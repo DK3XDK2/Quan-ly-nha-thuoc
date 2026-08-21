@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="view-transition" content="same-origin">
+    <title>Tài khoản của tôi - AINA Pharmacy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../../css/shop.css">
+    <style>
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--shop-text);
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid var(--shop-border);
+            border-radius: 6px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--shop-primary);
+        }
+        .btn-save {
+            background: var(--shop-primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-save:hover {
+            background: var(--shop-secondary);
+        }
+    </style>
+    <script>
+        // Chuyển hướng ngay lập tức nếu chưa đăng nhập (tránh chớp màn hình)
+        (function() {
+            const u = localStorage.getItem('shop_user');
+            if (!u || u === 'null' || u === 'undefined') {
+                window.location.replace('../public/shop-login.html');
+            }
+        })();
+    </script>
+</head>
+<body class="shop-layout">
+
+    <header class="shop-header">
+        <div class="shop-header-top">
+            <a href="../public/shop.html" class="shop-logo"><img src="../../assets/images/ainalogo.png" class="shop-logo-img" onerror="this.src='https://cdn-icons-png.flaticon.com/512/8687/8687597.png'" alt="Logo">
+                <div class="shop-logo-text">
+                    <span class="shop-logo-top">NHÀ THUỐC</span>
+                    <span class="shop-logo-bottom">AINA</span>
+                </div></a>
+            <div class="shop-header-actions">
+                <a href="../public/shop-login.html" class="shop-action-btn" id="btn-nav-login"><i class="fa-solid fa-right-to-bracket"></i><span>Đăng nhập</span></a>
+                <a href="shop-account.html" class="shop-action-btn" id="btn-nav-account" style="display: none; color: var(--shop-primary);"><i class="fa-solid fa-user"></i><span>Tài khoản</span></a>
+                <a href="shop-account.html#wishlist" class="shop-action-btn"><i class="fa-solid fa-heart"></i><span>Yêu thích</span></a>
+                <a href="#" class="shop-action-btn" onclick="Cart.toggleDrawer(event)"><i class="fa-solid fa-cart-shopping"></i><span>Giỏ hàng</span><span class="shop-cart-badge" id="cart-count">0</span></a>
+            </div>
+        </div>
+    </header>
+
+    <div class="shop-container">
+        <div class="account-layout">
+            <!-- Sidebar -->
+            <aside class="account-sidebar">
+                <div class="account-sidebar-user">
+                    <div class="avatar-wrapper" onclick="document.getElementById('avatar-upload').click()" title="Thay đổi ảnh đại diện">
+                        <img src="https://ui-avatars.com/api/?name=Khách+Hàng&background=0ea5e9&color=fff" alt="Avatar" id="user-avatar-img">
+                        <div class="avatar-overlay">
+                            <i class="fa-solid fa-camera"></i>
+                        </div>
+                    </div>
+                    <input type="file" id="avatar-upload" accept="image/*" style="display: none;" onchange="handleAvatarChange(event)">
+                    <div>
+                        <div style="font-weight: 600;" id="user-name-display">Khách Hàng</div>
+                        <div style="font-size: 0.8rem; color: var(--shop-text-muted);">Thành viên AINA</div>
+                    </div>
+                </div>
+                <script>
+                    (function() {
+                        try {
+                            const uStr = localStorage.getItem('currentUser') || localStorage.getItem('shop_user');
+                            if (uStr) {
+                                const u = JSON.parse(uStr);
+                                const dn = u.name || u.hoTen || 'Khách Hàng';
+                                document.getElementById('user-name-display').innerText = dn;
+                                if (u.avatarUrl || u.avatar) {
+                                    document.getElementById('user-avatar-img').src = u.avatarUrl || u.avatar;
+                                } else {
+                                    document.getElementById('user-avatar-img').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(dn)}&background=0ea5e9&color=fff`;
+                                }
+                            }
+                        } catch(e){}
+                    })();
+                </script>
+                <ul class="account-nav">
+                    <li><a href="#profile" id="nav-profile" class="active" onclick="switchTab('profile', event)"><i class="fa-regular fa-user"></i> Hồ sơ của tôi</a></li>
+                    <li><a href="#orders" id="nav-orders" onclick="switchTab('orders', event)"><i class="fa-solid fa-clipboard-list"></i> Đơn mua</a></li>
+                    <li><a href="#wishlist" id="nav-wishlist" onclick="switchTab('wishlist', event)"><i class="fa-regular fa-heart"></i> Sản phẩm yêu thích</a></li>
+                    <li><a href="#" onclick="handleLogout(event)" style="color: #ef4444;"><i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất</a></li>
+                </ul>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="account-content">
+                <div id="tab-profile" class="tab-pane">
+                    <h2 style="margin-top: 0; margin-bottom: 0.5rem;">Hồ sơ của tôi</h2>
+                    <p style="color: var(--shop-text-muted); margin-bottom: 2rem;">Quản lý thông tin hồ sơ để bảo mật tài khoản</p>
+
+                    <form onsubmit="event.preventDefault(); App.showToast('Đã lưu thông tin tài khoản!', 'success');">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="form-group">
+                                <label>Họ và tên</label>
+                                <input type="text" id="acc-name" class="form-control" value="Khách Hàng" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Số điện thoại</label>
+                                <input type="tel" id="acc-phone" class="form-control" value="" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="acc-email" class="form-control" value="">
+                        </div>
+                        <div class="form-group">
+                            <label>Địa chỉ mặc định</label>
+                            <input type="text" id="acc-address" class="form-control" value="">
+                        </div>
+                        <div class="form-group">
+                            <label>Giới tính</label>
+                            <div style="display: flex; gap: 2rem; margin-top: 10px;">
+                                <label><input type="radio" name="gender" value="male" checked> Nam</label>
+                                <label><input type="radio" name="gender" value="female"> Nữ</label>
+                                <label><input type="radio" name="gender" value="other"> Khác</label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-save">Lưu thay đổi</button>
+                    </form>
+                </div>
+
+                <div id="tab-orders" class="tab-pane" style="display: none;">
+                    <h2 style="margin-top: 0; margin-bottom: 2rem;">Lịch sử đơn hàng</h2>
+                    <div id="orders-list">
+                        <div style="text-align:center; padding: 2rem;">Đang tải đơn hàng...</div>
+                    </div>
+                </div>
+
+                <div id="tab-wishlist" class="tab-pane" style="display: none;">
+                    <h2 style="margin-top: 0; margin-bottom: 2rem;">Danh sách yêu thích của tôi</h2>
+                    <div id="wishlist-grid" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <!-- Wishlist items injected here -->
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../../js/storage.js"></script>
+    <script src="../../js/api.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script src="../../js/app.js"></script>
+    <script src="../../js/cart.js"></script>
+    <script src="../../js/wishlist.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = API.getCurrentUser() || Storage.get('shop_user');
+            if (!user) {
+                window.location.href = '../public/shop-login.html';
+                return;
+            }
+
+            const displayName = user.name || user.hoTen || 'Khách Hàng';
+            document.getElementById('user-name-display').innerText = displayName;
+            document.getElementById('acc-name').value = displayName;
+            document.getElementById('acc-phone').value = user.phone || user.soDienThoai || '';
+            document.getElementById('acc-email').value = user.email || '';
+            document.getElementById('acc-address').value = user.address || user.diaChi || '';
+
+            if (user.avatarUrl || user.avatar) {
+                document.getElementById('user-avatar-img').src = user.avatarUrl || user.avatar;
+            } else {
+                document.getElementById('user-avatar-img').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0ea5e9&color=fff`;
+            }
+
+            // Init tab based on URL hash
+            const initialTab = window.location.hash.replace('#', '') || 'profile';
+            if(['profile', 'orders', 'wishlist'].includes(initialTab)) {
+                switchTab(initialTab);
+            } else {
+                switchTab('profile');
+            }
+        });
+
+        function switchTab(tabId, event) {
+            if (event) event.preventDefault();
+            
+            // Update URL hash without jumping
+            history.pushState(null, null, '#' + tabId);
+
+            // Hide all tabs
+            document.querySelectorAll('.tab-pane').forEach(el => el.style.display = 'none');
+            // Remove active from nav
+            document.querySelectorAll('.account-nav a').forEach(el => el.classList.remove('active'));
+
+            // Show selected tab
+            const targetTab = document.getElementById('tab-' + tabId);
+            if(targetTab) targetTab.style.display = 'block';
+            
+            const navLink = document.getElementById('nav-' + tabId);
+            if(navLink) navLink.classList.add('active');
+
+            // Load data for specific tabs
+            if (tabId === 'orders') {
+                loadMyOrders();
+            } else if (tabId === 'wishlist') {
+                if (window.Wishlist) Wishlist.renderPage();
+            }
+        }
+
+        let isOrdersLoaded = false;
+        async function loadMyOrders() {
+            if (isOrdersLoaded) return;
+            const container = document.getElementById('orders-list');
+            container.innerHTML = '<div style="text-align:center; padding: 3rem;"><i class="fa-solid fa-circle-notch fa-spin fa-2x" style="color:var(--shop-primary);"></i><div style="margin-top:15px; color:var(--shop-text-muted); font-size:0.95rem;">Đang tải danh sách đơn hàng...</div></div>';
+            
+            let myOrders = [];
+            try {
+                const res = await API.get('/api/don-hang/lich-su');
+                if (Array.isArray(res)) {
+                    myOrders = res;
+                } else if (res && res.data) {
+                    myOrders = res.data;
+                }
+            } catch (err) {
+                console.error('Lỗi tải đơn hàng:', err);
+            }
+            
+            if (!myOrders || myOrders.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:4rem 2rem; background:white; border-radius:12px; border:1px dashed #cbd5e1;">
+                        <i class="fa-solid fa-box-open" style="font-size:3rem; color:#cbd5e1; margin-bottom:1rem;"></i>
+                        <h3 style="color:var(--shop-text); margin-bottom:0.5rem;">Bạn chưa có đơn hàng nào</h3>
+                        <p style="color:var(--shop-text-muted); margin-bottom:1.5rem; font-size:0.95rem;">Hãy khám phá các sản phẩm tuyệt vời của nhà thuốc nhé!</p>
+                        <a href="../public/shop.html" class="btn-save" style="text-decoration:none; display:inline-block;"><i class="fa-solid fa-cart-plus" style="margin-right:8px;"></i>Tiếp tục mua sắm</a>
+                    </div>
+                `;
+                isOrdersLoaded = true;
+                return;
+            }
+
+            let html = '';
+            myOrders.forEach(o => {
+                let itemsHtml = '';
+                const items = o.chiTietDonHang || o.chiTiet || o.items || [];
+                items.forEach(i => {
+                    const name = i.thuoc ? i.thuoc.tenThuoc : (i.tenThuoc || 'Sản phẩm');
+                    const price = i.donGia || i.price || 0;
+                    const qty = i.soLuong || i.quantity || 1;
+                    itemsHtml += `
+                        <div class="order-item" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; padding-bottom:0.5rem; border-bottom:1px solid #f1f5f9;">
+                            <div style="color:var(--shop-text); font-size:0.9rem; font-weight:500;">
+                                ${name} 
+                                <strong style="color:var(--shop-secondary); background:#eff6ff; padding:2px 6px; border-radius:10px; font-size:0.75rem; margin-left:6px;">x${qty}</strong>
+                            </div>
+                            <div style="font-weight:600; font-size:0.9rem; color:#334155;">${App.formatCurrency(price * qty)}</div>
+                        </div>
+                    `;
+                });
+
+                const statusConfig = {
+                    'MOI_TAO': { text: 'Mới tạo', color: '#3b82f6', bg: '#eff6ff', icon: 'fa-file-invoice' },
+                    'DA_XAC_NHAN': { text: 'Đã xác nhận', color: '#8b5cf6', bg: '#f5f3ff', icon: 'fa-box-open' },
+                    'DANG_GIAO': { text: 'Đang giao', color: '#f59e0b', bg: '#fffbeb', icon: 'fa-truck-fast' },
+                    'HOAN_TAT': { text: 'Hoàn thành', color: '#10b981', bg: '#ecfdf5', icon: 'fa-circle-check' },
+                    'HUY': { text: 'Đã hủy', color: '#ef4444', bg: '#fef2f2', icon: 'fa-ban' },
+                    'YEU_CAU_HOAN_TIEN': { text: 'Yêu cầu hoàn tiền', color: '#f59e0b', bg: '#fffbeb', icon: 'fa-clock-rotate-left' }
+                };
+                const st = statusConfig[o.trangThai] || { text: o.trangThai || 'Mới tạo', color: '#64748b', bg: '#f1f5f9', icon: 'fa-circle-info' };
+
+                html += `
+                    <div class="order-card" style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 1rem; border: 1px solid #e2e8f0;">
+                        <!-- Header -->
+                        <div style="background: #f8fafc; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; border-radius: 8px 8px 0 0;">
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.95rem; color: #0f172a;"><i class="fa-solid fa-hashtag" style="color:var(--shop-primary); margin-right:4px;"></i>${o.maDonHang || o.id}</div>
+                                <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;"><i class="fa-regular fa-clock" style="margin-right:4px;"></i>${new Date(o.taoLuc || o.createdAt || Date.now()).toLocaleString('vi-VN')}</div>
+                            </div>
+                            <div style="padding: 4px 10px; border-radius: 20px; font-weight: 600; font-size: 0.75rem; display: flex; align-items: center; gap: 4px; color: ${st.color}; background: ${st.bg}; border: 1px solid ${st.color}30;">
+                                <i class="fa-solid ${st.icon}"></i> ${st.text}
+                            </div>
+                        </div>
+                        
+                        <!-- Body -->
+                        <div style="padding: 0.75rem 1rem 0.25rem 1rem;">
+                            <div style="max-height: 120px; overflow-y: auto; padding-right: 4px;" class="custom-scrollbar">
+                                ${itemsHtml}
+                            </div>
+                        </div>
+                        
+                        <!-- Footer -->
+                        <div style="background: #fff; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #64748b; font-size: 0.85rem;">Tổng cộng <strong>${items.length}</strong> sản phẩm</span>
+                            <div style="font-size: 1.15rem; font-weight: 700; color: #ef4444;">
+                                ${App.formatCurrency(o.tongThanhToan || o.tongTien || 0)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            isOrdersLoaded = true;
+        }
+
+        function handleAvatarChange(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const dataUrl = e.target.result;
+                    document.getElementById('user-avatar-img').src = dataUrl;
+                    
+                    const user = API.getCurrentUser() || {};
+                    user.avatar = dataUrl;
+                    API.setCurrentUser(user);
+                    Storage.set('shop_user', user);
+                    
+                    App.showToast('Cập nhật ảnh đại diện thành công!', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function handleLogout(e) {
+            e.preventDefault();
+            Auth.logout();
+        }
+    </script>
+<script src="../../js/shop-ai.js"></script>
+</body>
+</html>

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết sản phẩm - AINA Pharmacy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../../css/shop.css">
+    <style>
+        .breadcrumb {
+            display: flex;
+            gap: 8px;
+            font-size: 0.875rem;
+            color: var(--shop-text-muted);
+            margin-bottom: 2rem;
+        }
+        .breadcrumb a { color: var(--shop-primary); text-decoration: none; }
+        
+        .product-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+            background: var(--shop-surface);
+            padding: 2rem;
+            border-radius: var(--shop-radius);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .product-gallery {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .main-image {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: var(--shop-radius);
+            border: 1px solid var(--shop-border);
+        }
+        .thumbnail-list {
+            display: flex;
+            gap: 1rem;
+        }
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid var(--shop-border);
+            cursor: pointer;
+        }
+        .thumbnail.active { border: 2px solid var(--shop-primary); }
+
+        .product-info h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            color: var(--shop-text);
+        }
+        .p-brand { font-size: 0.875rem; color: var(--shop-text-muted); text-transform: uppercase; margin-bottom: 1rem; display: inline-block;}
+        .p-price-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: var(--shop-bg);
+            border-radius: var(--shop-radius);
+        }
+        .p-price { font-size: 2rem; font-weight: bold; color: var(--shop-primary); }
+        .p-old-price { text-decoration: line-through; color: var(--shop-text-muted); }
+        .p-badge { background: var(--shop-accent); color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.875rem; }
+
+        .p-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .qty-selector {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--shop-border);
+            border-radius: 4px;
+        }
+        .qty-btn {
+            background: none; border: none; padding: 10px 15px; cursor: pointer; font-size: 1.2rem;
+        }
+        .qty-input {
+            width: 50px; text-align: center; border: none; border-left: 1px solid var(--shop-border); border-right: 1px solid var(--shop-border); font-family: inherit; font-size: 1rem; padding: 10px 0;
+        }
+        
+        .p-btn-buy {
+            flex: 1;
+            background: var(--shop-primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .p-btn-buy:hover { background: var(--shop-secondary); }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--shop-border);
+            margin-bottom: 1.5rem;
+            gap: 2rem;
+        }
+        .tab-btn {
+            background: none; border: none; padding: 10px 0; font-size: 1.1rem; font-weight: 500; color: var(--shop-text-muted); cursor: pointer; position: relative;
+        }
+        .tab-btn.active { color: var(--shop-primary); font-weight: bold; }
+        .tab-btn.active::after {
+            content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 3px; background: var(--shop-primary);
+        }
+        .tab-content { display: none; padding-top: 1.5rem; line-height: 1.6; color: var(--shop-text); }
+        .tab-content.active { display: block; }
+        
+        .slider-wrapper {
+            overflow-x: auto;
+            width: 100%;
+            scrollbar-width: none;
+            cursor: grab;
+            scroll-behavior: smooth;
+        }
+        .slider-wrapper::-webkit-scrollbar { display: none; }
+        .slider-wrapper:active { cursor: grabbing; }
+
+        .slider-track {
+            display: flex;
+            gap: 15px;
+            width: max-content;
+            padding-bottom: 10px;
+        }
+
+        .product-card-mini {
+            width: 190px;
+            flex-shrink: 0;
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid rgba(0,0,0,0.06);
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        .product-card-mini img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background: #f8fafc;
+        }
+        .product-card-mini:hover {
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);
+            border-color: var(--shop-primary);
+            transform: translateY(-4px);
+        }
+        .btn-mini-add {
+            margin-top: auto;
+            background: #f1f5f9;
+            color: var(--shop-primary);
+            border: none;
+            padding: 8px 0;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 100%;
+        }
+        .product-card-mini:hover .btn-mini-add {
+            background: var(--shop-primary);
+            color: white;
+        }
+
+        .slider-container {
+            position: relative;
+        }
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 1px solid var(--shop-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: var(--shop-text);
+            transition: all 0.3s;
+        }
+        .slider-btn:hover {
+            background: var(--shop-primary);
+            color: white;
+            border-color: var(--shop-primary);
+        }
+        .slider-btn-prev { left: -15px; }
+        .slider-btn-next { right: -15px; }
+
+        @media (max-width: 768px) {
+            .product-detail-grid { grid-template-columns: 1fr; padding: 1rem; }
+            .p-actions { flex-direction: column; }
+            .slider-btn { display: none; }
+        }
+
+        .btn-wishlist-detail {
+            background: #f8fafc;
+            color: #94a3b8;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.25rem;
+        }
+        .btn-wishlist-detail:hover {
+            background: #fee2e2;
+            color: #ef4444;
+            border-color: #fca5a5;
+            transform: scale(1.05);
+        }
+        .btn-wishlist-detail.active {
+            background: #fee2e2;
+            color: #ef4444;
+            border-color: #fca5a5;
+        }
+    </style>
+</head>
+<body class="shop-layout">
+
+    <header class="shop-header">
+        <div class="shop-header-top">
+            <a href="shop.html" class="shop-logo"><img src="../../assets/images/ainalogo.png" class="shop-logo-img" onerror="this.src='https://cdn-icons-png.flaticon.com/512/8687/8687597.png'" alt="Logo">
+                <div class="shop-logo-text">
+                    <span class="shop-logo-top">NHÀ THUỐC</span>
+                    <span class="shop-logo-bottom">AINA</span>
+                </div></a>
+            <div class="shop-search-bar">
+                <input type="text" id="shop-search-input" placeholder="Tìm kiếm thuốc, sản phẩm, hoạt chất..." onkeypress="if(event.key === 'Enter') window.location.href='shop.html'">
+                <button onclick="window.location.href='shop.html'"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+            <div class="shop-header-actions">
+                <a href="../public/shop-login.html" class="shop-action-btn" id="btn-nav-login"><i class="fa-solid fa-right-to-bracket"></i><span>Đăng nhập</span></a>
+                <a href="../customer/shop-account.html" class="shop-action-btn" id="btn-nav-account" style="display: none;"><i class="fa-solid fa-user"></i><span>Tài khoản</span></a>
+                <a href="../customer/wishlist.html" class="shop-action-btn"><i class="fa-solid fa-heart"></i><span>Yêu thích</span><span class="shop-cart-badge" id="wishlist-count" style="display: none;">0</span></a>
+                <a href="#" class="shop-action-btn" onclick="Cart.toggleDrawer(event)"><i class="fa-solid fa-cart-shopping"></i><span>Giỏ hàng</span><span class="shop-cart-badge" id="cart-count">0</span></a>
+            </div>
+        </div>
+    </header>
+
+    <div class="shop-container">
+        <div class="breadcrumb">
+            <a href="shop.html">Trang chủ</a> > <a href="#" id="bc-cat">Danh mục</a> > <span id="bc-name">Sản phẩm</span>
+        </div>
+
+        <div id="product-detail-container">
+            <!-- Injected by JS -->
+        </div>
+
+        <div style="background: var(--shop-surface); padding: 2rem; border-radius: var(--shop-radius); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="openTab('desc')">Mô tả sản phẩm</button>
+                <button class="tab-btn" onclick="openTab('ingredient')">Thành phần</button>
+                <button class="tab-btn" onclick="openTab('usage')">Cách dùng</button>
+            </div>
+            <div id="tab-desc" class="tab-content active"></div>
+            <div id="tab-ingredient" class="tab-content"></div>
+            <div id="tab-usage" class="tab-content"></div>
+        </div>
+
+        <!-- Related Products Section -->
+        <div class="product-slider-section" id="related-section" style="margin-top: 3.5rem;">
+            <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-layer-group" style="color: var(--shop-primary);"></i> Sản phẩm liên quan
+            </h3>
+            <div class="slider-container">
+                <button class="slider-btn slider-btn-prev" onclick="this.nextElementSibling.scrollBy({left: -220, behavior: 'smooth'})"><i class="fa-solid fa-chevron-left"></i></button>
+                <div class="slider-wrapper">
+                    <div class="slider-track" id="related-products"></div>
+                </div>
+                <button class="slider-btn slider-btn-next" onclick="this.previousElementSibling.scrollBy({left: 220, behavior: 'smooth'})"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../../js/storage.js"></script>
+    <script src="../../js/api.js"></script>
+    <script src="../../js/app.js"></script>
+    <script src="../../js/cart.js"></script>
+    <script src="../../js/wishlist.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+
+            let allProducts = [];
+            try {
+                const res = await API.get('/api/thuoc');
+                if (res && res.data) {
+                    allProducts = res.data.map(item => ({
+                        id: item.id || item.maThuoc,
+                        name: item.tenThuoc,
+                        category: item.danhMuc || item.nhomThuoc || 'Thuốc',
+                        price: Number(item.giaBan) || 0,
+                        stock: item.tonKho !== undefined ? item.tonKho : (item.loThuoc ? item.loThuoc.reduce((s, l) => s + (l.soLuongTon || 0), 0) : 0),
+                        unit: item.donViTinh || 'Hộp',
+                        image: item.hinhAnh,
+                        brand: item.nhanHieu || 'AINA',
+                        rating: 5,
+                        sold: 10,
+                        description: item.mota || item.hoatChat || 'Sản phẩm chính hãng AINA Pharmacy.',
+                        ingredient: item.hoatChat || 'Theo hướng dẫn trên bao bì.',
+                        usage: item.hieuLuc || 'Theo chỉ định của dược sĩ/bác sĩ.'
+                    }));
+                }
+            } catch (err) {
+                console.error('Lỗi tải thuốc:', err);
+                allProducts = Storage.get('products') || [];
+            }
+
+            const p = allProducts.find(x => String(x.id) === String(id));
+
+            if (!p) {
+                document.getElementById('product-detail-container').innerHTML = `<h2 style="padding:2rem;">Sản phẩm không tồn tại</h2>`;
+                return;
+            }
+
+            // Breadcrumb
+            document.getElementById('bc-cat').innerText = p.category;
+            document.getElementById('bc-name').innerText = p.name;
+
+            const fallbackImg = 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&auto=format&fit=crop';
+            const mainImgSrc = p.image || fallbackImg;
+
+            const statusHtml = p.stock === 0 ? `<div style="color: #ef4444; margin-bottom: 1rem;"><i class="fa-solid fa-circle-xmark"></i> Hết hàng</div>` : `<div style="color: #22c55e; margin-bottom: 1rem;"><i class="fa-solid fa-circle-check"></i> Còn hàng (Tồn: ${p.stock})</div>`;
+
+            const html = `
+                <div class="product-detail-grid">
+                    <div class="product-gallery">
+                        <img src="${mainImgSrc}" id="main-img" class="main-image">
+                    </div>
+                    <div class="product-info">
+                        <div class="p-brand">Thương hiệu: <strong>${p.brand}</strong> | Mã SP: ${p.id}</div>
+                        <h1>${p.name}</h1>
+                        <div style="color: #f59e0b; margin-bottom: 1rem;">★★★★★ <span style="color:var(--shop-text-muted);">(${p.rating} - Sản phẩm chất lượng)</span></div>
+                        
+                        ${statusHtml}
+
+                        <div style="font-size: 0.9rem; margin-bottom: 0.5rem;">Quy cách: <strong>${p.unit}</strong></div>
+                        <div style="font-size: 0.9rem;">Danh mục: <strong>${p.category}</strong></div>
+
+                        <div class="p-price-row">
+                            <div class="p-price">${App.formatCurrency(p.price)}</div>
+                        </div>
+
+                        <div class="p-actions">
+                            <div class="qty-selector">
+                                <button class="qty-btn" onclick="const i=document.getElementById('qty'); i.value=Math.max(1, i.value-1)">-</button>
+                                <input type="number" id="qty" class="qty-input" value="1" min="1" max="${p.stock || 999}">
+                                <button class="qty-btn" onclick="const i=document.getElementById('qty'); i.value=Math.min(${p.stock || 999}, parseInt(i.value)+1)">+</button>
+                            </div>
+                            <div style="display:flex; gap:10px; flex:1;">
+                                <button class="p-btn-buy" ${p.stock === 0 ? 'disabled' : ''} style="flex:1; background:var(--shop-primary); color:white; border:1px solid var(--shop-primary);" onclick="Cart.add('${p.id}', parseInt(document.getElementById('qty').value), event)">
+                                    ${p.stock === 0 ? 'HẾT HÀNG' : 'THÊM VÀO GIỎ HÀNG'}
+                                </button>
+                                <button class="p-btn-buy" ${p.stock === 0 ? 'disabled' : ''} style="flex:1; background:#ea580c; color:white; border:1px solid #ea580c;" onclick="Cart.buyNow('${p.id}', parseInt(document.getElementById('qty').value))">
+                                    MUA NGAY
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('product-detail-container').innerHTML = html;
+
+            // Tabs content
+            document.getElementById('tab-desc').innerHTML = p.description;
+            document.getElementById('tab-ingredient').innerHTML = p.ingredient;
+            document.getElementById('tab-usage').innerHTML = p.usage;
+
+            // Related Products
+            const related = allProducts.filter(x => x.category === p.category && String(x.id) !== String(p.id)).slice(0, 10);
+            if (related.length > 0) {
+                let rHtml = '';
+                related.forEach(item => {
+                    const img = item.image || fallbackImg;
+                    rHtml += `
+                        <div class="product-card-mini" onclick="window.location.href='shop-detail.html?id=${item.id}'">
+                            <img src="${img}">
+                            <div style="font-size: 0.9rem; font-weight: 600; white-space: normal; height: 40px; overflow: hidden; margin-bottom: 8px; color: #334155;">${item.name}</div>
+                            <div style="color: var(--shop-primary); font-weight: 700; font-size: 1.1rem; margin-bottom: 12px;">${App.formatCurrency(item.price)}</div>
+                            <button class="btn-mini-add" onclick="event.stopPropagation(); Cart.add('${item.id}', 1, event)">
+                                <i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ
+                            </button>
+                        </div>
+                    `;
+                });
+                document.getElementById('related-products').innerHTML = rHtml;
+            } else {
+                document.getElementById('related-section').style.display = 'none';
+            }
+        });
+
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+    </script>
+<script src="../../js/shop-ai.js"></script>
+</body>
+</html>
