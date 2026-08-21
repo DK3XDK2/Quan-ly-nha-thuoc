@@ -1,11 +1,11 @@
-# 🏥 HỆ THỐNG QUẢN LÝ VÀ BÁN THUỐC TRỰC TUYẾN AINA PHARMACY
+#  HỆ THỐNG QUẢN LÝ VÀ BÁN THUỐC TRỰC TUYẾN AINA PHARMACY
 > **Tài liệu Báo cáo Tiến trình - Bài kiểm tra thường xuyên 1**  
 > **Môn học:** Phân tích & Thiết kế Hệ thống Thông tin / Phát triển Ứng dụng Web  
 > **Đề tài:** Xây dựng Hệ thống Quản lý Nhà thuốc & Cửa hàng Thuốc Trực tuyến tích hợp AI Assistant (AINA Pharmacy)
 
 ---
 
-## 📑 MỤC LỤC BÁO CÁO
+##  MỤC LỤC BÁO CÁO
 
 1. [Phân tích Bài toán Quản lý Nhà thuốc](#1-phân-tích-bài-toán-quản-lý-nhà-thuốc)
 2. [Xác định Yêu cầu Chức năng (Functional Requirements)](#2-xác-định-yêu-cầu-chức-năng)
