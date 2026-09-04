@@ -4,9 +4,50 @@ const Cart = {
 
     init: function() {
         this.items = Storage.get('shop_cart') || [];
+        this.repairItemImages();
         this.renderBadge();
         this.buildDrawerUI();
         this.highlightActiveMenu();
+    },
+
+    resolveImage: function(item) {
+        if (!item) return 'https://cdn-icons-png.flaticon.com/512/8687/8687597.png';
+        if (typeof window.getValidMedicineImage === 'function') {
+            return window.getValidMedicineImage(item);
+        }
+        if (typeof getValidMedicineImage === 'function') {
+            return getValidMedicineImage(item);
+        }
+        if (typeof window.VIETNAM_DRUG_IMAGES !== 'undefined') {
+            const name = (item.name || item.tenThuoc || '').toLowerCase();
+            for (const [k, v] of Object.entries(window.VIETNAM_DRUG_IMAGES)) {
+                if (name.includes(k.toLowerCase())) return v;
+            }
+        }
+        const raw = item.imageUrl || item.image || item.hinhAnh;
+        return (raw && !raw.includes('data:image/svg') && !raw.includes('Chưa có ảnh'))
+            ? raw
+            : 'https://cdn-icons-png.flaticon.com/512/8687/8687597.png';
+    },
+
+    repairItemImages: function() {
+        let changed = false;
+        if (!Array.isArray(this.items)) {
+            this.items = [];
+            return;
+        }
+        this.items.forEach(item => {
+            if (!item.image || item.image.includes('data:image/svg') || item.image.includes('Chưa có ảnh') || item.image.includes('undefined')) {
+                const fixed = this.resolveImage(item);
+                if (fixed && fixed !== item.image) {
+                    item.image = fixed;
+                    changed = true;
+                }
+            }
+        });
+        if (changed) {
+            Storage.set('shop_cart', this.items);
+        }
     },
 
     save: function() {
@@ -39,30 +80,48 @@ const Cart = {
 
     add: async function(dbId, qty = 1, event = null) {
         try {
-            const list = await API.get('/api/thuoc');
-            const arr = Array.isArray(list) ? list : (list && list.data ? list.data : []);
-            const thuoc = arr.find(t => String(t.id) === String(dbId) || String(t.maThuoc) === String(dbId));
+            let thuoc = null;
+            // 1. Tìm trong danh sách Shop đã tải sẵn
+            if (typeof Shop !== 'undefined' && Array.isArray(Shop.allProducts) && Shop.allProducts.length > 0) {
+                thuoc = Shop.allProducts.find(t => String(t.id) === String(dbId) || String(t.dbId) === String(dbId) || String(t.maThuoc) === String(dbId));
+            }
+            // 2. Tìm trong Storage 'products'
+            if (!thuoc && typeof Storage !== 'undefined') {
+                const stored = Storage.get('products') || [];
+                thuoc = stored.find(t => String(t.id) === String(dbId) || String(t.dbId) === String(dbId) || String(t.maThuoc) === String(dbId));
+            }
+            // 3. Gọi API nếu chưa có
+            if (!thuoc && typeof API !== 'undefined') {
+                const list = await API.get('/api/thuoc');
+                const arr = Array.isArray(list) ? list : (list && list.data ? list.data : []);
+                thuoc = arr.find(t => String(t.id) === String(dbId) || String(t.maThuoc) === String(dbId));
+            }
+
             if (!thuoc) {
                 App.showToast('Sản phẩm không tồn tại!', 'error');
                 return;
             }
 
+            const rawImg = thuoc.imageUrl || thuoc.image || thuoc.hinhAnh;
+            const validImg = this.resolveImage({ name: thuoc.tenThuoc || thuoc.name, image: rawImg });
+
             const p = {
                 id: thuoc.maThuoc || thuoc.id,
-                dbId: thuoc.id,
-                name: thuoc.tenThuoc,
-                category: thuoc.danhMucThuoc?.tenDanhMuc || thuoc.danhMuc || 'Khác',
-                price: Number(thuoc.giaBan),
-                stock: thuoc.loTonKho ? thuoc.loTonKho.reduce((sum, lo) => sum + lo.soLuongTon, 0) : (thuoc.tonKho || 0),
-                unit: thuoc.donViTinh || 'Viên',
-                image: thuoc.hinhAnh
+                dbId: thuoc.id || thuoc.dbId || thuoc.maThuoc,
+                name: thuoc.tenThuoc || thuoc.name,
+                category: thuoc.danhMucThuoc?.tenDanhMuc || thuoc.danhMuc || thuoc.category || 'Khác',
+                price: Number(thuoc.giaBan || thuoc.price || 0),
+                stock: thuoc.loTonKho ? thuoc.loTonKho.reduce((sum, lo) => sum + (lo.soLuongTon || 0), 0) : (thuoc.tonKho !== undefined ? thuoc.tonKho : (thuoc.stock || 10)),
+                unit: thuoc.donViTinh || thuoc.unit || 'Viên',
+                image: validImg
             };
+
             if (p.stock <= 0) {
                 App.showToast('Sản phẩm đã hết hàng!', 'error');
                 return;
             }
 
-            const existing = this.items.find(x => x.dbId === p.dbId);
+            const existing = this.items.find(x => String(x.dbId) === String(p.dbId) || String(x.id) === String(p.id));
             if (existing) {
                 if (existing.quantity + qty > p.stock) {
                     App.showToast(`Kho chỉ còn ${p.stock} sản phẩm!`, 'warning');
@@ -70,13 +129,16 @@ const Cart = {
                 } else {
                     existing.quantity += qty;
                 }
+                if (!existing.image || existing.image.includes('data:image/svg') || existing.image.includes('Chưa có ảnh')) {
+                    existing.image = p.image;
+                }
             } else {
                 this.items.push({
                     dbId: p.dbId,
                     id: p.id,
                     name: p.name,
                     price: p.price,
-                    image: p.imageUrl,
+                    image: p.image,
                     maxStock: p.stock,
                     quantity: qty
                 });
@@ -89,8 +151,14 @@ const Cart = {
                 this.flyToCart(event);
             }
         } catch (e) {
+            console.error('Lỗi thêm giỏ hàng:', e);
             App.showToast('Không thể thêm sản phẩm vào giỏ!', 'error');
         }
+    },
+
+    buyNow: async function(dbId, qty = 1) {
+        await this.add(dbId, qty);
+        this.goToCheckout();
     },
 
     flyToCart: function(event) {
@@ -140,18 +208,18 @@ const Cart = {
     },
 
     remove: function(dbId) {
-        this.items = this.items.filter(x => x.dbId !== dbId);
+        this.items = this.items.filter(x => String(x.dbId) !== String(dbId) && String(x.id) !== String(dbId));
         this.save();
     },
 
     updateQty: function(dbId, delta) {
-        const item = this.items.find(x => x.dbId === dbId);
+        const item = this.items.find(x => String(x.dbId) === String(dbId) || String(x.id) === String(dbId));
         if (!item) return;
         
         item.quantity += delta;
         if (item.quantity <= 0) {
             this.remove(dbId);
-        } else if (item.quantity > item.maxStock) {
+        } else if (item.maxStock && item.quantity > item.maxStock) {
             item.quantity = item.maxStock;
             App.showToast('Vượt quá số lượng tồn kho', 'warning');
         }
@@ -223,23 +291,29 @@ const Cart = {
 
         let html = '';
         let total = 0;
+        const fallbackIcon = 'https://cdn-icons-png.flaticon.com/512/8687/8687597.png';
+
         this.items.forEach(item => {
             const itemTotal = item.price * item.quantity;
             total += itemTotal;
-            const imgSrc = item.image || 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22300%22%20height%3D%22300%22%20viewBox%3D%220%200%20300%20300%22%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22%23f3f4f6%22%2F%3E%3Ctext%20x%3D%22150%22%20y%3D%22150%22%20font-family%3D%22sans-serif%22%20font-size%3D%2216%22%20fill%3D%22%239ca3af%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ECh%C6%B0a%20c%C3%B3%20%E1%BA%A3nh%3C%2Ftext%3E%3C%2Fsvg%3E';
+            let imgSrc = item.image;
+            if (!imgSrc || imgSrc.includes('data:image/svg') || imgSrc.includes('Chưa có ảnh') || imgSrc.includes('undefined')) {
+                imgSrc = this.resolveImage(item);
+                item.image = imgSrc;
+            }
             html += `
-                <div style="display:flex; gap:1rem; margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--shop-border);">
-                    <img src="${imgSrc}" style="width:80px; height:80px; object-fit:cover; border-radius:4px; border:1px solid var(--shop-border);">
-                    <div style="flex:1;">
-                        <div style="font-weight:600; font-size:0.9rem; margin-bottom:4px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${item.name}</div>
+                <div style="display:flex; gap:1rem; margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--shop-border); align-items:center;">
+                    <img src="${imgSrc}" onerror="this.onerror=null;this.src='${fallbackIcon}';" style="width:75px; height:75px; object-fit:cover; border-radius:6px; border:1px solid var(--shop-border); background:white;">
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:600; font-size:0.9rem; margin-bottom:4px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.3;">${item.name}</div>
                         <div style="color:var(--shop-primary); font-weight:bold; margin-bottom:8px;">${App.formatCurrency(item.price)}</div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <div style="display:flex; align-items:center; border:1px solid var(--shop-border); border-radius:4px;">
-                                <button onclick="Cart.updateQty(${item.dbId}, -1)" style="background:none; border:none; padding:4px 10px; cursor:pointer;">-</button>
-                                <span style="font-size:0.9rem; width:30px; text-align:center;">${item.quantity}</span>
-                                <button onclick="Cart.updateQty(${item.dbId}, 1)" style="background:none; border:none; padding:4px 10px; cursor:pointer;">+</button>
+                            <div style="display:flex; align-items:center; border:1px solid var(--shop-border); border-radius:4px; background:white;">
+                                <button onclick="Cart.updateQty('${item.dbId}', -1)" style="background:none; border:none; padding:4px 10px; cursor:pointer; font-weight:bold;">-</button>
+                                <span style="font-size:0.9rem; width:28px; text-align:center;">${item.quantity}</span>
+                                <button onclick="Cart.updateQty('${item.dbId}', 1)" style="background:none; border:none; padding:4px 10px; cursor:pointer; font-weight:bold;">+</button>
                             </div>
-                            <button onclick="Cart.remove(${item.dbId})" style="background:none; border:none; color:var(--shop-text-muted); cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="Cart.remove('${item.dbId}')" title="Xóa" style="background:none; border:none; color:var(--shop-text-muted); cursor:pointer; padding:6px;"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </div>
                 </div>

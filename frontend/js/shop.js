@@ -1,65 +1,11 @@
 
-const VIETNAM_DRUG_IMAGES = {
-    'Panadol Extra': 'https://cdn.nhathuoclongchau.com.vn/v1/static/DSC_099842_74c1fc532a.png',
-    'Efferalgan': 'https://cdn.nhathuoclongchau.com.vn/v1/static/eferalgan_1_f94f787f4f.jpg',
-    'Hapacol': 'https://cdn.nhathuoclongchau.com.vn/v1/static/bot_hapacol_250_dhg_giam_dau_ha_sot_24_goi_00003627_3_cb4b38b2df.png',
-    'Gofen': 'https://cdn.nhathuoclongchau.com.vn/v1/static/thuoc_gofen_400_5_vi_x_10_vien_mega_we_care_00003460_565d3a853b.jpg',
-    'Amoxicillin': 'https://cdn.nhathuoclongchau.com.vn/v1/static/amoxicillin_500mg_10x10_domesco_00000740_4f06bb4231.png',
-    'Zinnat': 'https://cdn.nhathuoclongchau.com.vn/v1/static/thuoc_zinnat_500mg_gsk_1x10_00008252_e72c24f56b.png',
-    'Augmentin': 'https://cdn.nhathuoclongchau.com.vn/v1/static/augmentin_625mg_2x7_gsk_00000967_06efa6305d.png',
-    'Cravit': 'https://cdn.nhathuoclongchau.com.vn/v1/static/cravit_iv_161d628c5d.jpg',
-    'Phosphalugel': 'https://cdn.nhathuoclongchau.com.vn/v1/static/hon_dich_uong_phosphalugel_26_goi_x_20g_sanofi_00005924_510123ad08.jpg',
-    'Nexium': 'https://cdn.nhathuoclongchau.com.vn/v1/static/00005270_nexium_40_5668_63ab_large_adbd5b18da.jpg',
-    'Smecta': 'https://cdn.nhathuoclongchau.com.vn/v1/static/smecta_orange_vanilla_ipsen_10_goi_00040386_f5b8a5ead3.png',
-    'Concor': 'https://cdn.nhathuoclongchau.com.vn/v1/static/concor_5mg_3x10_merck_00002064_bf7f1ec1ee.png',
-    'Lipitor': 'https://cdn.nhathuoclongchau.com.vn/v1/static/thuoc_lipitor_20mg_3_vi_x_10_vien_viatris_00004454_e65c47d36e.jpg',
-    'Glucophage': 'https://cdn.nhathuoclongchau.com.vn/v1/static/thuoc_glucophage_500mg_5_vi_x_10_vien_merck_00003430_d1c8984d0f.jpg',
-    'Diamicron': 'https://cdn.nhathuoclongchau.com.vn/v1/static/diamicron_mr_60mg_2x15_servier_00002401_951e1d14fc.png',
-    'Berlthyrox': 'https://cdn.nhathuoclongchau.com.vn/v1/static/thuoc_berlthyrox_100_berlin_menarini_4x25_00008323_5485318853.png',
-    'Enervon': 'https://cdn.nhathuoclongchau.com.vn/v1/static/enervon_c_10x10_united_00002794_558c888fb2.png',
-    'Berocca': 'https://cdn.nhathuoclongchau.com.vn/v1/static/IMG_1758_33831b7cab.jpg',
-    'Calcium Corbiere': 'https://cdn.nhathuoclongchau.com.vn/v1/static/calcium_corbiere_kids_extra_sanofi_5ml_00032445_1_8223541b73.jpg',
-    'Laroche Posay': 'https://cdn.nhathuoclongchau.com.vn/v1/static/IMG_9629_8628daed64.jpg',
-    'Silkron': 'https://cdn.nhathuoclongchau.com.vn/v1/static/kem_boi_da_silkron_dongkwang_10g_00006704_1_59ea24d6cd.png',
-    'Systane Ultra': 'https://cdn.nhathuoclongchau.com.vn/v1/static/systane_ultra_a76ef7b346.jpg',
-    'Otrivin': 'https://cdn.nhathuoclongchau.com.vn/v1/static/DSC_01990_8fbfae866d.jpg',
-    'Telfast': 'https://cdn.nhathuoclongchau.com.vn/v1/static/1_467af3daf4.png',
-    'Clarityne': 'https://cdn.nhathuoclongchau.com.vn/v1/static/thuoc_clarityne_10mg_bayer_1x10_00049431_9ed3fc6265.png',
-    'Prospan': 'https://cdn.nhathuoclongchau.com.vn/v1/static/00006137_prospan_100ml_9655_5c68_large_ad5603e714.jpg',
-    'Astex': 'https://cdn.nhathuoclongchau.com.vn/v1/static/DSC_09091_c011071423.jpg',
-    'Bảo Thanh': 'https://cdn.nhathuoclongchau.com.vn/v1/static/DSC_09075_a2549abf26.png',
-    'Glucosamine': 'https://cdn.nhathuoclongchau.com.vn/v1/static/thuoc_glucosamine_stada_1500mg_sachet_30_goi_00033098_b66b8e113b.png',
-    'Boganic': 'https://cdn.nhathuoclongchau.com.vn/v1/static/VIEN_UONG_HO_TRO_BO_GAN_GIAI_DOC_GAN_BOGANIC_PREMIUM_TRAPHACO_60_V_00050786_1_f9e9211160.jpg',
-    'huyết áp Omron': 'https://cdn.nhathuoclongchau.com.vn/v1/static/MAY_DO_HUYET_AP_BAP_TAY_OMRON_EZ_HEM_7183_HO_TRO_DO_HUYET_AP_NHIP_TIM_00050892_1_2073a34ed6.png',
-    'Omron': 'https://cdn.nhathuoclongchau.com.vn/v1/static/MAY_DO_HUYET_AP_BAP_TAY_OMRON_EZ_HEM_7183_HO_TRO_DO_HUYET_AP_NHIP_TIM_00050892_1_2073a34ed6.png',
-    'Nhiệt kế': 'https://cdn.nhathuoclongchau.com.vn/v1/static/DSC_09751_ac0903b1b2.jpg',
-    'đường huyết': 'https://cdn.nhathuoclongchau.com.vn/v1/static/DSC_07705_0bbb7e7647.jpg',
-    'Amlor': 'https://cdn.nhathuoclongchau.com.vn/v1/static/1_c355de241c.jpg',
-    'Maalox': 'https://cdn.nhathuoclongchau.com.vn/v1/static/hon_dich_uong_phosphalugel_26_goi_x_20g_sanofi_00005924_510123ad08.jpg',
-    'Vitamin C': 'https://cdn.nhathuoclongchau.com.vn/v1/static/IMG_1758_33831b7cab.jpg',
-    'Oresol': 'https://cdn.nhathuoclongchau.com.vn/v1/static/bot_hapacol_250_dhg_giam_dau_ha_sot_24_goi_00003627_3_cb4b38b2df.png',
-    'Cetaphil': 'https://cdn.nhathuoclongchau.com.vn/v1/static/00503325_sua_rua_mat_ngua_mun_duong_am_va_lam_sang_da_reihaku_hatomugi_acne_care_and_facial_washing_130g_9270_63ed_large_3f5868bde7.jpg',
-    'Listerine': 'https://cdn.nhathuoclongchau.com.vn/v1/static/chai_xit_nhiet_mieng_tay_chan_mieng_aloclair_plus_15ml_00502899_1_b6e114616e.jpg',
-    'ColosBaby': 'https://cdn.nhathuoclongchau.com.vn/v1/static/Vien_ho_tro_phat_trien_nao_bo_suc_khoe_cho_mat_Brauer_Baby_and_Kids_Ultra_Pure_DHA_00033687_79d080f5b6.png',
-    'Omega 3': 'https://cdn.nhathuoclongchau.com.vn/v1/static/Vien_ho_tro_phat_trien_nao_bo_suc_khoe_cho_mat_Brauer_Baby_and_Kids_Ultra_Pure_DHA_00033687_79d080f5b6.png'
-};
-
-const DEFAULT_MEDICINE_ICON = 'https://cdn-icons-png.flaticon.com/512/8687/8687597.png';
-
-function getValidMedicineImage(item) {
+// Dùng danh sách ảnh từ window (đã khai báo trong app.js)
+var VIETNAM_DRUG_IMAGES = window.VIETNAM_DRUG_IMAGES || {};
+var DEFAULT_MEDICINE_ICON = window.DEFAULT_MEDICINE_ICON || 'https://cdn-icons-png.flaticon.com/512/8687/8687597.png';
+var getValidMedicineImage = window.getValidMedicineImage || function(item) {
     if (!item) return DEFAULT_MEDICINE_ICON;
-    const raw = item.imageUrl || item.image || item.hinhAnh;
-    if (raw && raw.startsWith('https://cdn.nhathuoclongchau.com.vn/v1/static/')) {
-        return raw;
-    }
-    const name = item.name || item.tenThuoc || '';
-    for (const [key, url] of Object.entries(VIETNAM_DRUG_IMAGES)) {
-        if (name.toLowerCase().includes(key.toLowerCase())) {
-            return url;
-        }
-    }
-    return (raw && !raw.includes('/unsafe/') && !raw.includes('unsplash.com')) ? raw : DEFAULT_MEDICINE_ICON;
-}
+    return DEFAULT_MEDICINE_ICON;
+};
 
 const Shop = {
     allProducts: [],

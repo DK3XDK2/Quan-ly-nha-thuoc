@@ -57,13 +57,18 @@ const Wishlist = {
         }
 
         let html = '';
+        const fallbackImg = 'https://cdn-icons-png.flaticon.com/512/8687/8687597.png';
         wlProducts.forEach(p => {
-            const fallbackImg = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22300%22%20height%3D%22300%22%20viewBox%3D%220%200%20300%20300%22%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22%23f3f4f6%22%2F%3E%3Ctext%20x%3D%22150%22%20y%3D%22150%22%20font-family%3D%22sans-serif%22%20font-size%3D%2216%22%20fill%3D%22%239ca3af%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ECh%C6%B0a%20c%C3%B3%20%E1%BA%A3nh%3C%2Ftext%3E%3C%2Fsvg%3E';
-            const imgSrc = p.image || p.imageUrl || fallbackImg;
+            let imgSrc = p.imageUrl || p.image;
+            if (!imgSrc || imgSrc.includes('data:image/svg') || imgSrc.includes('Chưa có ảnh')) {
+                imgSrc = (typeof window.getValidMedicineImage === 'function') 
+                    ? window.getValidMedicineImage(p) 
+                    : fallbackImg;
+            }
             html += `
-                <div style="display:flex; gap:1.5rem; padding:1.5rem; border:1px solid var(--shop-border); border-radius:var(--shop-radius); position:relative;">
+                <div style="display:flex; gap:1.5rem; padding:1.5rem; border:1px solid var(--shop-border); border-radius:var(--shop-radius); position:relative; background:white;">
                     <button onclick="Wishlist.remove('${p.id}')" style="position:absolute; top:10px; right:10px; background:none; border:none; color:#9ca3af; cursor:pointer;"><i class="fa-solid fa-xmark fa-lg"></i></button>
-                    <img src="${imgSrc}" style="width:120px; height:120px; object-fit:cover; border-radius:var(--shop-radius); cursor:pointer;" onclick="goToProductDetail('${p.id}')">
+                    <img src="${imgSrc}" onerror="this.onerror=null;this.src='${fallbackImg}';" style="width:120px; height:120px; object-fit:cover; border-radius:var(--shop-radius); cursor:pointer;" onclick="goToProductDetail('${p.id}')">
                     <div style="flex:1;">
                         <div style="font-weight:600; font-size:1.1rem; margin-bottom:0.5rem; cursor:pointer;" onclick="goToProductDetail('${p.id}')">${p.name}</div>
                         <div style="color:var(--shop-primary); font-size:1.25rem; font-weight:bold;">${App.formatCurrency(p.price)}</div>
