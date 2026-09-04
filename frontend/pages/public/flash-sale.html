@@ -71,7 +71,7 @@
 
     <header class="shop-header">
         <div class="shop-header-top">
-            <a href="shop.html" class="shop-logo">
+            <a href="index.html" class="shop-logo">
                 <img src="../../assets/images/ainalogo.png" class="shop-logo-img" onerror="this.src='https://cdn-icons-png.flaticon.com/512/8687/8687597.png'" alt="Logo">
                 <div class="shop-logo-text">
                     <span class="shop-logo-top">NHÀ THUỐC</span>
@@ -82,11 +82,11 @@
             <div style="flex:1;"></div>
 
             <div class="shop-header-actions">
-                <a href="shop.html" class="shop-action-btn">
+                <a href="index.html" class="shop-action-btn">
                     <i class="fa-solid fa-house"></i>
                     <span>Trang chủ</span>
                 </a>
-                <a href="../public/shop-login.html" class="shop-action-btn" id="btn-nav-login">
+                <a href="shop-login.html" class="shop-action-btn" id="btn-nav-login">
                     <i class="fa-solid fa-right-to-bracket"></i>
                     <span>Đăng nhập</span>
                 </a>
@@ -112,25 +112,23 @@
 
     <div class="shop-container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
         <div class="products-grid" id="fs-product-grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
-            <!-- Products injected here -->
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="../../js/storage.js"></script>
     <script src="../../js/mock-data.js"></script>
+    <script src="../../js/api.js"></script>
     <script src="../../js/app.js"></script>
     <script src="../../js/cart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            MockData.initialize();
             FlashSale.init();
         });
 
         const FlashSale = {
-            init: function() {
+            init: async function() {
                 this.startCountdown();
-                this.renderProducts();
+                await this.renderProducts();
             },
             
             startCountdown: function() {
@@ -156,25 +154,39 @@
                 }, 1000);
             },
 
-            renderProducts: function() {
-                const products = Storage.get('products') || [];
-                
-                // Thuật toán chọn sản phẩm Flash Sale:
-                // 1. Lọc ra các sản phẩm còn hàng
-                // 2. Trộn ngẫu nhiên (shuffle) và chọn 16 sản phẩm
-                // 3. Tự động gắn nhãn giảm giá sâu (30% - 70%)
-                // 4. Tạo thanh tiến trình "Đã bán" giả lập độ hot
+            renderProducts: async function() {
+                let products = [];
+                try {
+                    const res = await API.get('/api/thuoc');
+                    const list = Array.isArray(res) ? res : (res && res.data ? res.data : []);
+                    if (list && list.length > 0) {
+                        products = list.map(item => ({
+                            id: item.id,
+                            dbId: item.id,
+                            maThuoc: item.maThuoc || String(item.id),
+                            name: item.tenThuoc,
+                            price: Number(item.giaBan) || 0,
+                            stock: item.loTonKho ? item.loTonKho.reduce((s, l) => s + (l.soLuongTon || 0), 0) : (item.tonKho !== undefined ? item.tonKho : 10),
+                            imageUrl: item.hinhAnh,
+                            brand: 'AINA Pharmacy'
+                        }));
+                    }
+                } catch(e) {}
+
+                if (products.length === 0) {
+                    products = Storage.get('products') || (typeof MOCK_PRODUCTS !== 'undefined' ? MOCK_PRODUCTS : []);
+                }
                 
                 let inStock = products.filter(p => p.stock > 0);
-                
-                // Shuffle array
+                if (inStock.length === 0) inStock = products;
+
                 for (let i = inStock.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [inStock[i], inStock[j]] = [inStock[j], inStock[i]];
                 }
                 
                 let flashSaleItems = inStock.slice(0, 16).map(p => {
-                    const randomDiscount = Math.floor(Math.random() * 41) + 30; // 30% - 70%
+                    const randomDiscount = Math.floor(Math.random() * 41) + 30;
                     const originalPrice = p.price;
                     const discountedPrice = Math.round(originalPrice * (1 - randomDiscount / 100));
                     
@@ -183,11 +195,10 @@
                         oldPrice: originalPrice,
                         price: discountedPrice,
                         discountPercent: randomDiscount,
-                        soldPercent: Math.floor(Math.random() * 70) + 30 // 30% - 99% sold
+                        soldPercent: Math.floor(Math.random() * 70) + 30
                     };
                 });
 
-                // Sắp xếp theo độ hot (bán chạy nhất lên đầu)
                 flashSaleItems.sort((a, b) => b.soldPercent - a.soldPercent);
 
                 const grid = document.getElementById('fs-product-grid');
@@ -200,10 +211,10 @@
                         <div class="product-card" style="border: 2px solid #ef4444; position: relative;">
                             <div class="product-badge" style="background: #ef4444; font-size: 1.1rem; padding: 6px 12px; font-weight: bold;">-${p.discountPercent}%</div>
                             
-                            <img src="${imgSrc}" alt="${p.name}" class="product-image" onclick="location.href='shop-detail.html?id=${p.id}'" style="cursor:pointer; object-fit: cover;">
+                            <img src="${imgSrc}" alt="${p.name}" class="product-image" onclick="goToProductDetail('${p.id || p.dbId || p.maThuoc}')" style="cursor:pointer; object-fit: cover;">
                             
                             <div class="product-brand">${p.brand || 'Dược phẩm'}</div>
-                            <div class="product-name" title="${p.name}" onclick="location.href='shop-detail.html?id=${p.id}'" style="cursor:pointer; height: 40px; overflow: hidden;">${p.name}</div>
+                            <div class="product-name" title="${p.name}" onclick="goToProductDetail('${p.id || p.dbId || p.maThuoc}')" style="cursor:pointer; height: 40px; overflow: hidden;">${p.name}</div>
                             
                             <div class="product-price-row" style="margin-top: 15px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
                                 <span class="product-price" style="color: #ef4444; font-size: 1.4rem;">${App.formatCurrency(p.price)}</span>

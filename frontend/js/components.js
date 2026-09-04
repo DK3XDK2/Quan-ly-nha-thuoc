@@ -1,7 +1,4 @@
-/**
- * Layout Components Renderer
- * Hỗ trợ tái sử dụng Sidebar và Header mà không cần copy paste HTML
- */
+
 
 const Layout = {
     sidebarMenu: [
@@ -15,11 +12,12 @@ const Layout = {
         { id: 'reports', label: 'Báo cáo', icon: 'fa-chart-line', link: 'reports.html' },
         { id: 'employees', label: 'Nhân viên', icon: 'fa-user-nurse', link: 'employees.html' },
         { id: 'ai', label: 'AINA Assistant', icon: 'fa-robot', link: 'ai-assistant.html', extraClass: 'color-primary' },
-        { id: 'settings', label: 'Cài đặt', icon: 'fa-gear', link: 'settings.html' }
+        { id: 'settings', label: 'Cài đặt', icon: 'fa-gear', link: 'settings.html' },
+        { id: 'shop', label: 'Xem Shop Khách', icon: 'fa-store', link: '../public/index.html' }
     ],
 
     renderSidebar: function(activeId) {
-        // Kiểm tra permission trước khi render
+
         const availableMenus = this.sidebarMenu.filter(menu => Auth.hasPermission(menu.id));
         
         let menuHtml = '';
@@ -115,30 +113,27 @@ const Layout = {
             headerContainer.innerHTML = headerHtml;
         }
 
-        // Re-bind sidebar toggle event since we just overwrote the HTML
         App.initSidebar();
-        
-        // Initialize notifications if Notification module exists
+
         if(typeof Notifications !== 'undefined') {
             Notifications.init();
         }
-        
-        // Toggle notification dropdown
+
         const bell = document.getElementById('notification-bell');
         const dropdown = document.getElementById('notification-dropdown');
         if(bell && dropdown) {
             bell.addEventListener('click', (e) => {
-                if(e.target.closest('#notification-list') || e.target.innerText === 'Đánh dấu đã đọc') return; // Do not toggle if clicking inside list
+                if(e.target.closest('#notification-list') || e.target.innerText === 'Đánh dấu đã đọc') return;
                 dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
             });
-            // Close on click outside
+
             document.addEventListener('click', (e) => {
                 if(!bell.contains(e.target)) {
                     dropdown.style.display = 'none';
                 }
             });
         }
-        // Toggle user dropdown
+
         const userToggle = document.getElementById('user-menu-toggle');
         const userDropdown = document.getElementById('user-dropdown');
         if(userToggle && userDropdown) {

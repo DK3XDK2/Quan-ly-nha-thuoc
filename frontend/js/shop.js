@@ -1,6 +1,66 @@
-/**
- * B2C Shop Module - Kết nối Backend API
- */
+
+const VIETNAM_DRUG_IMAGES = {
+    'Panadol Extra': 'https://cdn.nhathuoclongchau.com.vn/v1/static/DSC_099842_74c1fc532a.png',
+    'Efferalgan': 'https://cdn.nhathuoclongchau.com.vn/v1/static/eferalgan_1_f94f787f4f.jpg',
+    'Hapacol': 'https://cdn.nhathuoclongchau.com.vn/v1/static/bot_hapacol_250_dhg_giam_dau_ha_sot_24_goi_00003627_3_cb4b38b2df.png',
+    'Gofen': 'https://cdn.nhathuoclongchau.com.vn/v1/static/thuoc_gofen_400_5_vi_x_10_vien_mega_we_care_00003460_565d3a853b.jpg',
+    'Amoxicillin': 'https://cdn.nhathuoclongchau.com.vn/v1/static/amoxicillin_500mg_10x10_domesco_00000740_4f06bb4231.png',
+    'Zinnat': 'https://cdn.nhathuoclongchau.com.vn/v1/static/thuoc_zinnat_500mg_gsk_1x10_00008252_e72c24f56b.png',
+    'Augmentin': 'https://cdn.nhathuoclongchau.com.vn/v1/static/augmentin_625mg_2x7_gsk_00000967_06efa6305d.png',
+    'Cravit': 'https://cdn.nhathuoclongchau.com.vn/v1/static/cravit_iv_161d628c5d.jpg',
+    'Phosphalugel': 'https://cdn.nhathuoclongchau.com.vn/v1/static/hon_dich_uong_phosphalugel_26_goi_x_20g_sanofi_00005924_510123ad08.jpg',
+    'Nexium': 'https://cdn.nhathuoclongchau.com.vn/v1/static/00005270_nexium_40_5668_63ab_large_adbd5b18da.jpg',
+    'Smecta': 'https://cdn.nhathuoclongchau.com.vn/v1/static/smecta_orange_vanilla_ipsen_10_goi_00040386_f5b8a5ead3.png',
+    'Concor': 'https://cdn.nhathuoclongchau.com.vn/v1/static/concor_5mg_3x10_merck_00002064_bf7f1ec1ee.png',
+    'Lipitor': 'https://cdn.nhathuoclongchau.com.vn/v1/static/thuoc_lipitor_20mg_3_vi_x_10_vien_viatris_00004454_e65c47d36e.jpg',
+    'Glucophage': 'https://cdn.nhathuoclongchau.com.vn/v1/static/thuoc_glucophage_500mg_5_vi_x_10_vien_merck_00003430_d1c8984d0f.jpg',
+    'Diamicron': 'https://cdn.nhathuoclongchau.com.vn/v1/static/diamicron_mr_60mg_2x15_servier_00002401_951e1d14fc.png',
+    'Berlthyrox': 'https://cdn.nhathuoclongchau.com.vn/v1/static/thuoc_berlthyrox_100_berlin_menarini_4x25_00008323_5485318853.png',
+    'Enervon': 'https://cdn.nhathuoclongchau.com.vn/v1/static/enervon_c_10x10_united_00002794_558c888fb2.png',
+    'Berocca': 'https://cdn.nhathuoclongchau.com.vn/v1/static/IMG_1758_33831b7cab.jpg',
+    'Calcium Corbiere': 'https://cdn.nhathuoclongchau.com.vn/v1/static/calcium_corbiere_kids_extra_sanofi_5ml_00032445_1_8223541b73.jpg',
+    'Laroche Posay': 'https://cdn.nhathuoclongchau.com.vn/v1/static/IMG_9629_8628daed64.jpg',
+    'Silkron': 'https://cdn.nhathuoclongchau.com.vn/v1/static/kem_boi_da_silkron_dongkwang_10g_00006704_1_59ea24d6cd.png',
+    'Systane Ultra': 'https://cdn.nhathuoclongchau.com.vn/v1/static/systane_ultra_a76ef7b346.jpg',
+    'Otrivin': 'https://cdn.nhathuoclongchau.com.vn/v1/static/DSC_01990_8fbfae866d.jpg',
+    'Telfast': 'https://cdn.nhathuoclongchau.com.vn/v1/static/1_467af3daf4.png',
+    'Clarityne': 'https://cdn.nhathuoclongchau.com.vn/v1/static/thuoc_clarityne_10mg_bayer_1x10_00049431_9ed3fc6265.png',
+    'Prospan': 'https://cdn.nhathuoclongchau.com.vn/v1/static/00006137_prospan_100ml_9655_5c68_large_ad5603e714.jpg',
+    'Astex': 'https://cdn.nhathuoclongchau.com.vn/v1/static/DSC_09091_c011071423.jpg',
+    'Bảo Thanh': 'https://cdn.nhathuoclongchau.com.vn/v1/static/DSC_09075_a2549abf26.png',
+    'Glucosamine': 'https://cdn.nhathuoclongchau.com.vn/v1/static/thuoc_glucosamine_stada_1500mg_sachet_30_goi_00033098_b66b8e113b.png',
+    'Boganic': 'https://cdn.nhathuoclongchau.com.vn/v1/static/VIEN_UONG_HO_TRO_BO_GAN_GIAI_DOC_GAN_BOGANIC_PREMIUM_TRAPHACO_60_V_00050786_1_f9e9211160.jpg',
+    'huyết áp Omron': 'https://cdn.nhathuoclongchau.com.vn/v1/static/MAY_DO_HUYET_AP_BAP_TAY_OMRON_EZ_HEM_7183_HO_TRO_DO_HUYET_AP_NHIP_TIM_00050892_1_2073a34ed6.png',
+    'Omron': 'https://cdn.nhathuoclongchau.com.vn/v1/static/MAY_DO_HUYET_AP_BAP_TAY_OMRON_EZ_HEM_7183_HO_TRO_DO_HUYET_AP_NHIP_TIM_00050892_1_2073a34ed6.png',
+    'Nhiệt kế': 'https://cdn.nhathuoclongchau.com.vn/v1/static/DSC_09751_ac0903b1b2.jpg',
+    'đường huyết': 'https://cdn.nhathuoclongchau.com.vn/v1/static/DSC_07705_0bbb7e7647.jpg',
+    'Amlor': 'https://cdn.nhathuoclongchau.com.vn/v1/static/1_c355de241c.jpg',
+    'Maalox': 'https://cdn.nhathuoclongchau.com.vn/v1/static/hon_dich_uong_phosphalugel_26_goi_x_20g_sanofi_00005924_510123ad08.jpg',
+    'Vitamin C': 'https://cdn.nhathuoclongchau.com.vn/v1/static/IMG_1758_33831b7cab.jpg',
+    'Oresol': 'https://cdn.nhathuoclongchau.com.vn/v1/static/bot_hapacol_250_dhg_giam_dau_ha_sot_24_goi_00003627_3_cb4b38b2df.png',
+    'Cetaphil': 'https://cdn.nhathuoclongchau.com.vn/v1/static/00503325_sua_rua_mat_ngua_mun_duong_am_va_lam_sang_da_reihaku_hatomugi_acne_care_and_facial_washing_130g_9270_63ed_large_3f5868bde7.jpg',
+    'Listerine': 'https://cdn.nhathuoclongchau.com.vn/v1/static/chai_xit_nhiet_mieng_tay_chan_mieng_aloclair_plus_15ml_00502899_1_b6e114616e.jpg',
+    'ColosBaby': 'https://cdn.nhathuoclongchau.com.vn/v1/static/Vien_ho_tro_phat_trien_nao_bo_suc_khoe_cho_mat_Brauer_Baby_and_Kids_Ultra_Pure_DHA_00033687_79d080f5b6.png',
+    'Omega 3': 'https://cdn.nhathuoclongchau.com.vn/v1/static/Vien_ho_tro_phat_trien_nao_bo_suc_khoe_cho_mat_Brauer_Baby_and_Kids_Ultra_Pure_DHA_00033687_79d080f5b6.png'
+};
+
+const DEFAULT_MEDICINE_ICON = 'https://cdn-icons-png.flaticon.com/512/8687/8687597.png';
+
+function getValidMedicineImage(item) {
+    if (!item) return DEFAULT_MEDICINE_ICON;
+    const raw = item.imageUrl || item.image || item.hinhAnh;
+    if (raw && raw.startsWith('https://cdn.nhathuoclongchau.com.vn/v1/static/')) {
+        return raw;
+    }
+    const name = item.name || item.tenThuoc || '';
+    for (const [key, url] of Object.entries(VIETNAM_DRUG_IMAGES)) {
+        if (name.toLowerCase().includes(key.toLowerCase())) {
+            return url;
+        }
+    }
+    return (raw && !raw.includes('/unsafe/') && !raw.includes('unsplash.com')) ? raw : DEFAULT_MEDICINE_ICON;
+}
+
 const Shop = {
     allProducts: [],
     categories: [],
@@ -10,6 +70,9 @@ const Shop = {
     currentCategory: null,
 
     init: async function() {
+        if (typeof MockData !== 'undefined' && MockData.initialize) {
+            MockData.initialize();
+        }
         if (typeof App !== 'undefined' && App.init) {
             App.init();
         }
@@ -35,31 +98,59 @@ const Shop = {
         try {
             App.showLoading();
             const res = await API.get('/api/thuoc');
-            const list = res.data || res || [];
-            this.allProducts = list.map(item => ({
-                id: item.maThuoc || item.id,
-                dbId: item.id,
-                name: item.tenThuoc,
-                category: item.danhMucThuoc?.tenDanhMuc || item.danhMuc || 'Khác',
-                price: Number(item.giaBan),
-                oldPrice: Number(item.giaBan) * 1.2,
-                discount: 0,
-                rating: 5,
-                sold: 0,
-                stock: item.loTonKho ? item.loTonKho.reduce((sum, lo) => sum + lo.soLuongTon, 0) : (item.tonKho || 0),
-                minStock: item.tonKhoToiThieu || 5,
-                unit: item.donViTinh || 'Viên',
-                activeIngredient: item.hoatChat || '',
-                dosage: item.hamLuong || '',
-                imageUrl: item.hinhAnh,
-                brand: 'AINA Pharmacy'
+            const list = Array.isArray(res) ? res : (res && res.data ? res.data : []);
+            if (list && list.length > 0) {
+                this.allProducts = list.map(item => ({
+                    id: item.id || item.maThuoc,
+                    dbId: item.id || item.maThuoc,
+                    maThuoc: item.maThuoc || String(item.id),
+                    name: item.tenThuoc || item.name,
+                    category: item.danhMucThuoc?.tenDanhMuc || item.danhMuc || item.category || 'Khác',
+                    price: Number(item.giaBan || item.price || 0),
+                    oldPrice: Number(item.giaBan || item.price || 0) * 1.2,
+                    discount: 0,
+                    rating: 5,
+                    sold: 0,
+                    stock: item.loTonKho ? item.loTonKho.reduce((sum, lo) => sum + (lo.soLuongTon || 0), 0) : (item.tonKho !== undefined ? item.tonKho : (item.stock || 0)),
+                    minStock: item.tonKhoToiThieu || 5,
+                    unit: item.donViTinh || item.unit || 'Viên',
+                    activeIngredient: item.hoatChat || item.activeIngredient || '',
+                    dosage: item.hamLuong || item.dosage || '',
+                    imageUrl: getValidMedicineImage(item),
+                    brand: 'AINA Pharmacy'
+                }));
+            } else {
+                throw new Error('Danh sách API rỗng');
+            }
+        } catch (e) {
+            console.error('Dùng dữ liệu sản phẩm dự phòng cho Shop:', e);
+            if (typeof MockData !== 'undefined' && MockData.initialize) {
+                MockData.initialize();
+            }
+            const local = Storage.get('products') || (typeof MockData !== 'undefined' ? Storage.get('products') : []);
+            const rawList = (local && local.length > 0) ? local : (typeof MOCK_PRODUCTS !== 'undefined' ? MOCK_PRODUCTS : []);
+            this.allProducts = rawList.map(item => ({
+                id: item.id || item.dbId || item.maThuoc,
+                dbId: item.id || item.dbId || item.maThuoc,
+                maThuoc: item.maThuoc || item.id,
+                name: item.name || item.tenThuoc,
+                category: item.category || item.danhMuc || 'Khác',
+                price: Number(item.price || item.giaBan) || 0,
+                oldPrice: Number(item.oldPrice || item.price) || 0,
+                discount: item.discount || 0,
+                rating: item.rating || 5,
+                sold: item.sold || 0,
+                stock: item.stock !== undefined ? item.stock : 10,
+                minStock: 5,
+                unit: item.unit || item.donViTinh || 'Hộp',
+                activeIngredient: item.activeIngredient || item.hoatChat || '',
+                dosage: item.dosage || item.hamLuong || '',
+                imageUrl: getValidMedicineImage(item),
+                brand: item.brand || 'AINA Pharmacy'
             }));
+        } finally {
             this.filteredProducts = [...this.allProducts];
             this.renderProducts();
-        } catch (e) {
-            console.error('Lỗi khi tải danh sách thuốc:', e);
-            App.showToast('Lỗi khi tải danh sách thuốc!', 'error');
-        } finally {
             App.hideLoading();
         }
     },
@@ -230,10 +321,11 @@ const Shop = {
                 if (matches.length > 0) {
                     let html = '';
                     matches.forEach(p => {
-                        const imgSrc = p.imageUrl || 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22300%22%20height%3D%22300%22%20viewBox%3D%220%200%20300%20300%22%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22%23f3f4f6%22%2F%3E%3Ctext%20x%3D%22150%22%20y%3D%22150%22%20font-family%3D%22sans-serif%22%20font-size%3D%2216%22%20fill%3D%22%239ca3af%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ECh%C6%B0a%20c%C3%B3%20%E1%BA%A3nh%3C%2Ftext%3E%3C%2Fsvg%3E';
+                        const imgSrc = getValidMedicineImage(p);
+                        const pId = p.id || p.dbId || p.maThuoc;
                         html += `
-                            <a href="shop-detail.html?id=${p.dbId}" class="search-dropdown-item">
-                                <img src="${imgSrc}" class="search-dropdown-img" alt="${p.name}">
+                            <a href="javascript:void(0)" onclick="goToProductDetail('${pId}')" class="search-dropdown-item">
+                                <img src="${imgSrc}" class="search-dropdown-img" alt="${p.name}" onerror="this.onerror=null;this.src='${DEFAULT_MEDICINE_ICON}';">
                                 <div class="search-dropdown-info">
                                     <div class="search-dropdown-name">${p.name}</div>
                                     <div class="search-dropdown-price">${App.formatCurrency(p.price)}</div>
@@ -376,7 +468,7 @@ const Shop = {
     },
 
     renderProducts: function() {
-        const grid = document.getElementById('product-grid');
+        const grid = document.getElementById('product-grid') || document.getElementById('products-grid');
         if (!grid) return;
 
         if (this.filteredProducts.length === 0) {
@@ -400,12 +492,13 @@ const Shop = {
                 stockHtml = `<div style="color: #f59e0b; font-size: 0.75rem; margin-bottom: 4px;">Chỉ còn ${p.stock} sp</div>`;
             }
 
-            const imgSrc = p.imageUrl || 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22300%22%20height%3D%22300%22%20viewBox%3D%220%200%20300%20300%22%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22%23f3f4f6%22%2F%3E%3Ctext%20x%3D%22150%22%20y%3D%22150%22%20font-family%3D%22sans-serif%22%20font-size%3D%2216%22%20fill%3D%22%239ca3af%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ECh%C6%B0a%20c%C3%B3%20%E1%BA%A3nh%3C%2Ftext%3E%3C%2Fsvg%3E';
+            const pId = p.id || p.dbId || p.maThuoc;
+            const imgSrc = getValidMedicineImage(p);
             html += `
                 <div class="product-card">
-                    <img src="${imgSrc}" alt="${p.name}" class="product-image" onclick="location.href='shop-detail.html?id=${p.dbId}'" style="cursor:pointer; object-fit: cover;">
+                    <img src="${imgSrc}" alt="${p.name}" class="product-image" onclick="goToProductDetail('${pId}')" onerror="this.onerror=null;this.src='${DEFAULT_MEDICINE_ICON}'; onerror=null;" style="cursor:pointer; object-fit: cover;">
                     <div class="product-brand">${p.category || 'Khác'}</div>
-                    <div class="product-name" title="${p.name}" onclick="location.href='shop-detail.html?id=${p.dbId}'" style="cursor:pointer;">${p.name}</div>
+                    <div class="product-name" title="${p.name}" onclick="goToProductDetail('${pId}')" style="cursor:pointer;">${p.name}</div>
                     
                     <div class="product-rating">
                         ★★★★★ <span style="color:var(--shop-text-muted); font-size: 0.75rem;">5.0</span>
@@ -418,7 +511,7 @@ const Shop = {
                     </div>
 
                     <div class="product-actions">
-                        <button class="btn-add-cart" ${btnDisabled} onclick="Cart.add(${p.dbId}, 1, event)">
+                        <button class="btn-add-cart" ${btnDisabled} onclick="Cart.add('${pId}', 1, event)">
                             ${p.stock === 0 ? 'Hết hàng' : 'Thêm vào giỏ'}
                         </button>
                     </div>

@@ -1,6 +1,4 @@
-/**
- * Module Bán Hàng (POS) - Kết nối Backend API
- */
+
 const POS = {
     cart: [],
     products: [],
@@ -331,12 +329,10 @@ const POS = {
             const createdInvoice = await API.post('/api/hoa-don', payload);
             
             App.showToast('Thanh toán thành công! Hóa đơn #' + createdInvoice.id, 'success');
-            
-            // Re-fetch products to update stock
+
             await this.loadData();
             this.renderProducts();
-            
-            // Show printable invoice
+
             this.showInvoice(createdInvoice);
             this.clearCart();
         } catch (error) {

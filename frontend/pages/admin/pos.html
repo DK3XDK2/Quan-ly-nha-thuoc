@@ -15,13 +15,13 @@
     <link rel="stylesheet" href="../../css/responsive.css">
     <style>
         .page-content {
-            padding: 0; /* Remove default padding for full height POS */
+            padding: 0; 
             display: flex;
             height: calc(100vh - var(--header-height));
             overflow: hidden;
         }
 
-        /* Left Column: Products */
+        
         .pos-products-section {
             flex: 1;
             display: flex;
@@ -149,7 +149,7 @@
             font-size: 1.15rem;
         }
 
-        /* Right Column: Cart */
+        
         .pos-cart-section {
             width: 360px;
             display: flex;
@@ -279,7 +279,7 @@
             color: var(--border-color);
         }
 
-        /* Invoice Modal Print style */
+        
         .invoice-print {
             text-align: center;
             font-family: monospace;
@@ -326,7 +326,7 @@
                 border-top: 2px solid var(--primary-color);
             }
             .product-grid {
-                max-height: 50vh; /* Allow some space for cart */
+                max-height: 50vh; 
             }
         }
     </style>
@@ -334,18 +334,18 @@
 <body>
 
     <div class="app-container">
-        <!-- Sidebar -->
+        
         <aside class="app-sidebar" id="app-sidebar"></aside>
 
-        <!-- Main Content -->
+        
         <main class="app-main">
-            <!-- Header -->
+            
             <header class="app-header" id="app-header"></header>
 
-            <!-- Page Content -->
+            
             <div class="page-content">
                 
-                <!-- Left: Products -->
+                
                 <div class="pos-products-section">
                     <div class="pos-toolbar">
                         <div class="search-wrapper">
@@ -366,17 +366,17 @@
                     </div>
 
                     <div class="product-grid" id="product-grid">
-                        <!-- Products will be rendered here by pos.js -->
+                        
                     </div>
                 </div>
 
-                <!-- Right: Cart -->
+                
                 <div class="pos-cart-section">
                     <div class="cart-customer">
                         <i class="fa-solid fa-user-circle text-muted" style="font-size: 1.5rem;"></i>
                         <select class="form-control" id="customer-select" style="flex: 1; border: none; background: transparent; padding: 0; font-weight: 600;">
                             <option value="GUEST">Khách lẻ</option>
-                            <!-- Customers injected by JS -->
+                            
                         </select>
                         <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;" title="Thêm khách mới" onclick="POS.showAddCustomerModal()">
                             <i class="fa-solid fa-user-plus"></i>
@@ -420,7 +420,7 @@
         </main>
     </div>
 
-    <!-- Add Customer Modal -->
+    
     <div class="modal-overlay" id="add-customer-modal">
         <div class="modal" style="max-width: 400px;">
             <div class="modal-header">
@@ -444,7 +444,7 @@
         </div>
     </div>
 
-    <!-- Payment Modal -->
+    
     <div class="modal-overlay" id="payment-modal">
         <div class="modal" style="max-width: 400px;">
             <div class="modal-header">
@@ -482,7 +482,7 @@
         </div>
     </div>
 
-    <!-- Invoice Modal -->
+    
     <div class="modal-overlay" id="invoice-modal">
         <div class="modal">
             <div class="modal-header">
@@ -491,7 +491,7 @@
             </div>
             <div class="modal-body">
                 <div class="invoice-print" id="invoice-content">
-                    <!-- Invoice content injected here -->
+                    
                 </div>
             </div>
             <div class="modal-footer">
@@ -501,7 +501,7 @@
         </div>
     </div>
 
-    <!-- Scripts -->
+    
     <script src="../../js/storage.js"></script>
     <script src="../../js/api.js"></script>
     <script src="../../js/auth.js"></script>
@@ -510,24 +510,24 @@
     <script src="../../js/components.js"></script>
     <script src="../../js/pos.js"></script>
     <script>
-        // Yêu cầu đăng nhập & quyền truy cập POS
+
         Auth.requireAuth();
         if(!Auth.hasPermission('pos')) {
             window.location.href = 'dashboard.html';
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Render Layout
+
             Layout.renderSidebar('pos');
             Layout.renderHeader('Bán hàng (POS)');
             
-            // Khởi tạo logic POS
+
             POS.init();
         });
         
         function closeInvoiceModal() {
             document.getElementById('invoice-modal').classList.remove('active');
-            POS.clearCart(); // Clear after closing success modal
+            POS.clearCart();
         }
         
         function closePaymentModal() {
@@ -539,7 +539,7 @@
         }
         
         function printInvoice() {
-            // Mock printing
+
             window.print();
         }
     </script>

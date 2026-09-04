@@ -1,13 +1,10 @@
-/**
- * Kiến trúc Mock AI Service
- * Sau này sẽ được thay thế bởi API call tới Node.js -> Gemini
- */
+
 const aiService = {
-    // Giả lập API delay
+
     delay: (ms) => new Promise(res => setTimeout(res, ms)),
 
     ask: async function(query) {
-        await this.delay(1000 + Math.random() * 1000); // 1-2 giây delay
+        await this.delay(1000 + Math.random() * 1000);
         const q = query.toLowerCase();
         
         let products = await API.get('/api/thuoc').catch(() => null);
@@ -31,7 +28,6 @@ const aiService = {
             allOrders = (Storage.get('orders') || []).map(o => ({ status: o.status, total: o.summary?.total || 0 }));
         }
 
-        // Logic phân tích thô sơ (Mock Gemini)
         if (q.includes('hết hạn') || q.includes('hạn sử dụng')) {
             const today = new Date();
             const expired = products.filter(p => new Date(p.expiryDate) < today);
@@ -84,17 +80,14 @@ const AI = {
             expiryDate: p.hanSuDung || p.expiryDate
         }));
         const today = new Date();
-        
-        // Expiry alert
+
         const expSoon = products.filter(p => {
             const d = (new Date(p.expiryDate) - today) / 86400000;
             return d > 0 && d <= 30;
         });
 
-        // Stock alert
         const outOfStock = products.filter(p => p.stock === 0);
 
-        // Sales insight (mock logic)
         let html = `
             <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 8px;">AI Insights Dashboard</h3>
         `;
@@ -161,15 +154,14 @@ const AI = {
         if (!query) return;
 
         input.value = '';
-        input.style.height = 'auto'; // reset height
+        input.style.height = 'auto';
 
         this.appendMessage('user', query);
         this.showTyping();
 
-        // Simulate API call
         aiService.ask(query).then(response => {
             this.hideTyping();
-            // Convert markdown-like bold to HTML for simple rendering
+
             const htmlRes = response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             this.appendMessage('ai', htmlRes);
         });

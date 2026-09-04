@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Environment Variables (IMPORTANT: Security)
+.env
+.env.local
+
+# Database related
+/prisma/migrations/
+*.db
+*.db-journal
+
+# Maintenance scripts and experiments
+scripts/
+scratch/
+seed.js
+check_*.js
+fix_*.js
+debug_*.js
+force_*.js
+sync_ai_names.js
+update_images.js
+purge_*.js
+find_bao.js
+
+# Logs and system files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store

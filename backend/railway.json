@@ -1,0 +1,11 @@
+{
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "npm install"
+  },
+  "deploy": {
+    "startCommand": "npx prisma generate && npx prisma migrate deploy && node src/server.js",
+    "healthcheckPath": "/",
+    "healthcheckTimeout": 30
+  }
+}

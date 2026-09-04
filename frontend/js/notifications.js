@@ -21,7 +21,6 @@ const Notifications = {
             const stock = p.loTonKho ? p.loTonKho.reduce((sum, lo) => sum + lo.soLuongTon, 0) : (p.tonKho || p.stock || 0);
             const minStock = p.tonKhoToiThieu || p.minStock || 5;
 
-            // Check out of stock
             if (stock === 0) {
                 this.alerts.push({
                     type: 'danger',
@@ -40,7 +39,6 @@ const Notifications = {
                 });
             }
 
-            // Check expiry
             const expStr = p.hanSuDung || p.expiryDate;
             if (expStr) {
                 const expDate = new Date(expStr);

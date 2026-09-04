@@ -1,12 +1,9 @@
-/**
- * Global AI Assistant for B2C Shop (AINA)
- * Advanced AI Character with animations and context-awareness
- */
+
 const ShopAI = {
     init: function() {
         this.buildUI();
         this.buildFooter();
-        // Trigger initial contextual greeting after a short delay
+
         setTimeout(() => {
             this.showContextTooltip();
         }, 2000);
@@ -208,7 +205,7 @@ const ShopAI = {
             return 'Bạn đang xem chi tiết sản phẩm. Bạn có thắc mắc gì về công dụng hay cách dùng không?';
         } else if(path.includes('checkout')) {
             return 'Bạn đang ở bước thanh toán. Nếu gặp khó khăn khi nhập thông tin, hãy cho tôi biết nhé!';
-        } else if(path.includes('shop.html')) {
+        } else if(path.includes('index.html')) {
             return 'Bạn muốn tìm sản phẩm nào, hay cần gợi ý danh mục nổi bật hôm nay?';
         } else if(path.includes('wishlist')) {
             return 'Danh sách yêu thích của bạn tuyệt quá! Cần thông tin thêm về sản phẩm nào không?';
@@ -223,7 +220,7 @@ const ShopAI = {
             tt.style.display = 'block';
             setTimeout(() => {
                 tt.style.display = 'none';
-            }, 8000); // Hide after 8s
+            }, 8000);
         }
     },
 
@@ -233,7 +230,7 @@ const ShopAI = {
         if(win.style.display === 'none' || win.style.display === '') {
             win.style.display = 'flex';
             if(tt) tt.style.display = 'none';
-            // Scroll to bottom
+
             const chat = document.getElementById('shop-ai-messages');
             chat.scrollTop = chat.scrollHeight;
         } else {
@@ -255,7 +252,6 @@ const ShopAI = {
         this.appendMsg('user', text);
         this.appendTyping();
 
-        // Simulate API delay algorithm based on text length
         const delay = 800 + Math.random() * 500 + (text.length * 10);
         setTimeout(() => {
             this.removeTyping();
@@ -290,8 +286,7 @@ const ShopAI = {
                 <div style="width:6px; height:6px; background:#94a3b8; border-radius:50%; animation:fade 1s infinite alternate; animation-delay:0.4s;"></div>
             </div>
         `;
-        
-        // Add fade keyframes if not exists
+
         if(!document.getElementById('aina-typing-style')) {
             const style = document.createElement('style');
             style.id = 'aina-typing-style';
@@ -310,16 +305,14 @@ const ShopAI = {
 
     processQuery: function(q) {
         const products = Storage.get('products') || [];
+
         
-        // Advanced contextual algorithms for AINA
-        
-        // 1. Strict Check for medical advice
+
         if (q.includes('chữa bệnh') || q.includes('đơn thuốc') || q.includes('điều trị') || q.includes('kê đơn') || q.includes('uống thế nào để khỏi')) {
             this.appendMsg('ai', '⚠️ Xin lỗi, AINA được lập trình để cung cấp thông tin sản phẩm và <strong>không được phép chẩn đoán, tư vấn điều trị hay kê đơn thuốc</strong> thay cho bác sĩ. Vui lòng đến cơ sở y tế gần nhất hoặc liên hệ dược sĩ chuyên môn để được tư vấn chính xác.');
             return;
         }
 
-        // 2. Search for pain relievers
         if (q.includes('đau đầu') || q.includes('giảm đau') || q.includes('nhức đầu')) {
             const match = products.find(p => p.name.toLowerCase().includes('panadol') || p.category.includes('Giảm đau'));
             if(match) {
@@ -328,7 +321,6 @@ const ShopAI = {
             }
         }
 
-        // 3. Search for vitamins
         if (q.includes('vitamin') || q.includes('đề kháng') || q.includes('miễn dịch')) {
             const matches = products.filter(p => p.name.toLowerCase().includes('vitamin'));
             if(matches.length > 0) {
@@ -337,7 +329,6 @@ const ShopAI = {
             }
         }
 
-        // 4. Search for promotions
         if (q.includes('khuyến mãi') || q.includes('giảm giá') || q.includes('sale')) {
             const matches = products.filter(p => p.discount > 0);
             if(matches.length > 0) {
@@ -346,8 +337,7 @@ const ShopAI = {
             }
         }
 
-        // 5. Fallback logic - Basic product search
-        const found = products.find(p => q.includes(p.name.toLowerCase().split(' ')[0])); // Simple match on first word
+        const found = products.find(p => q.includes(p.name.toLowerCase().split(' ')[0]));
         if (found) {
              this.appendMsg('ai', `AINA tìm thấy sản phẩm <strong>${found.name}</strong> (${App.formatCurrency(found.price)}) phù hợp với câu hỏi của bạn.<br><br><a href="shop-detail.html?id=${found.id}" style="display:inline-block; margin-top:8px; padding:6px 12px; background:#eff6ff; color:#2563eb; border-radius:15px; text-decoration:none; font-weight:600; font-size:0.85rem;">Xem ngay</a>`);
              return;

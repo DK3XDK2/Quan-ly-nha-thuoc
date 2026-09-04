@@ -1,0 +1,13 @@
+{
+  "cleanUrls": false,
+  "trailingSlash": true,
+  "redirects": [
+    { "source": "/admin/login", "destination": "/pages/admin/login.html" },
+    { "source": "/admin", "destination": "/pages/admin/dashboard.html" },
+    { "source": "/login", "destination": "/pages/public/shop-login.html" },
+    { "source": "/shop", "destination": "/pages/public/index.html" },
+    { "source": "/public/:slug", "destination": "/pages/public/:slug.html" },
+    { "source": "/customer/:slug", "destination": "/pages/customer/:slug.html" },
+    { "source": "/admin/:slug", "destination": "/pages/admin/:slug.html" }
+  ]
+}

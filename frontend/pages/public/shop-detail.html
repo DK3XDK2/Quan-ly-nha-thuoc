@@ -106,7 +106,7 @@
         }
         .p-btn-buy:hover { background: var(--shop-secondary); }
 
-        /* Tabs */
+        
         .tabs {
             display: flex;
             border-bottom: 1px solid var(--shop-border);
@@ -246,23 +246,34 @@
             color: #ef4444;
             border-color: #fca5a5;
         }
+
+        @keyframes skeletonPulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        .skeleton-box {
+            background: #e2e8f0;
+            border-radius: 8px;
+            animation: skeletonPulse 1.5s infinite ease-in-out;
+        }
     </style>
 </head>
 <body class="shop-layout">
 
     <header class="shop-header">
         <div class="shop-header-top">
-            <a href="shop.html" class="shop-logo"><img src="../../assets/images/ainalogo.png" class="shop-logo-img" onerror="this.src='https://cdn-icons-png.flaticon.com/512/8687/8687597.png'" alt="Logo">
+            <a href="index.html" class="shop-logo"><img src="../../assets/images/ainalogo.png" class="shop-logo-img" onerror="this.src='https://cdn-icons-png.flaticon.com/512/8687/8687597.png'" alt="Logo">
                 <div class="shop-logo-text">
                     <span class="shop-logo-top">NHÀ THUỐC</span>
                     <span class="shop-logo-bottom">AINA</span>
                 </div></a>
             <div class="shop-search-bar">
-                <input type="text" id="shop-search-input" placeholder="Tìm kiếm thuốc, sản phẩm, hoạt chất..." onkeypress="if(event.key === 'Enter') window.location.href='shop.html'">
-                <button onclick="window.location.href='shop.html'"><i class="fa-solid fa-magnifying-glass"></i></button>
+                <input type="text" id="shop-search-input" placeholder="Tìm kiếm thuốc, sản phẩm, hoạt chất..." onkeypress="if(event.key === 'Enter') window.location.href='index.html'">
+                <button onclick="window.location.href='index.html'"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
             <div class="shop-header-actions">
-                <a href="../public/shop-login.html" class="shop-action-btn" id="btn-nav-login"><i class="fa-solid fa-right-to-bracket"></i><span>Đăng nhập</span></a>
+                <a href="shop-login.html" class="shop-action-btn" id="btn-nav-login"><i class="fa-solid fa-right-to-bracket"></i><span>Đăng nhập</span></a>
                 <a href="../customer/shop-account.html" class="shop-action-btn" id="btn-nav-account" style="display: none;"><i class="fa-solid fa-user"></i><span>Tài khoản</span></a>
                 <a href="../customer/wishlist.html" class="shop-action-btn"><i class="fa-solid fa-heart"></i><span>Yêu thích</span><span class="shop-cart-badge" id="wishlist-count" style="display: none;">0</span></a>
                 <a href="#" class="shop-action-btn" onclick="Cart.toggleDrawer(event)"><i class="fa-solid fa-cart-shopping"></i><span>Giỏ hàng</span><span class="shop-cart-badge" id="cart-count">0</span></a>
@@ -272,14 +283,24 @@
 
     <div class="shop-container">
         <div class="breadcrumb">
-            <a href="shop.html">Trang chủ</a> > <a href="#" id="bc-cat">Danh mục</a> > <span id="bc-name">Sản phẩm</span>
+            <a href="index.html">Trang chủ</a> > <a href="#" id="bc-cat">Danh mục</a> > <span id="bc-name">Sản phẩm</span>
         </div>
 
         <div id="product-detail-container">
-            <!-- Injected by JS -->
+            <div class="product-detail-grid" style="grid-template-columns: 1fr 1fr; gap: 3rem; background: var(--shop-surface); padding: 2rem; border-radius: var(--shop-radius); margin-bottom: 2rem;">
+                <div class="skeleton-box" style="width: 100%; aspect-ratio: 1; border-radius: 16px;"></div>
+                <div style="display: flex; flex-direction: column; gap: 1rem; justify-content: center;">
+                    <div class="skeleton-box" style="width: 40%; height: 20px;"></div>
+                    <div class="skeleton-box" style="width: 85%; height: 36px;"></div>
+                    <div class="skeleton-box" style="width: 30%; height: 24px;"></div>
+                    <div class="skeleton-box" style="width: 60%; height: 20px;"></div>
+                    <div class="skeleton-box" style="width: 100%; height: 70px; margin-top: 1rem;"></div>
+                    <div class="skeleton-box" style="width: 100%; height: 48px; margin-top: 1rem;"></div>
+                </div>
+            </div>
         </div>
 
-        <div style="background: var(--shop-surface); padding: 2rem; border-radius: var(--shop-radius); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div id="product-tabs-section" style="display: none; background: var(--shop-surface); padding: 2rem; border-radius: var(--shop-radius); box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 2rem;">
             <div class="tabs">
                 <button class="tab-btn active" onclick="openTab('desc')">Mô tả sản phẩm</button>
                 <button class="tab-btn" onclick="openTab('ingredient')">Thành phần</button>
@@ -290,7 +311,7 @@
             <div id="tab-usage" class="tab-content"></div>
         </div>
 
-        <!-- Related Products Section -->
+        
         <div class="product-slider-section" id="related-section" style="margin-top: 3.5rem;">
             <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
                 <i class="fa-solid fa-layer-group" style="color: var(--shop-primary);"></i> Sản phẩm liên quan
@@ -305,8 +326,9 @@
         </div>
     </div>
 
-    <!-- Scripts -->
+    
     <script src="../../js/storage.js"></script>
+    <script src="../../js/mock-data.js"></script>
     <script src="../../js/api.js"></script>
     <script src="../../js/app.js"></script>
     <script src="../../js/cart.js"></script>
@@ -319,61 +341,126 @@
             let allProducts = [];
             try {
                 const res = await API.get('/api/thuoc');
-                if (res && res.data) {
-                    allProducts = res.data.map(item => ({
-                        id: item.id || item.maThuoc,
-                        name: item.tenThuoc,
-                        category: item.danhMuc || item.nhomThuoc || 'Thuốc',
-                        price: Number(item.giaBan) || 0,
-                        stock: item.tonKho !== undefined ? item.tonKho : (item.loThuoc ? item.loThuoc.reduce((s, l) => s + (l.soLuongTon || 0), 0) : 0),
-                        unit: item.donViTinh || 'Hộp',
-                        image: item.hinhAnh,
-                        brand: item.nhanHieu || 'AINA',
-                        rating: 5,
-                        sold: 10,
-                        description: item.mota || item.hoatChat || 'Sản phẩm chính hãng AINA Pharmacy.',
-                        ingredient: item.hoatChat || 'Theo hướng dẫn trên bao bì.',
-                        usage: item.hieuLuc || 'Theo chỉ định của dược sĩ/bác sĩ.'
-                    }));
+                const list = Array.isArray(res) ? res : (res && res.data ? res.data : []);
+                if (list && list.length > 0) {
+                    allProducts = list.map(item => {
+                        const stockCount = item.loTonKho ? item.loTonKho.reduce((s, l) => s + (l.soLuongTon || 0), 0) : (item.tonKho !== undefined ? item.tonKho : 0);
+                        const isRx = !!item.canDonThuoc;
+                        return {
+                            id: item.id,
+                            dbId: item.id,
+                            maThuoc: item.maThuoc || String(item.id),
+                            name: item.tenThuoc,
+                            category: item.danhMucThuoc?.tenDanhMuc || item.danhMuc || item.nhomThuoc || 'Thuốc',
+                            price: Number(item.giaBan) || 0,
+                            stock: stockCount,
+                            unit: item.donViTinh || 'Hộp',
+                            image: item.hinhAnh,
+                            brand: 'AINA Pharmacy',
+                            activeIngredient: item.hoatChat || '',
+                            dosage: item.hamLuong || '',
+                            isRx: isRx,
+                            rating: 5,
+                            sold: 10,
+                            description: item.mota || (item.hoatChat ? `Sản phẩm điều trị/hỗ trợ sức khỏe chứa thành phần <strong>${item.hoatChat}</strong>${item.hamLuong ? ' (hàm lượng ' + item.hamLuong + ')' : ''}. Được kiểm định chất lượng tại Nhà thuốc AINA Pharmacy.` : 'Sản phẩm chính hãng AINA Pharmacy.'),
+                            ingredient: item.hoatChat ? `<strong>Hoạt chất chính:</strong> ${item.hoatChat} ${item.hamLuong || ''}<br><strong>Dạng bào chế / Quy cách:</strong> ${item.donViTinh || 'Hộp'}` : 'Chi tiết thành phần và hàm lượng được in trên bao bì sản phẩm.',
+                            usage: item.hieuLuc || (isRx ? '<span style="color:#dc2626; font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> Thuốc kê đơn:</span> Chỉ sử dụng theo chỉ định và liều dùng của bác sĩ/dược sĩ chuyên môn.' : '<span style="color:#16a34a; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Thuốc không kê đơn (OTC):</span> Đọc kỹ hướng dẫn sử dụng ghi trên nhãn trước khi dùng.')
+                        };
+                    });
                 }
             } catch (err) {
-                console.error('Lỗi tải thuốc:', err);
-                allProducts = Storage.get('products') || [];
+                console.error('Lỗi tải thuốc từ Backend API:', err);
             }
 
-            const p = allProducts.find(x => String(x.id) === String(id));
+
+            if (allProducts.length === 0) {
+                const local = Storage.get('products') || (typeof MOCK_PRODUCTS !== 'undefined' ? MOCK_PRODUCTS : []);
+                allProducts = local.map(item => ({
+                    id: item.id || item.dbId || item.maThuoc,
+                    dbId: item.id || item.dbId || item.maThuoc,
+                    maThuoc: item.maThuoc || item.id,
+                    name: item.name || item.tenThuoc,
+                    category: item.category || item.danhMuc || 'Thuốc',
+                    price: Number(item.price || item.giaBan) || 0,
+                    stock: item.stock !== undefined ? item.stock : 10,
+                    unit: item.unit || item.donViTinh || 'Hộp',
+                    image: item.image || item.imageUrl || item.hinhAnh,
+                    brand: item.brand || 'AINA Pharmacy',
+                    activeIngredient: item.activeIngredient || item.hoatChat || '',
+                    dosage: item.dosage || item.hamLuong || '',
+                    isRx: !!item.isRx,
+                    rating: 5,
+                    sold: 10,
+                    description: item.description || item.mota || 'Sản phẩm chính hãng AINA Pharmacy.',
+                    ingredient: item.ingredient || item.hoatChat || 'Chi tiết ghi trên bao bì.',
+                    usage: item.usage || 'Đọc kỹ hướng dẫn trước khi dùng.'
+                }));
+            }
+
+            let p = null;
+            let targetId = (id && id !== 'undefined' && id !== 'null') ? id.trim() : null;
+            if (!targetId) {
+                targetId = localStorage.getItem('selectedProductId');
+            }
+
+            if (targetId) {
+                p = allProducts.find(x => 
+                    String(x.id) === String(targetId) || 
+                    String(x.maThuoc) === String(targetId) || 
+                    String(x.dbId) === String(targetId) ||
+                    (x.name && x.name.toLowerCase().trim() === decodeURIComponent(targetId).toLowerCase().trim())
+                );
+            }
 
             if (!p) {
-                document.getElementById('product-detail-container').innerHTML = `<h2 style="padding:2rem;">Sản phẩm không tồn tại</h2>`;
+                const tabsSec = document.getElementById('product-tabs-section');
+                if (tabsSec) tabsSec.style.display = 'none';
+                document.getElementById('product-detail-container').innerHTML = `
+                    <div style="padding:4rem 2rem; text-align:center; background:white; border-radius:16px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                        <i class="fa-solid fa-box-open" style="font-size:3.5rem; color:#cbd5e1; margin-bottom:1.2rem;"></i>
+                        <h2 style="color:#1e293b; font-size:1.4rem; font-weight:700; margin-bottom:0.5rem;">Sản phẩm không tồn tại hoặc chưa được chọn</h2>
+                        <p style="color:#64748b; font-size:0.95rem; margin-bottom:1.5rem;">Vui lòng chọn một sản phẩm từ Cửa hàng để xem chi tiết đầy đủ.</p>
+                        <a href="index.html" style="display:inline-flex; align-items:center; gap:8px; padding:12px 24px; background:var(--shop-primary); color:white; border-radius:24px; text-decoration:none; font-weight:600; font-size:0.95rem; transition:transform 0.2s;">
+                            <i class="fa-solid fa-arrow-left"></i> Quay lại Cửa hàng
+                        </a>
+                    </div>`;
                 return;
             }
 
-            // Breadcrumb
+
             document.getElementById('bc-cat').innerText = p.category;
             document.getElementById('bc-name').innerText = p.name;
 
-            const fallbackImg = 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&auto=format&fit=crop';
-            const mainImgSrc = p.image || fallbackImg;
+            const fallbackImg = 'https://cdn.nhathuoclongchau.com.vn/v1/static/DSC_099842_74c1fc532a.png';
+            let mainImgSrc = p.image || fallbackImg;
+            if (mainImgSrc.includes('unsplash.com') || mainImgSrc.includes('/unsafe/')) mainImgSrc = fallbackImg;
 
-            const statusHtml = p.stock === 0 ? `<div style="color: #ef4444; margin-bottom: 1rem;"><i class="fa-solid fa-circle-xmark"></i> Hết hàng</div>` : `<div style="color: #22c55e; margin-bottom: 1rem;"><i class="fa-solid fa-circle-check"></i> Còn hàng (Tồn: ${p.stock})</div>`;
+            const statusHtml = p.stock === 0 
+                ? `<div style="color: #ef4444; font-weight: 600; margin-bottom: 1rem;"><i class="fa-solid fa-circle-xmark"></i> Tạm hết hàng</div>` 
+                : `<div style="color: #22c55e; font-weight: 600; margin-bottom: 1rem;"><i class="fa-solid fa-circle-check"></i> Còn hàng (Tồn kho: ${p.stock} ${p.unit})</div>`;
+
+            const rxBadge = p.isRx 
+                ? `<span style="display:inline-block; background:#fee2e2; color:#dc2626; padding:3px 10px; border-radius:12px; font-size:0.8rem; font-weight:700; margin-left:8px;"><i class="fa-solid fa-prescription"></i> Thuốc kê đơn (Rx)</span>` 
+                : `<span style="display:inline-block; background:#dcfce7; color:#16a34a; padding:3px 10px; border-radius:12px; font-size:0.8rem; font-weight:700; margin-left:8px;"><i class="fa-solid fa-capsules"></i> Không kê đơn (OTC)</span>`;
 
             const html = `
                 <div class="product-detail-grid">
                     <div class="product-gallery">
-                        <img src="${mainImgSrc}" id="main-img" class="main-image">
+                        <img src="${mainImgSrc}" id="main-img" class="main-image" onerror="this.onerror=null; this.src='https://cdn.nhathuoclongchau.com.vn/v1/static/DSC_099842_74c1fc532a.png';">
                     </div>
                     <div class="product-info">
-                        <div class="p-brand">Thương hiệu: <strong>${p.brand}</strong> | Mã SP: ${p.id}</div>
-                        <h1>${p.name}</h1>
-                        <div style="color: #f59e0b; margin-bottom: 1rem;">★★★★★ <span style="color:var(--shop-text-muted);">(${p.rating} - Sản phẩm chất lượng)</span></div>
+                        <div class="p-brand">Thương hiệu: <strong>${p.brand}</strong> | Mã SP: <strong>${p.maThuoc || p.id}</strong> ${rxBadge}</div>
+                        <h1 style="margin-top:0.5rem; margin-bottom:0.5rem; font-size:1.6rem; color:#0f172a;">${p.name}</h1>
+                        <div style="color: #f59e0b; margin-bottom: 1rem; font-size:0.9rem;">★★★★★ <span style="color:var(--shop-text-muted);">(Chính hãng 100%)</span></div>
                         
                         ${statusHtml}
 
-                        <div style="font-size: 0.9rem; margin-bottom: 0.5rem;">Quy cách: <strong>${p.unit}</strong></div>
-                        <div style="font-size: 0.9rem;">Danh mục: <strong>${p.category}</strong></div>
+                        ${p.activeIngredient ? `<div style="font-size: 0.95rem; margin-bottom: 0.4rem;">Hoạt chất: <strong>${p.activeIngredient} ${p.dosage}</strong></div>` : ''}
+                        <div style="font-size: 0.95rem; margin-bottom: 0.4rem;">Quy cách: <strong>${p.unit}</strong></div>
+                        <div style="font-size: 0.95rem; margin-bottom: 1rem;">Danh mục: <strong>${p.category}</strong></div>
 
-                        <div class="p-price-row">
-                            <div class="p-price">${App.formatCurrency(p.price)}</div>
+                        <div class="p-price-row" style="background:#f8fafc; padding:12px 18px; border-radius:12px; margin-bottom:1.5rem;">
+                            <div class="p-price" style="font-size:1.8rem; color:#0284c7; font-weight:800;">${App.formatCurrency(p.price)}</div>
                         </div>
 
                         <div class="p-actions">
@@ -383,10 +470,10 @@
                                 <button class="qty-btn" onclick="const i=document.getElementById('qty'); i.value=Math.min(${p.stock || 999}, parseInt(i.value)+1)">+</button>
                             </div>
                             <div style="display:flex; gap:10px; flex:1;">
-                                <button class="p-btn-buy" ${p.stock === 0 ? 'disabled' : ''} style="flex:1; background:var(--shop-primary); color:white; border:1px solid var(--shop-primary);" onclick="Cart.add('${p.id}', parseInt(document.getElementById('qty').value), event)">
-                                    ${p.stock === 0 ? 'HẾT HÀNG' : 'THÊM VÀO GIỎ HÀNG'}
+                                <button class="p-btn-buy" ${p.stock === 0 ? 'disabled' : ''} style="flex:1; background:var(--shop-primary); color:white; border:1px solid var(--shop-primary);" onclick="Cart.add('${p.dbId}', parseInt(document.getElementById('qty').value), event)">
+                                    ${p.stock === 0 ? 'HẾT HÀNG' : '<i class="fa-solid fa-cart-plus"></i> THÊM VÀO GIỎ'}
                                 </button>
-                                <button class="p-btn-buy" ${p.stock === 0 ? 'disabled' : ''} style="flex:1; background:#ea580c; color:white; border:1px solid #ea580c;" onclick="Cart.buyNow('${p.id}', parseInt(document.getElementById('qty').value))">
+                                <button class="p-btn-buy" ${p.stock === 0 ? 'disabled' : ''} style="flex:1; background:#ea580c; color:white; border:1px solid #ea580c;" onclick="Cart.buyNow('${p.dbId}', parseInt(document.getElementById('qty').value))">
                                     MUA NGAY
                                 </button>
                             </div>
@@ -396,31 +483,44 @@
             `;
             document.getElementById('product-detail-container').innerHTML = html;
 
-            // Tabs content
+
             document.getElementById('tab-desc').innerHTML = p.description;
             document.getElementById('tab-ingredient').innerHTML = p.ingredient;
             document.getElementById('tab-usage').innerHTML = p.usage;
+            const tabsSec = document.getElementById('product-tabs-section');
+            if (tabsSec) tabsSec.style.display = 'block';
 
-            // Related Products
-            const related = allProducts.filter(x => x.category === p.category && String(x.id) !== String(p.id)).slice(0, 10);
+
+            const relFallbackImg = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22300%22%20height%3D%22300%22%20viewBox%3D%220%200%20300%20300%22%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20fill%3D%22%23f3f4f6%22%2F%3E%3Ctext%20x%3D%22150%22%20y%3D%22150%22%20font-family%3D%22sans-serif%22%20font-size%3D%2216%22%20fill%3D%22%239ca3af%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ECh%C6%B0a%20c%C3%B3%20%E1%BA%A3nh%3C%2Ftext%3E%3C%2Fsvg%3E';
+            let related = allProducts.filter(x => x.category === p.category && String(x.id) !== String(p.id));
+            if (related.length === 0) {
+                related = allProducts.filter(x => String(x.id) !== String(p.id));
+            }
+            related = related.slice(0, 8);
+
             if (related.length > 0) {
                 let rHtml = '';
                 related.forEach(item => {
-                    const img = item.image || fallbackImg;
+                    const rId = item.id || item.dbId || item.maThuoc;
+                    const imgSrc = item.image || item.imageUrl || relFallbackImg;
                     rHtml += `
-                        <div class="product-card-mini" onclick="window.location.href='shop-detail.html?id=${item.id}'">
-                            <img src="${img}">
+                        <div class="product-card-mini" onclick="goToProductDetail('${rId}')">
+                            <img src="${imgSrc}" alt="${item.name}">
                             <div style="font-size: 0.9rem; font-weight: 600; white-space: normal; height: 40px; overflow: hidden; margin-bottom: 8px; color: #334155;">${item.name}</div>
                             <div style="color: var(--shop-primary); font-weight: 700; font-size: 1.1rem; margin-bottom: 12px;">${App.formatCurrency(item.price)}</div>
-                            <button class="btn-mini-add" onclick="event.stopPropagation(); Cart.add('${item.id}', 1, event)">
+                            <button class="btn-mini-add" onclick="event.stopPropagation(); Cart.add('${rId}', 1, event)">
                                 <i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ
                             </button>
                         </div>
                     `;
                 });
-                document.getElementById('related-products').innerHTML = rHtml;
+                const relContainer = document.getElementById('related-products');
+                if (relContainer) relContainer.innerHTML = rHtml;
+                const relSec = document.getElementById('related-section');
+                if (relSec) relSec.style.display = 'block';
             } else {
-                document.getElementById('related-section').style.display = 'none';
+                const relSec = document.getElementById('related-section');
+                if (relSec) relSec.style.display = 'none';
             }
         });
 

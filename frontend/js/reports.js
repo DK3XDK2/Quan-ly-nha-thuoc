@@ -11,12 +11,11 @@ const Reports = {
             ]);
 
             if (listHoaDon === null && listDonHang === null) {
-                // Fallback to mock data if backend APIs are missing
+
                 this.orders = Storage.get('orders') || [];
             } else {
                 let combined = [];
-                
-                // Map HoaDon (POS)
+
                 if (listHoaDon) {
                     listHoaDon.forEach(hd => {
                         combined.push({
@@ -31,8 +30,7 @@ const Reports = {
                         });
                     });
                 }
-                
-                // Map DonHang (Online)
+
                 if (listDonHang) {
                     listDonHang.forEach(dh => {
                         combined.push({
@@ -72,13 +70,13 @@ const Reports = {
             const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             filteredOrders = filteredOrders.filter(o => new Date(o.timestamp) >= last7Days);
         } else if (period === 'thismonth') {
-            const monthStr = now.toISOString().slice(0, 7); // YYYY-MM
+            const monthStr = now.toISOString().slice(0, 7);
             filteredOrders = filteredOrders.filter(o => o.timestamp.startsWith(monthStr));
         }
 
         let totalRevenue = 0;
         let totalItems = 0;
-        let productSales = {}; // { 'id': {name, qty} }
+        let productSales = {};
 
         filteredOrders.forEach(o => {
             totalRevenue += o.summary.total;
@@ -91,7 +89,6 @@ const Reports = {
             });
         });
 
-        // Profit assumption 30%
         const profit = totalRevenue * 0.3;
 
         document.getElementById('rep-revenue').innerText = App.formatCurrency(totalRevenue);
@@ -103,17 +100,15 @@ const Reports = {
         this.filteredOrders = filteredOrders;
 
         this.renderTopProducts(productSales);
-        
-        // Prepare dynamic chart data
+
         let chartMap = {};
         filteredOrders.forEach(o => {
             const dateStr = new Date(o.timestamp).toLocaleDateString('vi-VN');
             if (!chartMap[dateStr]) chartMap[dateStr] = 0;
             chartMap[dateStr] += o.summary.total;
         });
-        
-        // Sort by date (naive string sort doesn't work for DD/MM/YYYY, but fine for prototype)
-        // Better to sort by actual timestamp if needed, but we'll extract directly
+
+
         let chartLabels = Object.keys(chartMap).sort((a,b) => {
             let [d1,m1,y1] = a.split('/');
             let [d2,m2,y2] = b.split('/');
@@ -265,7 +260,7 @@ const Reports = {
         const orders = document.getElementById('rep-orders').innerText;
         const items = document.getElementById('rep-items').innerText;
 
-        let csv = "\uFEFF"; // UTF-8 BOM cho Excel hiển thị tiếng Việt không bị lỗi font
+        let csv = "\uFEFF";
         csv += "BÁO CÁO KINH DOANH - AINA PHARMACY\n";
         csv += `Thời gian báo cáo:,${periodText}\n`;
         csv += `Ngày xuất báo cáo:,${new Date().toLocaleString('vi-VN')}\n\n`;

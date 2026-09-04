@@ -18,7 +18,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/vn.js"></script>
     <style>
-        /* Fix Flatpickr month/year header layout on Windows */
+        
         .flatpickr-current-month {
             display: flex !important;
             align-items: center !important;
@@ -120,15 +120,15 @@
 <body>
 
     <div class="app-container">
-        <!-- Sidebar -->
+        
         <aside class="app-sidebar" id="app-sidebar"></aside>
 
-        <!-- Main Content -->
+        
         <main class="app-main">
-            <!-- Header -->
+            
             <header class="app-header" id="app-header"></header>
 
-            <!-- Page Content -->
+            
             <div class="page-content">
                 <div class="page-header">
                     <h1 class="page-title">Tổng quan kinh doanh</h1>
@@ -144,7 +144,7 @@
                     </div>
                 </div>
 
-                <!-- Stats Grid -->
+                
                 <div class="stat-grid">
                     <div class="card stat-card" style="cursor: pointer;" onclick="window.location.href='orders.html'">
                         <div class="stat-icon blue">
@@ -184,9 +184,9 @@
                     </div>
                 </div>
 
-                <!-- Charts & Lists -->
+                
                 <div class="chart-grid">
-                    <!-- Revenue Chart -->
+                    
                     <div class="card">
                         <div class="card-header">
                             Biểu đồ doanh thu 7 ngày qua
@@ -196,7 +196,7 @@
                         </div>
                     </div>
 
-                    <!-- AI Insights Mini -->
+                    
                     <div class="card" style="border: 1px solid var(--primary-light);">
                         <div class="card-header" style="background-color: var(--primary-light); color: var(--primary-color);">
                             <i class="fa-solid fa-robot" style="margin-right: 8px;"></i> AI Insights
@@ -244,7 +244,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="recent-orders">
-                                    <!-- Injected by JS -->
+                                    
                                 </tbody>
                             </table>
                         </div>
@@ -303,7 +303,7 @@
                 </div>
 
                 <div class="chart-grid" style="margin-top: var(--spacing-xl);">
-                    <!-- VIP Customers (Top Spenders) -->
+                    
                     <div class="card">
                         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                             <div><i class="fa-solid fa-crown text-warning" style="margin-right: 8px;"></i> Khách hàng VIP (Chi tiêu cao)</div>
@@ -373,7 +373,7 @@
                         </div>
                     </div>
                     
-                    <!-- Loyal Customers (Frequency) -->
+                    
                     <div class="card">
                         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                             <div><i class="fa-solid fa-heart text-danger" style="margin-right: 8px;"></i> Khách hàng mua thường xuyên</div>
@@ -432,7 +432,7 @@
         </main>
     </div>
 
-    <!-- Scripts -->
+    
     <script src="../../js/storage.js"></script>
     <script src="../../js/api.js"></script>
     <script src="../../js/auth.js"></script>
@@ -441,15 +441,15 @@
     <script src="../../js/components.js"></script>
     <script src="../../js/dashboard.js"></script>
     <script>
-        // Yêu cầu đăng nhập
+
         Auth.requireAuth();
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Render Layout
+
             Layout.renderSidebar('dashboard');
             Layout.renderHeader('Dashboard');
 
-            // Init Dashboard data
+
             Dashboard.init();
         });
     </script>

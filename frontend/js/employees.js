@@ -6,7 +6,7 @@ const EmployeeManager = {
         try {
             const list = await API.get('/api/xac-thuc/nhan-vien').catch(() => null);
             if (list) {
-                // Map backend keys to frontend expected keys
+
                 this.employees = list.map(e => ({
                     id: e.id || e.maNhanVien || Date.now(),
                     name: e.hoTen || e.name || 'N/A',
@@ -32,14 +32,13 @@ const EmployeeManager = {
 
         let html = '';
         this.employees.forEach(e => {
-            let roleClass = 'badge-success'; // Cashier
+            let roleClass = 'badge-success';
             if (e.role === 'PHARMACIST') roleClass = 'badge-primary';
             if (e.role === 'ADMIN') roleClass = 'badge-danger';
             
             const currentUser = Auth.getCurrentUser();
             const isSelf = currentUser && currentUser.id === e.id;
-            
-            // Mask password slightly for UI realism
+
             const maskedPass = e.password.length > 0 ? '***' : '';
 
             html += `
@@ -95,7 +94,6 @@ const EmployeeManager = {
         if (!name || !email || !password) return App.showToast('Vui lòng điền đủ thông tin!', 'error');
         if (!email.includes('@')) return App.showToast('Email không hợp lệ!', 'error');
 
-        // Check duplicate email
         const duplicate = this.employees.find(x => x.email === email && x.id.toString() !== editId);
         if (duplicate) return App.showToast('Email này đã được sử dụng!', 'error');
 
@@ -109,12 +107,12 @@ const EmployeeManager = {
         };
 
         if (editId) {
-            // Cập nhật qua API
+
             const res = await API.put(`/api/nhan-vien/${editId}`, payload).catch(() => null);
             if (res) {
                 App.showToast('Cập nhật nhân viên thành công!', 'success');
             } else {
-                // Fallback mock
+
                 const index = this.employees.findIndex(x => x.id.toString() === editId);
                 if (index !== -1) {
                     this.employees[index] = { ...this.employees[index], name, email, password, role };
@@ -122,20 +120,19 @@ const EmployeeManager = {
                 }
                 App.showToast('Lưu nội bộ thành công (Mock)', 'success');
             }
-            
-            // Nếu tự sửa chính mình thì update session
+
             const currentUser = Auth.getCurrentUser();
             if(currentUser && currentUser.id.toString() === editId) {
                 Storage.set('currentUser', { id: editId, name, email, role });
                 if (role !== 'ADMIN') window.location.href = 'dashboard.html';
             }
         } else {
-            // Thêm mới qua API
+
             const res = await API.post('/api/xac-thuc/tao-tai-khoan', payload).catch(() => null);
             if (res) {
                 App.showToast('Thêm nhân viên thành công!', 'success');
             } else {
-                // Fallback mock
+
                 const newId = Date.now();
                 this.employees.push({ id: newId, name, email, password, role });
                 Storage.set('users', this.employees);
@@ -145,7 +142,7 @@ const EmployeeManager = {
 
         App.hideLoading();
         this.closeModal();
-        await this.init(); // Refresh data từ DB
+        await this.init();
     },
 
     deleteEmployee: async function(id) {
@@ -160,7 +157,7 @@ const EmployeeManager = {
             if (res) {
                 App.showToast('Đã xóa nhân viên', 'success');
             } else {
-                // Fallback mock
+
                 this.employees = this.employees.filter(x => x.id.toString() !== id.toString());
                 Storage.set('users', this.employees);
                 App.showToast('Xóa nội bộ thành công (Mock)', 'success');

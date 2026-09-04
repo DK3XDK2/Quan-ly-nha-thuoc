@@ -1,8 +1,6 @@
-/**
- * Module xử lý xác thực người dùng kết nối Backend API
- */
+
 const Auth = {
-    // Đăng nhập cho Nhân viên / Quản lý
+
     login: async function(email, password) {
         try {
             App.showLoading();
@@ -14,7 +12,7 @@ const Auth = {
                     id: res.nguoiDung.id,
                     name: res.nguoiDung.hoTen,
                     email: res.nguoiDung.email,
-                    role: res.nguoiDung.vaiTro, // 'QUAN_LY' hoặc 'NHAN_VIEN'
+                    role: res.nguoiDung.vaiTro,
                     avatarUrl: res.nguoiDung.avatarUrl
                 };
                 API.setCurrentUser(userSession);
@@ -29,7 +27,6 @@ const Auth = {
         }
     },
 
-    // Đăng nhập cho Khách hàng (Shop Online)
     loginCustomer: async function(email, password) {
         try {
             App.showLoading();
@@ -60,7 +57,6 @@ const Auth = {
         }
     },
 
-    // Đăng ký cho Khách hàng
     registerCustomer: async function(data) {
         try {
             App.showLoading();
@@ -115,10 +111,9 @@ const Auth = {
             return null;
         }
 
-        // Chặn khách hàng vào trang admin
         if (user.role === 'KHACH_HANG' && path.includes('/admin/')) {
-            // Chuyển hướng về trang chủ cửa hàng
-            window.location.href = '../public/shop.html';
+
+            window.location.href = '../public/index.html';
             return null;
         }
 

@@ -112,7 +112,7 @@
                 user.email = document.getElementById('prof-email').value;
                 if(pass1) user.password = pass1;
                 
-                // Update in users array
+
                 const users = Storage.get('users') || [];
                 const idx = users.findIndex(u => u.id === user.id);
                 if(idx !== -1) {
@@ -120,12 +120,12 @@
                     Storage.set('users', users);
                 }
                 
-                Storage.set('currentUser', user); // update session
+                Storage.set('currentUser', user);
                 
                 App.hideLoading();
                 App.showToast('Đã lưu hồ sơ!', 'success');
                 loadProfile();
-                Layout.renderHeader('Hồ sơ cá nhân'); // Refresh header name
+                Layout.renderHeader('Hồ sơ cá nhân');
             }, 800);
         }
     </script>

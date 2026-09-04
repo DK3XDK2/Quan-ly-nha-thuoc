@@ -1,6 +1,4 @@
-/**
- * Module Dashboard - Hiển thị thống kê dữ liệu thực tế từ Backend
- */
+
 const Dashboard = {
     invoices: [],
     onlineOrders: [],
@@ -86,7 +84,6 @@ const Dashboard = {
             startDate = new Date(0);
         }
 
-        // Aggregate completed retail invoices + completed online orders
         const filteredInvoices = this.invoices.filter(h => {
             const d = new Date(h.taoLuc);
             return d >= startDate && d <= endDate;

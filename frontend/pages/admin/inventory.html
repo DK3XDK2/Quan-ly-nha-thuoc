@@ -43,7 +43,7 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar -->
+        
         <aside class="app-sidebar" id="app-sidebar"></aside>
         <main class="app-main">
             <header class="app-header" id="app-header"></header>
@@ -58,7 +58,7 @@
                     <div class="tab-btn" onclick="switchTab('batches', this)">Quản lý Lô & Hạn sử dụng</div>
                 </div>
 
-                <!-- Tồn kho -->
+                
                 <div id="tab-inventory" class="tab-content active">
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-md); margin-bottom: var(--spacing-lg);">
                         <div class="card card-body" style="border-left: 4px solid var(--info-color);">
@@ -90,14 +90,14 @@
                                     </tr>
                                 </thead>
                                 <tbody id="inventory-list">
-                                    <!-- Rendered by inventory.js -->
+                                    
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
-                <!-- Batches -->
+                
                 <div id="tab-batches" class="tab-content">
                     <div class="card">
                         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
@@ -117,7 +117,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="batches-list">
-                                    <!-- Rendered by inventory.js -->
+                                    
                                 </tbody>
                             </table>
                         </div>
@@ -128,7 +128,7 @@
         </main>
     </div>
 
-    <!-- Scripts -->
+    
     <script src="../../js/storage.js"></script>
     <script src="../../js/api.js"></script>
     <script src="../../js/auth.js"></script>
@@ -167,7 +167,7 @@
                     App.hideLoading();
                 }
                 this.renderInventory();
-                this.renderBatches(); // mock logic
+                this.renderBatches();
             },
             
             renderInventory: function() {
@@ -179,9 +179,9 @@
                 this.products.forEach(p => {
                     totalQty += p.stock;
                     if (p.stock <= p.minStock && p.stock > 0) lowQtyCount++;
-                    if (p.stock === 0) lowQtyCount++; // also alert out of stock
+                    if (p.stock === 0) lowQtyCount++;
 
-                    const estImportPrice = p.price * 0.7; // mock import price = 70% retail
+                    const estImportPrice = p.price * 0.7;
                     totalValue += (estImportPrice * p.stock);
 
                     const isOutOfStock = p.stock <= 0;

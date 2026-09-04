@@ -1,6 +1,4 @@
-/**
- * Module Quản lý Nhà Cung Cấp - Kết nối Backend API
- */
+
 const SupplierManager = {
     suppliers: [],
     currentPage: 1,

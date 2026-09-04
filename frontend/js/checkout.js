@@ -1,6 +1,4 @@
-/**
- * Module Thanh toán Checkout - Kết nối Backend API
- */
+
 const Checkout = {
     cartItems: [],
     total: 0,
@@ -18,11 +16,10 @@ const Checkout = {
 
         if (this.cartItems.length === 0) {
             alert('Không có sản phẩm để thanh toán! Đang quay lại trang chủ.');
-            window.location.href = 'shop.html';
+            window.location.href = 'index.html';
             return;
         }
 
-        // Prefill customer profile if logged in
         const user = Auth.getCurrentUser();
         if (user) {
             const nameEl = document.getElementById('co-name');
@@ -39,57 +36,49 @@ const Checkout = {
     },
 
     bindEvents: function() {
-        const nameInput = document.getElementById('co-name');
         const phoneInput = document.getElementById('co-phone');
+        const nameInput = document.getElementById('co-name');
         const addressInput = document.getElementById('co-address');
-        const noteInput = document.getElementById('co-note');
 
-        if (!nameInput || !phoneInput || !addressInput) return;
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                const err = document.getElementById('err-phone');
+                if (this.value.length > 0 && !this.value.match(/^[0-9]{10,11}$/)) {
+                    this.style.borderColor = '#ef4444';
+                    if (err) { err.innerText = 'Số điện thoại phải từ 10 đến 11 chữ số'; err.style.display = 'block'; }
+                } else {
+                    this.style.borderColor = 'var(--shop-border)';
+                    if (err) err.style.display = 'none';
+                }
+            });
+        }
 
-        const styleDisabled = (el) => {
-            if (!el) return;
-            el.style.backgroundColor = '#f3f4f6';
-            el.style.cursor = 'not-allowed';
-            el.disabled = true;
-        };
-        const styleEnabled = (el) => {
-            if (!el) return;
-            el.style.backgroundColor = '#ffffff';
-            el.style.cursor = 'text';
-            el.disabled = false;
-        };
+        if (nameInput) {
+            nameInput.addEventListener('input', function() {
+                const err = document.getElementById('err-name');
+                if (this.value.trim().length > 0 && this.value.trim().length < 2) {
+                    this.style.borderColor = '#ef4444';
+                    if (err) { err.innerText = 'Họ và tên phải ít nhất 2 ký tự'; err.style.display = 'block'; }
+                } else {
+                    this.style.borderColor = 'var(--shop-border)';
+                    if (err) err.style.display = 'none';
+                }
+            });
+        }
 
-        const checkFields = () => {
-            if (nameInput.value.trim().length > 0) {
-                styleEnabled(phoneInput);
-            } else {
-                styleDisabled(phoneInput);
-                styleDisabled(addressInput);
-                styleDisabled(noteInput);
-                return;
-            }
-
-            if (phoneInput.value.trim().match(/^[0-9]{10,11}$/)) {
-                styleEnabled(addressInput);
-            } else {
-                styleDisabled(addressInput);
-                styleDisabled(noteInput);
-                return;
-            }
-
-            if (addressInput.value.trim().length > 0) {
-                styleEnabled(noteInput);
-            } else {
-                styleDisabled(noteInput);
-            }
-        };
-
-        // Enable all if prefilled
-        checkFields();
-
-        nameInput.addEventListener('input', checkFields);
-        phoneInput.addEventListener('input', checkFields);
-        addressInput.addEventListener('input', checkFields);
+        if (addressInput) {
+            addressInput.addEventListener('input', function() {
+                const err = document.getElementById('err-address');
+                if (this.value.trim().length > 0 && this.value.trim().length < 5) {
+                    this.style.borderColor = '#ef4444';
+                    if (err) { err.innerText = 'Địa chỉ giao hàng quá ngắn (tối thiểu 5 ký tự)'; err.style.display = 'block'; }
+                } else {
+                    this.style.borderColor = 'var(--shop-border)';
+                    if (err) err.style.display = 'none';
+                }
+            });
+        }
     },
 
     renderOrderSummary: function() {
@@ -132,10 +121,10 @@ const Checkout = {
             if (err) err.style.display = 'none';
         });
 
-        if (!name) {
+        if (!name || name.length < 2) {
             document.getElementById('co-name').style.borderColor = '#ef4444';
             const err = document.getElementById('err-name');
-            if (err) { err.innerText = 'Vui lòng nhập họ và tên'; err.style.display = 'block'; }
+            if (err) { err.innerText = 'Vui lòng nhập họ và tên hợp lệ (tối thiểu 2 ký tự)'; err.style.display = 'block'; }
             document.getElementById('co-name').focus();
             return;
         }
@@ -143,15 +132,15 @@ const Checkout = {
         if (!phone || !phone.match(/^[0-9]{10,11}$/)) {
             document.getElementById('co-phone').style.borderColor = '#ef4444';
             const err = document.getElementById('err-phone');
-            if (err) { err.innerText = 'Số điện thoại không hợp lệ (10-11 số)'; err.style.display = 'block'; }
+            if (err) { err.innerText = 'Số điện thoại không hợp lệ (phải gồm 10 đến 11 chữ số)'; err.style.display = 'block'; }
             document.getElementById('co-phone').focus();
             return;
         }
 
-        if (!address) {
+        if (!address || address.length < 5) {
             document.getElementById('co-address').style.borderColor = '#ef4444';
             const err = document.getElementById('err-address');
-            if (err) { err.innerText = 'Vui lòng nhập địa chỉ giao hàng'; err.style.display = 'block'; }
+            if (err) { err.innerText = 'Vui lòng nhập địa chỉ giao hàng cụ thể hơn (tối thiểu 5 ký tự)'; err.style.display = 'block'; }
             document.getElementById('co-address').focus();
             return;
         }
@@ -159,27 +148,25 @@ const Checkout = {
         try {
             App.showLoading();
 
+            const user = Auth.getCurrentUser();
             const payload = {
                 tenNguoiNhan: name,
                 soDienThoaiNhan: phone,
-                emailNguoiNhan: Auth.getCurrentUser()?.email || `${phone}@domain.com`,
+                emailNguoiNhan: user?.email || `${phone}@domain.com`,
                 diaChiGiao: address,
                 ghiChu: note,
                 phiGiaoHang: 0,
                 phuongThucThanhToan: payment === 'SEPAY' || payment === 'BANK' ? 'SEPAY' : 'CASH',
                 chiTiet: this.cartItems.map(item => ({
-                    thuocId: item.dbId,
-                    soLuong: item.quantity
+                    thuocId: Number(item.dbId || item.id),
+                    soLuong: Number(item.quantity)
                 }))
             };
 
-            const endpoint = Auth.getCurrentUser()
-                ? '/api/don-hang/dat-hang-da-dang-nhap'
-                : '/api/don-hang/dat-hang';
+            const endpoint = '/api/don-hang/dat-hang';
 
             const res = await API.post(endpoint, payload);
 
-            // Clear cart
             if (this.isBuyNow) {
                 Storage.set('buy_now_item', []);
             } else {
@@ -187,7 +174,7 @@ const Checkout = {
             }
 
             const createdOrder = res.duLieu || res;
-            const orderCode = createdOrder.maDonHang || `DH${createdOrder.id}`;
+            const orderCode = createdOrder.maDonHang || `DH${createdOrder.id || Date.now()}`;
 
             App.showToast('Đặt hàng thành công!', 'success');
             window.location.href = `order-success.html?id=${orderCode}`;

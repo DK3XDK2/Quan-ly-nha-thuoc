@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Environment Variables & Secrets (CỰC KỲ QUAN TRỌNG - KHÔNG COMMIT FILE .env)
+.env
+backend/.env
+frontend/.env
+
+# Database & Uploads
+*.db
+*.sqlite
+*.db-journal
+
+# Build / Output
+dist/
+build/
+
+# Temporary / Scratch & Scripts
+scratch/
+frontend_old/
+check_*.js
+fix_*.js
+debug_*.js
+force_*.js
+purge_*.js
+
+# System / IDE
+.DS_Store
+.vscode/
+.idea/
+

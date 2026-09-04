@@ -1,6 +1,4 @@
-/**
- * Module Quản lý Đơn Hàng - Kết nối Backend API
- */
+
 const OrderManager = {
     orders: [],
     currentPage: 1,
@@ -74,6 +72,10 @@ const OrderManager = {
         if (searchInput) {
             searchInput.addEventListener('input', () => { this.currentPage = 1; this.renderList(); });
         }
+        const statusSelect = document.getElementById('filter-status');
+        if (statusSelect) {
+            statusSelect.addEventListener('change', () => { this.currentPage = 1; this.renderList(); });
+        }
     },
 
     renderList: function() {
@@ -81,9 +83,16 @@ const OrderManager = {
         if (!tbody) return;
 
         const searchInput = document.getElementById('search-order');
+        const statusSelect = document.getElementById('filter-status');
         const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+        const selectedStatus = statusSelect ? statusSelect.value : '';
         
         this.filteredOrders = this.orders;
+
+        if (selectedStatus) {
+            this.filteredOrders = this.filteredOrders.filter(o => o.status === selectedStatus || (selectedStatus === 'HUY' && o.status === 'DA_HOAN_TIEN'));
+        }
+
         if (searchTerm) {
             this.filteredOrders = this.filteredOrders.filter(o => 
                 o.id.toLowerCase().includes(searchTerm) || 
@@ -165,6 +174,8 @@ const OrderManager = {
             `;
         });
 
+        const noteHtml = order.raw.ghiChu ? `<div style="margin-top: 4px; color: #d97706; background: #fffbe6; padding: 6px 10px; border-radius: 4px; border: 1px solid #ffe58f;"><strong>Ghi chú / Lý do:</strong> ${order.raw.ghiChu}</div>` : '';
+
         const html = `
             <div style="text-align: left; margin-bottom: 1rem; font-size: 0.875rem;">
                 <div><strong>Mã đơn hàng:</strong> ${order.id}</div>
@@ -172,6 +183,7 @@ const OrderManager = {
                 <div><strong>Người nhận:</strong> ${order.customerName} (${order.customerPhone})</div>
                 <div><strong>Địa chỉ giao:</strong> ${order.customerAddress}</div>
                 <div><strong>Trạng thái:</strong> <span class="badge ${order.statusClass}">${order.statusText}</span></div>
+                ${noteHtml}
             </div>
             
             <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end;" id="order-actions-container">
@@ -205,12 +217,13 @@ const OrderManager = {
         
         let actions = '';
         if (order.status === 'MOI_TAO') {
-            actions += `<button class="btn btn-primary btn-sm" onclick="OrderManager.updateStatus(${order.dbId}, 'DA_XAC_NHAN')">Xác nhận đơn</button>`;
+            actions += `<button class="btn btn-primary btn-sm" onclick="OrderManager.updateStatus(${order.dbId}, 'DANG_GIAO')">Xác nhận & Giao hàng</button>`;
             actions += `<button class="btn btn-outline btn-sm" style="color: var(--danger-color)" onclick="OrderManager.updateStatus(${order.dbId}, 'HUY')">Hủy đơn</button>`;
-        } else if (order.status === 'DA_XAC_NHAN') {
-            actions += `<button class="btn btn-primary btn-sm" onclick="OrderManager.updateStatus(${order.dbId}, 'DANG_GIAO')">Giao hàng</button>`;
-        } else if (order.status === 'DANG_GIAO') {
+        } else if (order.status === 'DANG_GIAO' || order.status === 'DA_XAC_NHAN') {
             actions += `<button class="btn btn-primary btn-sm" onclick="OrderManager.updateStatus(${order.dbId}, 'HOAN_TAT')">Hoàn tất đơn hàng</button>`;
+        } else if (order.status === 'YEU_CAU_HOAN_TIEN') {
+            actions += `<button class="btn btn-success btn-sm" onclick="OrderManager.updateStatus(${order.dbId}, 'DA_HOAN_TIEN')">Đồng ý Hoàn tiền</button>`;
+            actions += `<button class="btn btn-outline btn-sm" style="color: var(--danger-color)" onclick="OrderManager.updateStatus(${order.dbId}, 'HOAN_TAT')">Từ chối Yêu cầu</button>`;
         }
         
         container.innerHTML = actions;

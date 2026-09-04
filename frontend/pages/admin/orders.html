@@ -23,7 +23,7 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar -->
+        
         <aside class="app-sidebar" id="app-sidebar"></aside>
         <main class="app-main">
             <header class="app-header" id="app-header"></header>
@@ -31,6 +31,21 @@
             <div class="page-content">
                 <div class="page-header">
                     <h1 class="page-title">Quản lý Đơn hàng (Hóa đơn)</h1>
+                </div>
+
+                <div class="card" style="margin-bottom: 1rem; padding: 1rem;">
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <input type="text" id="search-order" class="form-control" placeholder="🔍 Tìm theo Mã đơn, Tên KH, SĐT..." style="flex: 1; min-width: 250px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px;">
+                        <select id="filter-status" class="form-control" style="width: 220px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px;">
+                            <option value="">-- Tất cả trạng thái --</option>
+                            <option value="MOI_TAO">Mới tạo</option>
+                            <option value="DA_XAC_NHAN">Đã xác nhận</option>
+                            <option value="DANG_GIAO">Đang giao</option>
+                            <option value="YEU_CAU_HOAN_TIEN">Yêu cầu hoàn tiền</option>
+                            <option value="HOAN_TAT">Hoàn tất</option>
+                            <option value="HUY">Đã hủy / Đã hoàn tiền</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="card">
@@ -54,7 +69,7 @@
         </main>
     </div>
 
-    <!-- Order Details Modal -->
+    
     <div class="modal-overlay" id="order-modal">
         <div class="modal">
             <div class="modal-header">
@@ -63,7 +78,7 @@
             </div>
             <div class="modal-body">
                 <div class="invoice-print" id="order-details-content">
-                    <!-- Injected by JS -->
+                    
                 </div>
             </div>
             <div class="modal-footer">
@@ -73,6 +88,7 @@
     </div>
 
     <script src="../../js/storage.js"></script>
+    <script src="../../js/mock-data.js"></script>
     <script src="../../js/api.js"></script>
     <script src="../../js/auth.js"></script>
     <script src="../../js/notifications.js"></script>

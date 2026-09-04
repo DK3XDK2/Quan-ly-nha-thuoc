@@ -1,6 +1,4 @@
-/**
- * Wrapper cho localStorage để dễ dàng chuyển đổi sang API thực tế sau này
- */
+
 const Storage = {
     get: function(key) {
         try {

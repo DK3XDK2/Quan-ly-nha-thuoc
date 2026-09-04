@@ -1,5 +1,5 @@
-#  HỆ THỐNG QUẢN LÝ VÀ BÁN THUỐC TRỰC TUYẾN AINA PHARMACY
-> **Tài liệu Báo cáo Tiến trình - Bài kiểm tra thường xuyên 1**  
+# 🏥 HỆ THỐNG QUẢN LÝ VÀ BÁN THUỐC TRỰC TUYẾN AINA PHARMACY
+> **Tài liệu Báo cáo Đầy đủ - Bài kiểm tra thường xuyên 2**  
 > **Môn học:** Phân tích & Thiết kế Hệ thống Thông tin / Phát triển Ứng dụng Web  
 > **Đề tài:** Xây dựng Hệ thống Quản lý Nhà thuốc & Cửa hàng Thuốc Trực tuyến tích hợp AI Assistant (AINA Pharmacy)
 
@@ -312,19 +312,21 @@ Trong quá trình phân tích và xây dựng hệ thống, sinh viên đã áp 
 
 ---
 
-## 10. TÀI LIỆU PHÂN TÍCH THIẾT KẾ & KẾ HOẠCH TRIỂN KHAI
+## 10. BẢNG NGHIỆM THU 10 TIÊU CHÍ BÀI KIỂM TRA THƯỜNG XUYÊN 2
 
-### 10.1. Hiện trạng Hoàn thành (Báo cáo Tiến trình BKTX1)
-- [x] Complete 100% Giao diện Frontend (Public Shop, Customer Shop, Admin Dashboard, POS Bán hàng, Báo cáo Kinh doanh).
-- [x] Complete 100% Logic chuyển hướng xác thực & Phân tách Session Khách hàng / Quản lý.
-- [x] Complete 100% Bộ công cụ xuất báo cáo đa định dạng (.pdf, .csv, .doc, .json).
-- [x] Complete 100% Thiết kế CSDL (ERD) và Tích hợp khung AI Assistant.
-
-### 10.2. Kế hoạch Triển khai Giai đoạn tiếp theo
-1. **Giai đoạn 2 (Tuần 1 - Tuần 2):** Hoàn thiện các API kiểm thử unit test phía Backend với Prisma ORM.
-2. **Giai đoạn 3 (Tuần 3):** Đóng gói Container bằng Docker và triển khai Staging Server.
-3. **Giai đoạn 4 (Tuần 4):** Nghiệm thu toàn bộ dự án và báo cáo kết thúc môn học.
+| STT | Tiêu chí đánh giá | Hiện trạng hoàn thành | Minh chứng & Vị trí trong dự án |
+|:---:|---|:---:|---|
+| **1** | **Cấu trúc dự án hợp lý** | **ĐẠT 100%** | Tổ chức rõ ràng: `frontend/`, `backend/`, `database/`, `docs/`, `.env.example`. |
+| **2** | **Đăng nhập & Phân quyền** | **ĐẠT 100%** | Xác thực JWT Token, phân quyền RBAC 3 vai trò rõ rệt (`ADMIN`, `PHARMACIST`, `KHACH_HANG`). Hỗ trợ tài khoản click-to-login demo. |
+| **3** | **CRUD Nghiệp vụ chính** | **ĐẠT 100%** | Đầy đủ Thêm / Xem / Sửa / Xóa đối với: Thuốc, Lô kho thuốc, Đơn hàng, Khách hàng, Bán lẻ quầy POS. |
+| **4** | **Tìm kiếm & Lọc dữ liệu** | **ĐẠT 100%** | Tìm kiếm thuốc real-time với dropdown gợi ý, lọc đa tiêu chí: danh mục, khoảng giá, rating sao, sắp xếp theo giá / bán chạy. |
+| **5** | **Thống kê / Báo cáo** | **ĐẠT 100%** | Dashboard tổng quan doanh thu/đơn hàng với biểu đồ Chart.js; Trang báo cáo hỗ trợ xuất 5 định dạng (.pdf, .csv/Excel, .doc/Word, .json, Print). |
+| **6** | **Giao diện & Trải nghiệm (UI/UX)** | **ĐẠT 100%** | Thiết kế Modern Glassmorphism, phong cách y tế thanh lịch, responsive 100% mobile/desktop, thông báo Toast và Modal phản hồi tương tác mượt mà. |
+| **7** | **CSDL & Thao tác ổn định** | **ĐẠT 100%** | Prisma ORM kết nối MySQL kèm `seed.js` nạp dữ liệu mẫu; Tích hợp **Offline Mock Fallback** (`mock-data.js`) giúp demo trơn tru ngay cả khi không có CSDL. |
+| **8** | **Xử lý lỗi cơ bản** | **ĐẠT 100%** | Bắt lỗi input form, ảnh thuốc hỏng tự động fallback sang icon y tế (`onerror`), try/catch toàn bộ API, tự động sửa lỗi URL không để 404. |
+| **9** | **Minh chứng sử dụng AI** | **ĐẠT 100%** | Tài liệu chi tiết [docs/NHAT_KY_SU_DUNG_AI.md](file:///c:/Users/hackt/Downloads/Quanlythuoc-main/docs/NHAT_KY_SU_DUNG_AI.md) ghi chép đầy đủ: Nhật ký prompt, phản hồi AI, code hỗ trợ và phần sinh viên kiểm tra/chỉnh sửa. |
+| **10** | **Quản lý mã nguồn & Chạy thử** | **ĐẠT 100%** | Có `README.md`, `.env.example`, tài liệu [docs/HUONG_DAN_CAI_DAT_VA_CHAY.md](file:///c:/Users/hackt/Downloads/Quanlythuoc-main/docs/HUONG_DAN_CAI_DAT_VA_CHAY.md) và [HUONG_DAN_CHAM_BAI.md](file:///c:/Users/hackt/Downloads/Quanlythuoc-main/HUONG_DAN_CHAM_BAI.md). |
 
 ---
-*Tài liệu được đóng gói chuẩn hóa phục vụ Báo cáo Tiến trình Bài kiểm tra Thường xuyên 1.*  
+*Tài liệu được đóng gói chuẩn hóa phục vụ Báo cáo Nghiệm thu Bài kiểm tra Thường xuyên 2.*  
 **Hệ thống Quản lý Nhà thuốc AINA Pharmacy - 2026**

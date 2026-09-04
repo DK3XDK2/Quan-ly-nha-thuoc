@@ -1,6 +1,4 @@
-/**
- * Module Quản lý Sản Phẩm - Kết nối REST API Backend
- */
+
 const ProductManager = {
     products: [],
     categories: [],
@@ -237,7 +235,7 @@ const ProductManager = {
         try {
             App.showLoading();
             if (dbId) {
-                // Cập nhật
+
                 await API.patch(`/api/thuoc/${dbId}`, {
                     maThuoc,
                     tenThuoc,
@@ -248,7 +246,7 @@ const ProductManager = {
                 });
                 App.showToast('Cập nhật sản phẩm thành công!', 'success');
             } else {
-                // Thêm mới
+
                 await API.post('/api/thuoc', {
                     maThuoc,
                     tenThuoc,

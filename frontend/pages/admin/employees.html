@@ -16,7 +16,7 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar -->
+        
         <aside class="app-sidebar" id="app-sidebar"></aside>
         <main class="app-main">
             <header class="app-header" id="app-header"></header>
@@ -29,7 +29,7 @@
                     </button>
                 </div>
 
-                <!-- Permission Roles info card -->
+                
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-md); margin-bottom: var(--spacing-lg);">
                     <div class="card card-body">
                         <div style="font-weight: 600; color: var(--danger-color); margin-bottom: 0.5rem;"><i class="fa-solid fa-user-shield"></i> ADMIN (Quản trị viên)</div>
@@ -66,7 +66,7 @@
         </main>
     </div>
 
-    <!-- Modal -->
+    
     <div class="modal-overlay" id="employee-modal">
         <div class="modal">
             <div class="modal-header">
@@ -114,7 +114,7 @@
     <script src="../../js/employees.js"></script>
     <script>
         Auth.requireAuth();
-        // ADMIN only
+
         if(!Auth.hasPermission('employees')) {
             window.location.href = 'dashboard.html';
         }

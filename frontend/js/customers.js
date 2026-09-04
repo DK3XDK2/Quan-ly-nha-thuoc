@@ -1,6 +1,4 @@
-/**
- * Module Quản lý Khách Hàng - Kết nối Backend API
- */
+
 const CustomerManager = {
     customers: [],
     currentPage: 1,

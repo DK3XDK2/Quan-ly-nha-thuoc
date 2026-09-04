@@ -1,4 +1,4 @@
-/* Typography & Utilities */
+
 .text-primary { color: var(--text-primary); }
 .text-secondary { color: var(--text-secondary); }
 .text-muted { color: var(--text-muted); }
@@ -8,7 +8,6 @@
 .color-warning { color: var(--warning-color); }
 .color-danger { color: var(--danger-color); }
 
-/* Buttons */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -54,10 +53,9 @@
     color: var(--text-white);
 }
 .btn-danger:hover {
-    background-color: #DC2626; /* Darker red */
+    background-color: #DC2626; 
 }
 
-/* Inputs & Forms */
 .form-group {
     margin-bottom: var(--spacing-md);
 }
@@ -92,7 +90,6 @@
     cursor: not-allowed;
 }
 
-/* Cards */
 .card {
     background-color: var(--bg-surface);
     border-radius: var(--radius-lg);
@@ -114,7 +111,6 @@
     padding: var(--spacing-lg);
 }
 
-/* Badges */
 .badge {
     display: inline-block;
     padding: 0.25rem 0.5rem;
@@ -128,7 +124,6 @@
 .badge-danger { background-color: #FEE2E2; color: #DC2626; }
 .badge-primary { background-color: var(--primary-light); color: var(--primary-hover); }
 
-/* Tables */
 .table-container {
     overflow-x: auto;
 }
@@ -159,7 +154,6 @@
     background-color: var(--bg-main);
 }
 
-/* Modals */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -228,7 +222,6 @@
     gap: var(--spacing-sm);
 }
 
-/* Toast Notifications */
 .toast-container {
     position: fixed;
     bottom: var(--spacing-xl);
@@ -261,7 +254,6 @@
 .toast.error { border-left-color: var(--danger-color); }
 .toast.warning { border-left-color: var(--warning-color); }
 
-/* Toggle Switch */
 .switch {
     position: relative;
     display: inline-block;

@@ -2,6 +2,11 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <script>
+        if (window.location.pathname === '/pages/public' || window.location.pathname === '/public') {
+            window.location.replace(window.location.pathname + '/' + window.location.search + window.location.hash);
+        }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AINA Pharmacy - Nhà Thuốc Trực Tuyến</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10,7 +15,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../../css/shop.css">
     <style>
-        /* Flash Sale Area */
+        
         .flash-sale-banner {
             background: linear-gradient(90deg, #ef4444 0%, #f97316 100%);
             color: white;
@@ -29,7 +34,7 @@
             margin: 0 2px;
         }
 
-        /* Banner Slider */
+        
         .hero-slider-container {
             position: relative;
             border-radius: var(--shop-radius);
@@ -71,7 +76,7 @@
             font-size: 1.1rem;
         }
         .btn-hero {
-            background: #1e3a8a; /* Deep blue from screenshot */
+            background: #1e3a8a; 
             color: white;
             border: none;
             padding: 12px 24px;
@@ -114,7 +119,7 @@
             border-radius: 10px;
         }
 
-        /* Category Highlights */
+        
         .cat-card {
             min-width: 125px;
             background: white;
@@ -165,7 +170,7 @@
             color: var(--cat-color, var(--shop-primary));
         }
         
-        /* Hide scrollbar for horizontal lists */
+        
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
@@ -177,10 +182,10 @@
 </head>
 <body class="shop-layout">
 
-    <!-- Header -->
+    
     <header class="shop-header">
         <div class="shop-header-top">
-            <a href="shop.html" class="shop-logo">
+            <a href="index.html" class="shop-logo">
                 <img src="../../assets/images/ainalogo.png" class="shop-logo-img" onerror="this.src='https://cdn-icons-png.flaticon.com/512/8687/8687597.png'" alt="Logo">
                 <div class="shop-logo-text">
                     <span class="shop-logo-top">NHÀ THUỐC</span>
@@ -191,12 +196,12 @@
             <div class="shop-search-bar">
                 <input type="text" id="shop-search-input" placeholder="Tìm kiếm thuốc, sản phẩm, hoạt chất..." autocomplete="off">
                 <button onclick="Shop.search()"><i class="fa-solid fa-magnifying-glass"></i></button>
-                <!-- Dropdown kết quả tìm kiếm -->
+                
                 <div id="search-dropdown" class="search-dropdown" style="display: none;"></div>
             </div>
 
             <div class="shop-header-actions">
-                <a href="../public/shop-login.html" class="shop-action-btn" id="btn-nav-login">
+                <a href="shop-login.html" class="shop-action-btn" id="btn-nav-login">
                     <i class="fa-solid fa-right-to-bracket"></i>
                     <span>Đăng nhập</span>
                 </a>
@@ -214,6 +219,10 @@
                     <span>Giỏ hàng</span>
                     <span class="shop-cart-badge" id="cart-count">0</span>
                 </a>
+                <a href="../admin/login.html" class="shop-action-btn" title="Cổng quản trị dành cho Quản lý & Dược sĩ" style="background: #e0f2fe; color: #0284c7; border-radius: 8px; padding: 6px 12px; font-weight: 600;">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>Quản trị</span>
+                </a>
             </div>
         </div>
         
@@ -223,17 +232,17 @@
                     <i class="fa-solid fa-layer-group" style="color: var(--shop-primary);"></i> Danh mục
                 </label>
                 <select id="category-nav" class="category-dropdown" onchange="Shop.filterCategory(this.value)">
-                    <!-- Injected via JS -->
+                    
                 </select>
             </div>
         </nav>
     </header>
 
     <div class="shop-container">
-        <!-- Hero Slider -->
+        
         <div class="hero-slider-container">
             <div class="hero-slides" id="hero-slides">
-                <!-- Slide 1 -->
+                
                 <div class="hero-slide" style="background: #e0f2fe; display: flex;">
                     <div class="hero-slide-content">
                         <h2>Chăm sóc sức khỏe mỗi ngày</h2>
@@ -242,7 +251,7 @@
                     </div>
                     <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400&auto=format&fit=crop" class="hero-img">
                 </div>
-                <!-- Slide 2 -->
+                
                 <div class="hero-slide" style="background: #dcfce7; display: none;">
                     <div class="hero-slide-content">
                         <h2 style="color: #166534;">Tuần lễ vàng Vitamin</h2>
@@ -251,7 +260,7 @@
                     </div>
                     <img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&auto=format&fit=crop" class="hero-img" style="border-radius:50%; transform: rotate(-5deg);">
                 </div>
-                <!-- Slide 3 -->
+                
                 <div class="hero-slide" style="background: #fee2e2; display: none;">
                     <div class="hero-slide-content">
                         <h2 style="color: #991b1b;">Sản phẩm cho Mẹ & Bé</h2>
@@ -264,9 +273,9 @@
             <div class="hero-slider-dots" id="hero-dots"></div>
         </div>
 
-        <!-- Flash Sale -->
+        
 
-        <!-- Danh mục nổi bật -->
+        
         <div class="featured-categories" style="margin-bottom: 2.5rem;">
             <h3 style="margin-bottom: 1.5rem; font-size: 1.4rem; font-weight: 700; color: #1e293b;">Danh mục nổi bật</h3>
             <div class="no-scrollbar" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 15px; margin: 0 -10px; padding-left: 10px; padding-right: 10px; padding-top: 5px;">
@@ -280,9 +289,9 @@
             </div>
         </div>
 
-        <!-- Main Layout -->
+        
         <div class="shop-layout-grid">
-            <!-- Sidebar -->
+            
             <aside class="filter-sidebar">
                 <div class="filter-group">
                     <div class="filter-title">Khoảng giá</div>
@@ -296,7 +305,7 @@
                 <div class="filter-group">
                     <div class="filter-title">Thương hiệu</div>
                     <div id="brand-filters">
-                        <!-- Injected -->
+                        
                     </div>
                 </div>
 
@@ -308,7 +317,7 @@
                 </div>
             </aside>
 
-            <!-- Product List -->
+            
             <main>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h2 style="font-size: 1.25rem;">Tất cả sản phẩm</h2>
@@ -322,17 +331,17 @@
                 </div>
 
                 <div class="products-grid" id="product-grid">
-                    <!-- Products -->
+                    
                 </div>
 
-                <!-- Pagination -->
+                
                 <div id="pagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 2rem;">
                 </div>
             </main>
         </div>
     </div>
 
-    <!-- Góc Sức Khỏe & Tin Tức -->
+    
     <section class="news-section">
         <div class="shop-container" style="margin-bottom: 1.5rem;">
             <h2 style="font-size: 1.5rem; display: flex; align-items: center; gap: 8px;">
@@ -342,7 +351,7 @@
         
         <div class="news-marquee-container">
             <div class="news-marquee-track" id="news-marquee-track">
-                <!-- Data will be loaded from RSS here -->
+                
                 <div style="padding: 2rem; color: #6b7280;">Đang tải tin tức y tế mới nhất...</div>
             </div>
         </div>
@@ -351,7 +360,7 @@
         </div>
     </section>
 
-    <!-- Newsletter Section -->
+    
     <section class="newsletter-section">
         <div class="shop-container">
             <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Nhận Bản Tin Y Tế & Ưu Đãi Độc Quyền</h2>
@@ -363,7 +372,7 @@
         </div>
     </section>
 
-    <!-- Footer -->
+    
     <footer class="shop-footer">
         <div class="shop-container">
             <div class="footer-grid">
@@ -437,10 +446,11 @@
         </div>
     </footer>
 
-    <!-- Scripts -->
+    
     <script src="../../js/storage.js"></script>
+    <script src="../../js/mock-data.js"></script>
     <script src="../../js/api.js"></script>
-    <!-- We will need a formatting util. App.formatCurrency exists in app.js, we can include it -->
+    
     <script src="../../js/app.js"></script> 
     <script src="../../js/shop.js"></script>
     <script src="../../js/cart.js"></script>

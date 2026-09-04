@@ -1,6 +1,4 @@
-/**
- * Khởi tạo dữ liệu giả lập cho hệ thống demo (Version 2.0 - Massive Data)
- */
+
 const MockData = {
     initialize: function(forceReset = false) {
         if (forceReset) {
@@ -8,9 +6,9 @@ const MockData = {
         }
 
         const currentProducts = Storage.get('products');
-        const needsProductReset = !currentProducts || currentProducts.length < 50 || (currentProducts[0] && currentProducts[0].image && currentProducts[0].image.includes('unsplash.com'));
+        const hasValidImages = currentProducts && currentProducts.length > 0 && currentProducts[0].image && currentProducts[0].image.includes('v1/static');
+        const needsProductReset = !currentProducts || currentProducts.length < 50 || !hasValidImages;
 
-        // Initialize core entities if they don't exist
         if (!Storage.get('users')) this.initUsers();
         if (!Storage.get('suppliers')) this.initSuppliers();
         if (needsProductReset) this.initProductsAndBatches();
@@ -26,7 +24,7 @@ const MockData = {
             { id: 'NV002', email: 'pharmacist@pharmacy.local', password: '123', name: 'Trần Dược Sĩ', role: 'PHARMACIST', phone: '0900000002', status: 'ACTIVE' },
             { id: 'NV003', email: 'cashier@pharmacy.local', password: '123', name: 'Lê Thu Ngân', role: 'CASHIER', phone: '0900000003', status: 'ACTIVE' }
         ];
-        // Generate 7 more employees
+
         for(let i=4; i<=10; i++) {
             users.push({
                 id: 'NV00' + i,
@@ -65,16 +63,66 @@ const MockData = {
         const brands = ['DHG Pharma', 'OPC', 'Sanofi', 'Traphaco', 'Rohto', 'Mega We Care', 'Blackmores', 'Abbott'];
         
         const baseProducts = [
-            { name: 'Panadol Extra', ingredient: 'Paracetamol 500mg, Caffeine 65mg', cat: 'Thuốc' },
-            { name: 'Vitamin C 1000mg', ingredient: 'Ascorbic acid 1000mg', cat: 'Vitamin & khoáng chất' },
-            { name: 'Amoxicillin 500mg', ingredient: 'Amoxicillin', cat: 'Thuốc' },
-            { name: 'Oresol Cam', ingredient: 'Electrolytes', cat: 'Thực phẩm bảo vệ sức khỏe' },
-            { name: 'Sữa rửa mặt Cetaphil', ingredient: 'Purified water', cat: 'Dược mỹ phẩm' },
-            { name: 'Kem chống nắng La Roche-Posay', ingredient: 'Titanium dioxide', cat: 'Dược mỹ phẩm' },
-            { name: 'Nước súc miệng Listerine', ingredient: 'Menthol, Thymol', cat: 'Chăm sóc răng miệng' },
-            { name: 'Sữa non ColosBaby', ingredient: 'Sữa non', cat: 'Mẹ & bé' },
-            { name: 'Máy đo huyết áp Omron', ingredient: 'Nhựa y tế', cat: 'Thiết bị y tế' },
-            { name: 'Dầu cá Omega 3', ingredient: 'Fish oil 1000mg', cat: 'Vitamin & khoáng chất' }
+            { 
+                name: 'Panadol Extra', 
+                ingredient: 'Paracetamol 500mg, Caffeine 65mg', 
+                cat: 'Thuốc',
+                image: 'https://cdn.nhathuoclongchau.com.vn/v1/static/DSC_099842_74c1fc532a.png'
+            },
+            { 
+                name: 'Vitamin C 1000mg', 
+                ingredient: 'Ascorbic acid 1000mg', 
+                cat: 'Vitamin & khoáng chất',
+                image: 'https://cdn.nhathuoclongchau.com.vn/v1/static/IMG_1758_33831b7cab.jpg'
+            },
+            { 
+                name: 'Amoxicillin 500mg', 
+                ingredient: 'Amoxicillin', 
+                cat: 'Thuốc',
+                image: 'https://cdn.nhathuoclongchau.com.vn/v1/static/amoxicillin_500mg_10x10_domesco_00000740_4f06bb4231.png'
+            },
+            { 
+                name: 'Oresol Cam', 
+                ingredient: 'Electrolytes', 
+                cat: 'Thực phẩm bảo vệ sức khỏe',
+                image: 'https://cdn.nhathuoclongchau.com.vn/v1/static/bot_hapacol_250_dhg_giam_dau_ha_sot_24_goi_00003627_3_cb4b38b2df.png'
+            },
+            { 
+                name: 'Sữa rửa mặt Cetaphil', 
+                ingredient: 'Purified water', 
+                cat: 'Dược mỹ phẩm',
+                image: 'https://cdn.nhathuoclongchau.com.vn/v1/static/00503325_sua_rua_mat_ngua_mun_duong_am_va_lam_sang_da_reihaku_hatomugi_acne_care_and_facial_washing_130g_9270_63ed_large_3f5868bde7.jpg'
+            },
+            { 
+                name: 'Kem chống nắng La Roche-Posay', 
+                ingredient: 'Titanium dioxide', 
+                cat: 'Dược mỹ phẩm',
+                image: 'https://cdn.nhathuoclongchau.com.vn/v1/static/IMG_9629_8628daed64.jpg'
+            },
+            { 
+                name: 'Nước súc miệng Listerine', 
+                ingredient: 'Menthol, Thymol', 
+                cat: 'Chăm sóc răng miệng',
+                image: 'https://cdn.nhathuoclongchau.com.vn/v1/static/chai_xit_nhiet_mieng_tay_chan_mieng_aloclair_plus_15ml_00502899_1_b6e114616e.jpg'
+            },
+            { 
+                name: 'Sữa non ColosBaby', 
+                ingredient: 'Sữa non', 
+                cat: 'Mẹ & bé',
+                image: 'https://cdn.nhathuoclongchau.com.vn/v1/static/Vien_ho_tro_phat_trien_nao_bo_suc_khoe_cho_mat_Brauer_Baby_and_Kids_Ultra_Pure_DHA_00033687_79d080f5b6.png'
+            },
+            { 
+                name: 'Máy đo huyết áp Omron', 
+                ingredient: 'Nhựa y tế', 
+                cat: 'Thiết bị y tế',
+                image: 'https://cdn.nhathuoclongchau.com.vn/v1/static/MAY_DO_HUYET_AP_BAP_TAY_OMRON_EZ_HEM_7183_HO_TRO_DO_HUYET_AP_NHIP_TIM_00050892_1_2073a34ed6.png'
+            },
+            { 
+                name: 'Dầu cá Omega 3', 
+                ingredient: 'Fish oil 1000mg', 
+                cat: 'Vitamin & khoáng chất',
+                image: 'https://cdn.nhathuoclongchau.com.vn/v1/static/VIEN_UONG_HO_TRO_BO_GAN_GIAI_DOC_GAN_BOGANIC_PREMIUM_TRAPHACO_60_V_00050786_1_f9e9211160.jpg'
+            }
         ];
 
         let products = [];
@@ -111,25 +159,23 @@ const MockData = {
                 stock: stock,
                 minStock: 20,
                 unit: i % 3 === 0 ? 'Hộp' : (i % 2 === 0 ? 'Lọ' : 'Tuýp'),
-                image: '',
-                images: [],
+                image: base.image,
+                images: [base.image],
                 supplierId: 'NCC001',
                 tags: isDiscount ? ['Khuyến mãi'] : ['Bán chạy'],
                 status: stock === 0 ? 'INACTIVE' : 'ACTIVE'
             });
 
-            // Create 1-2 batches per product
             const numBatches = stock > 0 ? (Math.random() > 0.5 ? 2 : 1) : 0;
             let remainingStock = stock;
             
             for(let b=0; b<numBatches; b++) {
                 const batchStock = b === numBatches - 1 ? remainingStock : Math.floor(remainingStock / 2);
                 remainingStock -= batchStock;
-                
-                // Trộn lẫn các hạn sử dụng: Expired, Expiring soon, Normal
+
                 let expiryDays = Math.floor(Math.random() * 800) - 10;
-                if (i === 1) expiryDays = -5; // Cố tình cho SP002 có lô hết hạn
-                if (i === 2) expiryDays = 15; // Cố tình cho SP003 sắp hết hạn
+                if (i === 1) expiryDays = -5;
+                if (i === 2) expiryDays = 15;
                 
                 batches.push({
                     id: 'L0' + productId + '-' + (b+1),
@@ -196,10 +242,9 @@ const MockData = {
 
             const statuses = ['PENDING', 'PROCESSING', 'SHIPPING', 'COMPLETED', 'CANCELLED'];
             const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-            
-            // Lùi ngày để có dữ liệu quá khứ cho báo cáo
+
             const date = new Date();
-            date.setDate(date.getDate() - Math.floor(Math.random() * 60)); // Trong 60 ngày qua
+            date.setDate(date.getDate() - Math.floor(Math.random() * 60));
 
             const customer = customers[Math.floor(Math.random() * customers.length)];
             const employee = users[Math.floor(Math.random() * users.length)];
@@ -219,12 +264,12 @@ const MockData = {
                 summary: {
                     subtotal: total,
                     tax: 0,
-                    discount: Math.floor(total * (Math.random() > 0.8 ? 0.1 : 0)), // 10% discount sometimes
+                    discount: Math.floor(total * (Math.random() > 0.8 ? 0.1 : 0)),
                     total: total - (Math.floor(total * (Math.random() > 0.8 ? 0.1 : 0)))
                 }
             });
         }
-        // Sắp xếp đơn hàng mới nhất lên đầu
+
         orders.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
         Storage.set('orders', orders);
     },
@@ -264,3 +309,8 @@ const MockData = {
         });
     }
 };
+
+if (typeof window !== 'undefined' && typeof MockData !== 'undefined' && MockData.initialize) {
+    MockData.initialize();
+}
+

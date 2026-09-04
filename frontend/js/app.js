@@ -1,6 +1,24 @@
-/**
- * Common App Utilities
- */
+
+
+window.goToProductDetail = function(productId) {
+    if (productId !== undefined && productId !== null && productId !== '') {
+        try {
+            localStorage.setItem('selectedProductId', String(productId));
+        } catch(e){}
+        let path = window.location.pathname.toLowerCase();
+        let prefix = '';
+        if (path.includes('/customer') || path.includes('/admin')) {
+            prefix = '../public/';
+        } else if (path.includes('/public')) {
+            prefix = '';
+        } else if (path.includes('/pages/')) {
+            prefix = 'public/';
+        } else {
+            prefix = 'pages/public/';
+        }
+        window.location.href = `${prefix}shop-detail.html?id=${encodeURIComponent(productId)}`;
+    }
+};
 
 const App = {
     init: function() {
@@ -9,9 +27,8 @@ const App = {
         this.interceptAccountLinks();
     },
 
-    // Cập nhật hiển thị Đăng nhập / Tài khoản
     interceptAccountLinks: function() {
-        if (window.location.pathname.includes('/admin/')) return;
+        if (window.location.pathname.includes('/admin')) return;
         
         let isLogged = false;
         try {
@@ -32,30 +49,31 @@ const App = {
         if (isLogged) {
             loginBtns.forEach(btn => btn.style.display = 'none');
             accountBtns.forEach(btn => {
-                btn.style.display = ''; // Hiển thị nút Tài khoản
+                btn.style.display = '';
                 if(btn.style.color === '') btn.style.color = 'var(--shop-primary)';
             });
         } else {
             loginBtns.forEach(btn => btn.style.display = '');
             accountBtns.forEach(btn => btn.style.display = 'none');
-            
-            // Đổi đích đến các thẻ link a cũ nếu còn sót (phòng hờ)
-            let loginPath = '../public/shop-login.html';
-            if (window.location.pathname.includes('/pages/public/')) {
+
+            let loginPath = 'shop-login.html';
+            const path = window.location.pathname.toLowerCase();
+            if (path.includes('/customer') || path.includes('/admin')) {
+                loginPath = '../public/shop-login.html';
+            } else if (path.includes('/public')) {
                 loginPath = 'shop-login.html';
-            } else if (window.location.pathname.endsWith('/frontend/') || window.location.pathname.endsWith('index.html')) {
+            } else if (path.endsWith('/frontend/') || path.endsWith('index.html') || path === '/' || path === '') {
                 loginPath = 'pages/public/shop-login.html';
             }
 
             document.querySelectorAll('a[href*="shop-account.html"]:not(#btn-nav-account)').forEach(link => {
-                if(!link.hash) { // Không áp dụng cho link có #wishlist
+                if(!link.hash) {
                     link.href = loginPath;
                 }
             });
         }
     },
 
-    // Áp dụng giao diện (Sáng/Tối)
     applyTheme: function() {
         const settings = Storage.get('settings') || {};
         if (settings.theme === 'dark') {
@@ -67,7 +85,6 @@ const App = {
         }
     },
 
-    // Áp dụng ngôn ngữ
     applyLanguage: function() {
         const settings = Storage.get('settings') || {};
         const lang = settings.language || 'vi';
@@ -155,7 +172,7 @@ const App = {
                 } else if (trimmed) {
                     let newText = text;
                     for (const [vi, en] of Object.entries(dict)) {
-                        // Safe replacement for partial matches
+
                         if (newText.includes(vi)) {
                             newText = newText.replace(vi, en);
                         }
@@ -181,7 +198,6 @@ const App = {
         }, 150);
     },
 
-    // Hiển thị thông báo (Toast)
     showToast: function(message, type = 'success') {
         let container = document.getElementById('toast-container');
         if (!container) {
@@ -204,8 +220,7 @@ const App = {
         `;
 
         container.appendChild(toast);
-        
-        // Trigger reflow for animation
+
         setTimeout(() => toast.classList.add('show'), 10);
 
         setTimeout(() => {
@@ -214,12 +229,10 @@ const App = {
         }, 3000);
     },
 
-    // Format tiền tệ
     formatCurrency: function(amount) {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
     },
 
-    // Toggle Sidebar trên Mobile
     initSidebar: function() {
         const toggleBtn = document.getElementById('toggle-sidebar');
         const sidebar = document.getElementById('app-sidebar');
@@ -235,12 +248,10 @@ const App = {
         }
     },
 
-    // Lấy thông tin User đang đăng nhập
     getCurrentUser: function() {
         return Storage.get('currentUser');
     },
 
-    // Kiểm tra đã đăng nhập chưa
     requireAuth: function() {
         const user = this.getCurrentUser();
         if (!user) {
@@ -249,7 +260,6 @@ const App = {
         return user;
     },
 
-    // Đăng xuất
     logout: function() {
         if (typeof Auth !== 'undefined' && typeof Auth.logout === 'function') {
             Auth.logout();
@@ -266,17 +276,15 @@ const App = {
         }
     },
 
-    // Quản lý Modal
     showModal: function(modalId) {
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.style.display = 'flex';
-            // Setup close events if not already done
+
             if (!modal.dataset.eventsBound) {
                 const closeBtns = modal.querySelectorAll('.btn-close, .modal-close');
                 closeBtns.forEach(btn => btn.addEventListener('click', () => this.hideModal(modalId)));
-                
-                // Click outside
+
                 modal.addEventListener('click', (e) => {
                     if (e.target === modal) this.hideModal(modalId);
                 });
@@ -292,7 +300,6 @@ const App = {
         }
     },
 
-    // Global Confirm Box
     showConfirm: function(message, onConfirm, onCancel = null) {
         let confirmBox = document.getElementById('global-confirm');
         if (!confirmBox) {
@@ -318,7 +325,6 @@ const App = {
         const btnOk = document.getElementById('global-confirm-ok');
         const btnCancel = document.getElementById('global-confirm-cancel');
 
-        // Remove old event listeners
         const newBtnOk = btnOk.cloneNode(true);
         const newBtnCancel = btnCancel.cloneNode(true);
         btnOk.parentNode.replaceChild(newBtnOk, btnOk);
@@ -333,8 +339,7 @@ const App = {
             confirmBox.style.display = 'none';
             if (typeof onCancel === 'function') onCancel();
         });
-        
-        // Click outside
+
         const outsideHandler = (e) => {
             if (e.target === confirmBox) {
                 confirmBox.style.display = 'none';
@@ -345,7 +350,6 @@ const App = {
         confirmBox.addEventListener('click', outsideHandler);
     },
 
-    // Loading overlay
     showLoading: function() {
         let loading = document.getElementById('global-loading');
         if (!loading) {
@@ -370,8 +374,7 @@ const App = {
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
     App.initSidebar();
-    
-    // Global ESC key listener to close modals
+
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             document.querySelectorAll('.modal, #global-confirm').forEach(el => {
@@ -383,7 +386,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Tự động quét và xử lý link tài khoản ngay khi DOM tải xong
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof App !== 'undefined' && App.interceptAccountLinks) {
         App.interceptAccountLinks();

@@ -1,4 +1,4 @@
-/* Layout base structure */
+
 .app-container {
     display: flex;
     height: 100vh;
@@ -6,7 +6,6 @@
     background-color: var(--bg-main);
 }
 
-/* Sidebar */
 .app-sidebar {
     width: var(--sidebar-width);
     background-color: var(--bg-surface);
@@ -82,7 +81,6 @@
     margin-right: 0;
 }
 
-/* Main Content */
 .app-main {
     flex: 1;
     display: flex;
@@ -90,7 +88,6 @@
     overflow: hidden;
 }
 
-/* Header */
 .app-header {
     height: var(--header-height);
     background-color: var(--bg-surface);
@@ -123,7 +120,6 @@
     color: var(--primary-color);
 }
 
-/* Page Content */
 .page-content {
     flex: 1;
     overflow-y: auto;

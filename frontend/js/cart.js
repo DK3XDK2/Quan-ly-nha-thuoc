@@ -1,6 +1,4 @@
-/**
- * Cart Manager cho B2C Shop - Kết nối Backend API
- */
+
 const Cart = {
     items: [],
 
@@ -27,7 +25,7 @@ const Cart = {
 
     highlightActiveMenu: function() {
         const path = window.location.pathname;
-        const page = path.split('/').pop() || 'shop.html';
+        const page = path.split('/').pop() || 'index.html';
         
         document.querySelectorAll('.shop-action-btn').forEach(btn => {
             const href = btn.getAttribute('href');
@@ -42,7 +40,8 @@ const Cart = {
     add: async function(dbId, qty = 1, event = null) {
         try {
             const list = await API.get('/api/thuoc');
-            const thuoc = list.find(t => t.id === Number(dbId));
+            const arr = Array.isArray(list) ? list : (list && list.data ? list.data : []);
+            const thuoc = arr.find(t => String(t.id) === String(dbId) || String(t.maThuoc) === String(dbId));
             if (!thuoc) {
                 App.showToast('Sản phẩm không tồn tại!', 'error');
                 return;
@@ -216,7 +215,7 @@ const Cart = {
             body.innerHTML = `<div style="text-align:center; padding: 3rem 0; color:var(--shop-text-muted);">
                 <i class="fa-solid fa-cart-arrow-down" style="font-size:3rem; margin-bottom:1rem;"></i>
                 <p>Giỏ hàng đang trống.</p>
-                <button onclick="Cart.closeDrawer(); window.location.href='shop.html'" style="margin-top:1rem; padding:10px 20px; border-radius:20px; border:1px solid var(--shop-primary); color:var(--shop-primary); background:white; cursor:pointer;">Tiếp tục mua sắm</button>
+                <button onclick="Cart.closeDrawer(); window.location.href='index.html'" style="margin-top:1rem; padding:10px 20px; border-radius:20px; border:1px solid var(--shop-primary); color:var(--shop-primary); background:white; cursor:pointer;">Tiếp tục mua sắm</button>
             </div>`;
             totalEl.innerText = '0 ₫';
             return;
@@ -252,19 +251,22 @@ const Cart = {
     },
 
     goToCheckout: function() {
+        const path = window.location.pathname.toLowerCase();
         let checkoutPath = '../customer/checkout.html';
-        if (window.location.pathname.includes('/pages/customer/')) {
+        if (path.includes('/customer')) {
             checkoutPath = 'checkout.html';
-        } else if (window.location.pathname.endsWith('/frontend/') || window.location.pathname.endsWith('index.html')) {
+        } else if (path.endsWith('/frontend/') || path.endsWith('index.html') || path === '/' || path === '') {
             checkoutPath = 'pages/customer/checkout.html';
         }
         
         const u = localStorage.getItem('shop_user');
         if (!u || u === 'null' || u === 'undefined') {
-            let loginPath = '../public/shop-login.html';
-            if (window.location.pathname.includes('/pages/public/')) {
+            let loginPath = 'shop-login.html';
+            if (path.includes('/customer') || path.includes('/admin')) {
+                loginPath = '../public/shop-login.html';
+            } else if (path.includes('/public')) {
                 loginPath = 'shop-login.html';
-            } else if (window.location.pathname.endsWith('/frontend/') || window.location.pathname.endsWith('index.html')) {
+            } else if (path.endsWith('/frontend/') || path.endsWith('index.html') || path === '/' || path === '') {
                 loginPath = 'pages/public/shop-login.html';
             }
             if (typeof App !== 'undefined' && App.showToast) {
