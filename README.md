@@ -1,6 +1,8 @@
 # BÀI KIỂM TRA THƯỜNG XUYÊN 2
 ## Đề tài: Hệ thống Quản lý và Bán thuốc Trực tuyến (AINA Pharmacy)
 
+**Kho mã nguồn:** [https://github.com/DK3XDK2/Quan-ly-nha-thuoc](https://github.com/DK3XDK2/Quan-ly-nha-thuoc)
+
 ---
 
 ### 1. Cấu trúc dự án hợp lý
@@ -120,6 +122,7 @@ Các chức năng Thêm, Xem, Sửa, Xóa dữ liệu hoạt động chính xác
 ---
 
 ### 10. Quản lý mã nguồn và tài liệu chạy thử
+- **Kho GitHub:** Toàn bộ mã nguồn được quản lý tại [https://github.com/DK3XDK2/Quan-ly-nha-thuoc](https://github.com/DK3XDK2/Quan-ly-nha-thuoc).
 - **Tài liệu hướng dẫn:** Cung cấp hướng dẫn chi tiết các bước cài đặt và chạy thử dự án tại:  
   👉 **Xem chi tiết tại:** [`docs/HUONG_DAN_CAI_DAT_VA_CHAY.md`](docs/HUONG_DAN_CAI_DAT_VA_CHAY.md)
   - *Cách 1: Chạy nhanh Offline trong 10 giây (`cd frontend && npm run dev`).*
