@@ -8,7 +8,16 @@ const duongDanThuoc = require("./routes/thuoc");
 const duongDanTonKho = require("./routes/ton_kho");
 const duongDanDonThuoc = require("./routes/don_thuoc");
 const duongDanHoaDon = require("./routes/hoa_don");
-const duongDanGoiYAi = require("./routes/goi_y_ai");
+let duongDanGoiYAi;
+try {
+  duongDanGoiYAi = require("./routes/goi_y_ai");
+} catch (e) {
+  const routerAo = express.Router();
+  routerAo.all("*", (req, res) => {
+    res.json({ thongBao: "Dịch vụ đang được bảo trì và nâng cấp", trangThai: "coming_soon" });
+  });
+  duongDanGoiYAi = routerAo;
+}
 const duongDanBaoCao = require("./routes/bao_cao");
 const duongDanKhachHang = require("./routes/khach_hang");
 const duongDanDonHang = require("./routes/don_hang");

@@ -17,7 +17,7 @@ frontend/.env
 dist/
 build/
 
-# Temporary / Scratch & Scripts
+# Scripts & Maintenance
 scratch/
 frontend_old/
 check_*.js
@@ -25,6 +25,19 @@ fix_*.js
 debug_*.js
 force_*.js
 purge_*.js
+test_*.js
+show_*.js
+sync_*.js
+update_*.js
+find_*.js
+crawl_*.js
+seed.js
+
+# Optional / Experimental services
+backend/src/routes/goi_y_ai.js
+backend/src/services/gemini.js
+backend/src/services/groq.js
+backend/src/services/ai_noi_bo.js
 
 # System / IDE
 .DS_Store

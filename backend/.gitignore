@@ -21,7 +21,14 @@ force_*.js
 sync_ai_names.js
 update_images.js
 purge_*.js
-find_bao.js
+crawl_*.js
+show_*.js
+test_*.js
+find_*.js
+src/routes/goi_y_ai.js
+src/services/gemini.js
+src/services/groq.js
+src/services/ai_noi_bo.js
 
 # Logs and system files
 npm-debug.log*
