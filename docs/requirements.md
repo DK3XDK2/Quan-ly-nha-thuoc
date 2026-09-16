@@ -143,7 +143,7 @@ Kiến trúc hiện tại:
 
 ## 5. Ràng buộc kỹ thuật
 
-- Frontend chạy cổng **3000** (`npx serve`).
+- Frontend chạy cổng **3001** (`npx serve`).
 - Backend chạy cổng **4000**.
 - CSDL mặc định MySQL, chuỗi kết nối `DATABASE_URL`.
 - Node.js 18 trở lên.

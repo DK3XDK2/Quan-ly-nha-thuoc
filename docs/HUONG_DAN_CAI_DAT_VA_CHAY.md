@@ -18,7 +18,7 @@
    cd frontend
    npm run dev
    ```
-2. Mở trình duyệt truy cập: **`http://localhost:3000`**
+2. Mở trình duyệt truy cập: **`http://localhost:3001`**
 3. **Trải nghiệm đầy đủ hệ thống:**
    - Xem danh sách thuốc với ảnh sản phẩm thật của Việt Nam (Long Châu, An Khang).
    - Tìm kiếm, lọc theo danh mục, lọc theo giá, xem chi tiết sản phẩm.
@@ -65,7 +65,7 @@
    cd frontend
    npm run dev
    ```
-2. Mở trình duyệt truy cập: **`http://localhost:3000`**
+2. Mở trình duyệt truy cập: **`http://localhost:3001`**
 
 ---
 

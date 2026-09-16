@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Frontend nha thuoc AINA Pharmacy",
   "scripts": {
-    "dev": "npx -y serve -l 3000 .",
-    "start": "npx -y serve -l 3000 ."
+    "dev": "npx -y serve -l 3001 -c serve.json",
+    "start": "npx -y serve -l 3001 -c serve.json"
   }
 }
