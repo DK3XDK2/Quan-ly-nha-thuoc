@@ -249,20 +249,49 @@ duongDan.post(
   },
 );
 
-duongDan.get("/lich-su", xacThucTruyCap, yeuCauKhachHang, async (req, res) => {
-  const danhSach = await coSoDuLieu.donHang.findMany({
-    where: { khachHangId: req.nguoiDung.id },
-    include: {
-      chiTietDonHang: {
-        include: {
-          thuoc: true,
+duongDan.get("/lich-su", xacThucTuyChon, async (req, res) => {
+  try {
+    let where = {};
+    if (req.nguoiDung && req.nguoiDung.id) {
+      where = { khachHangId: req.nguoiDung.id };
+    } else if (req.query.soDienThoai) {
+      const sdtSach = req.query.soDienThoai.replace(/[\s\.]/g, "");
+      const kh = await coSoDuLieu.khachHang.findFirst({
+        where: { soDienThoai: sdtSach },
+      });
+      if (kh) {
+        where = {
+          OR: [
+            { khachHangId: kh.id },
+            { soDienThoaiNhan: sdtSach }
+          ]
+        };
+      } else {
+        where = { soDienThoaiNhan: sdtSach };
+      }
+    } else if (req.query.khachHangId) {
+      where = { khachHangId: Number(req.query.khachHangId) };
+    } else {
+      return res.json([]);
+    }
+
+    const danhSach = await coSoDuLieu.donHang.findMany({
+      where,
+      include: {
+        chiTietDonHang: {
+          include: {
+            thuoc: true,
+          },
         },
       },
-    },
-    orderBy: { taoLuc: "desc" },
-  });
+      orderBy: { taoLuc: "desc" },
+    });
 
-  return res.json(danhSach);
+    return res.json(danhSach);
+  } catch (err) {
+    console.error("Lỗi lấy lịch sử đơn hàng:", err);
+    return res.status(500).json({ thongBao: "Lỗi hệ thống khi lấy lịch sử đơn hàng" });
+  }
 });
 
 duongDan.get(

@@ -443,21 +443,18 @@ const Checkout = {
 
         try {
             App.showLoading();
-            await API.post(`/api/don-hang/${this.currentOrder.id || maDonHang}/trang-thai`, {
-                trangThai: 'DA_XAC_NHAN'
-            }).catch(() => null);
-
-            const orders = Storage.get('orders') || [];
-            const target = orders.find(o => o.maDonHang === maDonHang || String(o.id) === String(this.currentOrder.id));
-            if (target) {
-                target.trangThai = 'DA_XAC_NHAN';
-                target.status = 'DA_XAC_NHAN';
-                Storage.set('orders', orders);
+            const res = await API.get(`/api/thanh-toan/kiem-tra/${maDonHang}`);
+            if (res && res.daThanhToan) {
+                this.onPaymentSuccess(maDonHang);
+            } else {
+                if (typeof App !== 'undefined' && App.showToast) {
+                    App.showToast(`Hệ thống chưa nhận được tiền cho nội dung CK "${maDonHang}". Vui lòng chuyển tiền đúng nội dung và thử lại sau 3-5 giây!`, 'warning');
+                } else {
+                    alert(`Hệ thống chưa nhận được tiền cho nội dung CK "${maDonHang}". Vui lòng chuyển tiền đúng nội dung và thử lại sau 3-5 giây!`);
+                }
             }
-
-            this.onPaymentSuccess(maDonHang);
         } catch(e) {
-            this.onPaymentSuccess(maDonHang);
+            App.showToast('Không thể kết nối máy chủ để kiểm tra thanh toán.', 'error');
         } finally {
             App.hideLoading();
         }

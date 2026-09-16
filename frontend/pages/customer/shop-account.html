@@ -419,7 +419,10 @@
             container.innerHTML = '<div style="text-align:center; padding: 3rem;"><i class="fa-solid fa-circle-notch fa-spin fa-2x" style="color:var(--shop-primary);"></i><div style="margin-top:15px; color:var(--shop-text-muted); font-size:0.95rem;">Đang tải danh sách đơn hàng...</div></div>';
             
             try {
-                const res = await API.get('/api/don-hang/lich-su');
+                const user = API.getCurrentUser() || Storage.get('shop_user');
+                const phone = user ? (user.phone || user.soDienThoai || '') : '';
+                const query = phone ? `?soDienThoai=${encodeURIComponent(phone)}` : '';
+                const res = await API.get(`/api/don-hang/lich-su${query}`);
                 if (Array.isArray(res)) {
                     allMyOrders = res;
                 } else if (res && res.data) {
@@ -797,22 +800,17 @@
             if (!currentAccOrderCode) return;
             try {
                 App.showLoading();
-                await API.post(`/api/don-hang/${currentAccOrderCode}/trang-thai`, { trangThai: 'DA_XAC_NHAN' }).catch(() => null);
-                
-                const orders = Storage.get('orders') || [];
-                const target = orders.find(o => o.maDonHang === currentAccOrderCode || String(o.id) === currentAccOrderCode);
-                if (target) {
-                    target.trangThai = 'DA_XAC_NHAN';
-                    target.status = 'DA_XAC_NHAN';
-                    Storage.set('orders', orders);
+                const res = await API.get(`/api/thanh-toan/kiem-tra/${currentAccOrderCode}`);
+                if (res && res.daThanhToan) {
+                    App.showToast('Thanh toán SePay thành công! Đơn hàng đã được xác nhận.', 'success');
+                    closeOrderSepayModal();
+                    isOrdersLoaded = false;
+                    await loadMyOrders();
+                } else {
+                    App.showToast(`Hệ thống chưa nhận được tiền cho nội dung CK "${currentAccOrderCode}". Quý khách vui lòng chuyển tiền đúng nội dung và thử lại sau ít giây!`, 'warning');
                 }
-
-                App.showToast('Đã ghi nhận thanh toán! Đơn hàng sẽ được chuyển đi sớm.', 'success');
-                closeOrderSepayModal();
-                isOrdersLoaded = false;
-                await loadMyOrders();
             } catch(e) {
-                App.showToast('Lỗi xác nhận', 'error');
+                App.showToast('Không thể kết nối máy chủ để kiểm tra thanh toán.', 'error');
             } finally {
                 App.hideLoading();
             }
@@ -893,8 +891,8 @@
             </p>
             
             <div style="display: flex; flex-direction: column; gap: 8px;">
-                <button type="button" onclick="confirmManualOrderPayment()" style="width: 100%; padding: 11px; background: #22c55e; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem;">
-                    <i class="fa-solid fa-circle-check"></i> Xác nhận tôi đã chuyển khoản thành công
+                <button type="button" onclick="confirmManualOrderPayment()" style="width: 100%; padding: 11px; background: #0ea5e9; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem;">
+                    <i class="fa-solid fa-rotate"></i> Tôi đã chuyển khoản, kiểm tra ngay
                 </button>
                 <button type="button" onclick="closeOrderSepayModal()" style="width: 100%; padding: 8px; background: transparent; color: #64748b; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; cursor: pointer;">
                     Đóng
