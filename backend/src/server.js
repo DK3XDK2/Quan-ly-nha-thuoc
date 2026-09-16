@@ -58,6 +58,7 @@ ungDung.get("/", (req, res) => {
 ungDung.use("/api/xac-thuc", duongDanXacThuc);
 ungDung.use("/api/thuoc", duongDanThuoc);
 ungDung.use("/api/ton-kho", duongDanTonKho);
+ungDung.use("/api/lo-thuoc", duongDanTonKho);
 ungDung.use("/api/don-thuoc", duongDanDonThuoc);
 ungDung.use("/api/hoa-don", duongDanHoaDon);
 ungDung.use("/api/goi-y-ai", duongDanGoiYAi);

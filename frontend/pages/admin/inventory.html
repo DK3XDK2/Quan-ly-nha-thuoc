@@ -43,7 +43,6 @@
 </head>
 <body>
     <div class="app-container">
-        
         <aside class="app-sidebar" id="app-sidebar"></aside>
         <main class="app-main">
             <header class="app-header" id="app-header"></header>
@@ -58,7 +57,7 @@
                     <div class="tab-btn" onclick="switchTab('batches', this)">Quản lý Lô & Hạn sử dụng</div>
                 </div>
 
-                
+                <!-- Tab 1: Tổng quan tồn kho -->
                 <div id="tab-inventory" class="tab-content active">
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-md); margin-bottom: var(--spacing-lg);">
                         <div class="card card-body" style="border-left: 4px solid var(--info-color);">
@@ -89,15 +88,13 @@
                                         <th>Trạng thái</th>
                                     </tr>
                                 </thead>
-                                <tbody id="inventory-list">
-                                    
-                                </tbody>
+                                <tbody id="inventory-list"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
-                
+                <!-- Tab 2: Quản lý lô & HSD -->
                 <div id="tab-batches" class="tab-content">
                     <div class="card">
                         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
@@ -116,9 +113,7 @@
                                         <th>Trạng thái HSD</th>
                                     </tr>
                                 </thead>
-                                <tbody id="batches-list">
-                                    
-                                </tbody>
+                                <tbody id="batches-list"></tbody>
                             </table>
                         </div>
                     </div>
@@ -128,7 +123,6 @@
         </main>
     </div>
 
-    
     <script src="../../js/storage.js"></script>
     <script src="../../js/api.js"></script>
     <script src="../../js/auth.js"></script>
@@ -157,12 +151,26 @@
 
         const Inventory = {
             products: [],
+            batches: [],
             
             init: async function() {
                 try {
                     App.showLoading();
-                    this.products = await API.get('/api/thuoc').catch(() => Storage.get('products') || []);
-                    this.batches = await API.get('/api/lo-thuoc').catch(() => Storage.get('batches') || []);
+                    const [resThuoc, resLo] = await Promise.allSettled([
+                        API.get('/api/thuoc'),
+                        API.get('/api/ton-kho/lo?limit=100')
+                    ]);
+
+                    this.products = (resThuoc.status === 'fulfilled' && Array.isArray(resThuoc.value)) 
+                        ? resThuoc.value 
+                        : (Storage.get('products') || []);
+
+                    if (resLo.status === 'fulfilled') {
+                        const val = resLo.value;
+                        this.batches = Array.isArray(val) ? val : (val.danhSach || []);
+                    } else {
+                        this.batches = Storage.get('batches') || [];
+                    }
                 } finally {
                     App.hideLoading();
                 }
@@ -177,31 +185,47 @@
                 let html = '';
 
                 this.products.forEach(p => {
-                    totalQty += p.stock;
-                    if (p.stock <= p.minStock && p.stock > 0) lowQtyCount++;
-                    if (p.stock === 0) lowQtyCount++;
+                    const name = p.tenThuoc || p.name || 'Sản phẩm';
+                    const code = p.maThuoc || p.id;
 
-                    const estImportPrice = p.price * 0.7;
-                    totalValue += (estImportPrice * p.stock);
+                    // Tính tồn kho thực tế từ các lô hoặc trường dự phòng
+                    let stock = 0;
+                    let estImportPrice = 0;
+                    if (Array.isArray(p.loTonKho) && p.loTonKho.length > 0) {
+                        stock = p.loTonKho.reduce((sum, l) => sum + (Number(l.soLuongTon) || 0), 0);
+                        const firstGiaNhap = Number(p.loTonKho.find(l => Number(l.giaNhap) > 0)?.giaNhap || 0);
+                        estImportPrice = firstGiaNhap > 0 ? firstGiaNhap : (Number(p.giaBan || p.price || 0) * 0.7);
+                    } else {
+                        stock = Number(p.soLuongTon || p.stock || 0);
+                        estImportPrice = Number(p.giaBan || p.price || 0) * 0.7;
+                    }
 
-                    const isOutOfStock = p.stock <= 0;
-                    const stockClass = isOutOfStock ? 'badge-danger' : (p.stock <= p.minStock ? 'badge-warning' : 'badge-success');
-                    const stockText = isOutOfStock ? 'Hết hàng' : (p.stock <= p.minStock ? 'Sắp hết' : 'Đủ hàng');
+                    const minStock = Number(p.tonToiThieu || p.minStock || 20);
+
+                    totalQty += stock;
+                    if (stock <= minStock) lowQtyCount++;
+
+                    const rowValue = estImportPrice * stock;
+                    totalValue += rowValue;
+
+                    const isOutOfStock = stock <= 0;
+                    const stockClass = isOutOfStock ? 'badge-danger' : (stock <= minStock ? 'badge-warning' : 'badge-success');
+                    const stockText = isOutOfStock ? 'Hết hàng' : (stock <= minStock ? 'Sắp hết' : 'Đủ hàng');
 
                     html += `
                         <tr>
-                            <td>${p.id}</td>
-                            <td style="font-weight: 500;">${p.name}</td>
-                            <td style="font-weight: 600;">${p.stock}</td>
-                            <td>${p.minStock}</td>
+                            <td><strong>${code}</strong></td>
+                            <td style="font-weight: 500;">${name}</td>
+                            <td style="font-weight: 600;">${stock.toLocaleString('vi-VN')}</td>
+                            <td>${minStock}</td>
                             <td>${App.formatCurrency(estImportPrice)}</td>
-                            <td>${App.formatCurrency(estImportPrice * p.stock)}</td>
+                            <td>${App.formatCurrency(rowValue)}</td>
                             <td><span class="badge ${stockClass}">${stockText}</span></td>
                         </tr>
                     `;
                 });
 
-                document.getElementById('inventory-list').innerHTML = html;
+                document.getElementById('inventory-list').innerHTML = html || `<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-muted);">Không có dữ liệu tồn kho</td></tr>`;
                 document.getElementById('inv-total-qty').innerText = totalQty.toLocaleString('vi-VN');
                 document.getElementById('inv-low-qty').innerText = lowQtyCount;
                 document.getElementById('inv-total-value').innerText = App.formatCurrency(totalValue);
@@ -210,31 +234,44 @@
             renderBatches: function() {
                 const batches = this.batches || [];
                 let html = '';
+                const today = new Date();
                 
                 batches.forEach(b => {
-                    let statusClass = 'expiry-good';
-                    let statusText = 'Bình thường';
+                    const batchCode = b.soLo || b.id || 'N/A';
+                    const productName = b.thuoc?.tenThuoc || b.productName || 'Sản phẩm';
+                    const qty = Number(b.soLuongTon ?? b.quantity ?? 0);
                     
-                    if (b.status === 'EXPIRED') {
-                        statusClass = 'expiry-critical';
-                        statusText = 'Đã hết hạn';
-                    } else if (b.status === 'EXPIRING') {
-                        statusClass = 'expiry-warning';
-                        statusText = 'Sắp hết hạn';
+                    let mfgFormatted = b.manufacturingDate || (b.taoLuc ? new Date(b.taoLuc).toLocaleDateString('vi-VN') : '-');
+                    let expFormatted = '-';
+                    let statusClass = 'expiry-good';
+                    let statusText = 'Còn hạn';
+
+                    if (b.hanSuDung || b.expiryDate) {
+                        const expDate = new Date(b.hanSuDung || b.expiryDate);
+                        expFormatted = expDate.toLocaleDateString('vi-VN');
+                        const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+                        
+                        if (diffDays < 0) {
+                            statusClass = 'expiry-critical';
+                            statusText = 'Đã hết hạn';
+                        } else if (diffDays <= 30) {
+                            statusClass = 'expiry-warning';
+                            statusText = `Sắp hết hạn (${diffDays} ngày)`;
+                        }
                     }
 
                     html += `
                         <tr>
-                            <td style="font-family: monospace; font-weight: 600;">${b.id}</td>
-                            <td>${b.productName}</td>
-                            <td>${b.manufacturingDate}</td>
-                            <td class="${statusClass}">${b.expiryDate}</td>
-                            <td>${b.quantity}</td>
+                            <td style="font-family: monospace; font-weight: 600;">${batchCode}</td>
+                            <td>${productName}</td>
+                            <td>${mfgFormatted}</td>
+                            <td class="${statusClass}">${expFormatted}</td>
+                            <td style="font-weight: 600;">${qty.toLocaleString('vi-VN')}</td>
                             <td><span class="badge" style="background-color: var(--bg-main); color: var(--text-primary); border: 1px solid currentColor;">${statusText}</span></td>
                         </tr>
                     `;
                 });
-                document.getElementById('batches-list').innerHTML = html || `<tr><td colspan="6" style="text-align:center;">Không có dữ liệu lô</td></tr>`;
+                document.getElementById('batches-list').innerHTML = html || `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">Không có dữ liệu lô</td></tr>`;
             }
         };
     </script>

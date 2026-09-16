@@ -54,9 +54,7 @@
                                     <th>Thao tác</th>
                                 </tr>
                             </thead>
-                            <tbody id="batches-tbody">
-                                
-                            </tbody>
+                            <tbody id="batches-tbody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -64,7 +62,7 @@
         </main>
     </div>
 
-    
+    <!-- Modal Thêm/Sửa Lô -->
     <div id="modal-batch" class="modal" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9000; justify-content:center; align-items:center;">
         <div style="background:var(--bg-surface); padding:2rem; border-radius:8px; width:500px; max-width:90%;">
             <h3 id="modal-batch-title" style="margin-top:0; margin-bottom:1.5rem;">Thêm lô hàng</h3>
@@ -76,9 +74,7 @@
                 </div>
                 <div style="margin-bottom: 1rem;">
                     <label style="display:block; margin-bottom:0.5rem; font-weight:500;">Sản phẩm *</label>
-                    <select id="batch-product" required style="width:100%; padding:8px; border:1px solid var(--border-color); border-radius:4px;">
-                        
-                    </select>
+                    <select id="batch-product" required style="width:100%; padding:8px; border:1px solid var(--border-color); border-radius:4px;"></select>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                     <div>
@@ -119,51 +115,91 @@
         async function populateProductSelect() {
             const products = await API.get('/api/thuoc').catch(() => Storage.get('products') || []);
             const select = document.getElementById('batch-product');
-            select.innerHTML = '<option value="">-- Chọn sản phẩm --</option>' + products.map(p => `<option value="${p.id || p.maThuoc}">${p.name || p.tenThuoc}</option>`).join('');
+            select.innerHTML = '<option value="">-- Chọn sản phẩm --</option>' + products.map(p => `<option value="${p.id || p.maThuoc}">${p.tenThuoc || p.name}</option>`).join('');
         }
 
         async function loadBatches() {
             App.showLoading();
-            const batches = await API.get('/api/lo-thuoc').catch(() => Storage.get('batches') || []);
+            let batches = [];
+            try {
+                const res = await API.get('/api/ton-kho/lo?limit=100');
+                batches = Array.isArray(res) ? res : (res.danhSach || []);
+            } catch (e) {
+                batches = Storage.get('batches') || [];
+            }
             window.allBatches = batches;
             renderTable(batches);
             App.hideLoading();
         }
 
         function filterBatches() {
-            let batches = window.allBatches || Storage.get('batches') || [];
-            const search = document.getElementById('search-batch').value.toLowerCase();
-            const status = document.getElementById('filter-status').value;
+            let batches = window.allBatches || [];
+            const search = document.getElementById('search-batch').value.toLowerCase().trim();
+            const statusFilter = document.getElementById('filter-status').value;
+            const today = new Date();
 
-            if(search) {
-                batches = batches.filter(b => b.id.toLowerCase().includes(search) || b.productName.toLowerCase().includes(search));
+            if (search) {
+                batches = batches.filter(b => {
+                    const code = (b.soLo || b.id || '').toString().toLowerCase();
+                    const name = (b.thuoc?.tenThuoc || b.productName || '').toLowerCase();
+                    return code.includes(search) || name.includes(search);
+                });
             }
-            if(status !== 'all') {
-                batches = batches.filter(b => b.status === status);
+
+            if (statusFilter !== 'all') {
+                batches = batches.filter(b => {
+                    let bStatus = b.status;
+                    if (!bStatus && (b.hanSuDung || b.expiryDate)) {
+                        const expDate = new Date(b.hanSuDung || b.expiryDate);
+                        const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+                        if (diffDays < 0) bStatus = 'EXPIRED';
+                        else if (diffDays <= 30) bStatus = 'EXPIRING';
+                        else bStatus = 'ACTIVE';
+                    }
+                    return bStatus === statusFilter;
+                });
             }
             renderTable(batches);
         }
 
         function renderTable(batches) {
             const tbody = document.getElementById('batches-tbody');
-            if(batches.length === 0) {
+            if (!batches || batches.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-muted);">Không tìm thấy lô hàng nào.</td></tr>`;
                 return;
             }
 
+            const today = new Date();
             let html = '';
             batches.forEach(b => {
+                const batchCode = b.soLo || b.id || 'N/A';
+                const productName = b.thuoc?.tenThuoc || b.productName || 'Sản phẩm';
+                const qty = Number(b.soLuongTon ?? b.quantity ?? 0);
+                const mfg = b.manufacturingDate || (b.taoLuc ? new Date(b.taoLuc).toLocaleDateString('vi-VN') : '-');
+                
+                let expFormatted = '-';
+                let bStatus = b.status || 'ACTIVE';
+
+                if (b.hanSuDung || b.expiryDate) {
+                    const expDate = new Date(b.hanSuDung || b.expiryDate);
+                    expFormatted = expDate.toLocaleDateString('vi-VN');
+                    const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+                    if (diffDays < 0) bStatus = 'EXPIRED';
+                    else if (diffDays <= 30) bStatus = 'EXPIRING';
+                    else bStatus = 'ACTIVE';
+                }
+
                 let statusBadge = `<span class="badge badge-success">Còn hạn</span>`;
-                if(b.status === 'EXPIRED') statusBadge = `<span class="badge badge-danger">Hết hạn</span>`;
-                if(b.status === 'EXPIRING') statusBadge = `<span class="badge badge-warning">Sắp hết hạn</span>`;
+                if (bStatus === 'EXPIRED') statusBadge = `<span class="badge badge-danger">Hết hạn</span>`;
+                if (bStatus === 'EXPIRING') statusBadge = `<span class="badge badge-warning">Sắp hết hạn</span>`;
 
                 html += `
                     <tr>
-                        <td style="font-weight:600;">${b.id}</td>
-                        <td>${b.productName}</td>
-                        <td>${b.quantity}</td>
-                        <td>${b.manufacturingDate}</td>
-                        <td style="font-weight:600; color: ${b.status==='EXPIRED' ? 'var(--danger-color)' : 'inherit'}">${b.expiryDate}</td>
+                        <td style="font-weight:600; font-family: monospace;">${batchCode}</td>
+                        <td>${productName}</td>
+                        <td style="font-weight:600;">${qty.toLocaleString('vi-VN')}</td>
+                        <td>${mfg}</td>
+                        <td style="font-weight:600; color: ${bStatus === 'EXPIRED' ? 'var(--danger-color)' : 'inherit'}">${expFormatted}</td>
                         <td>${statusBadge}</td>
                         <td>
                             <button class="btn-icon" onclick="editBatch('${b.id}')"><i class="fa-solid fa-pen"></i></button>
@@ -184,16 +220,16 @@
 
         function editBatch(id) {
             const batches = window.allBatches || Storage.get('batches') || [];
-            const b = batches.find(x => x.id === id);
+            const b = batches.find(x => x.id == id);
             if(!b) return;
 
             document.getElementById('modal-batch-title').innerText = 'Cập nhật lô hàng';
             document.getElementById('batch-old-id').value = b.id;
-            document.getElementById('batch-id').value = b.id;
-            document.getElementById('batch-product').value = b.productId;
-            document.getElementById('batch-mfg').value = b.manufacturingDate;
-            document.getElementById('batch-exp').value = b.expiryDate;
-            document.getElementById('batch-qty').value = b.quantity;
+            document.getElementById('batch-id').value = b.soLo || b.id;
+            document.getElementById('batch-product').value = b.thuocId || b.productId;
+            document.getElementById('batch-mfg').value = b.manufacturingDate || (b.taoLuc ? b.taoLuc.split('T')[0] : '');
+            document.getElementById('batch-exp').value = b.hanSuDung ? b.hanSuDung.split('T')[0] : (b.expiryDate || '');
+            document.getElementById('batch-qty').value = b.soLuongTon ?? b.quantity ?? 0;
             App.showModal('modal-batch');
         }
 
@@ -210,7 +246,6 @@
             App.showLoading();
             setTimeout(() => {
                 let batches = window.allBatches || Storage.get('batches') || [];
-                
 
                 const today = new Date();
                 const expDate = new Date(exp);
@@ -223,16 +258,20 @@
 
                 const newBatch = {
                     id: id,
+                    soLo: id,
+                    thuocId: productId,
                     productId: productId,
                     productName: productName,
                     manufacturingDate: mfg,
+                    hanSuDung: exp,
                     expiryDate: exp,
+                    soLuongTon: qty,
                     quantity: qty,
                     status: status
                 };
 
                 if(oldId) {
-                    const idx = batches.findIndex(x => x.id === oldId);
+                    const idx = batches.findIndex(x => x.id == oldId);
                     if(idx !== -1) batches[idx] = newBatch;
                 } else {
                     batches.push(newBatch);
@@ -250,7 +289,7 @@
         function deleteBatch(id) {
             App.showConfirm('Bạn có chắc chắn muốn xóa lô hàng này?', () => {
                 let batches = window.allBatches || Storage.get('batches') || [];
-                batches = batches.filter(x => x.id !== id);
+                batches = batches.filter(x => x.id != id);
                 Storage.set('batches', batches);
                 App.showToast('Đã xóa lô hàng!', 'success');
                 filterBatches();

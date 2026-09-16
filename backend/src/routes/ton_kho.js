@@ -5,7 +5,7 @@ const { ghiNhatKy } = require("../services/audit");
 
 const duongDan = express.Router();
 
-duongDan.get("/lo", xacThucTruyCap, async (req, res) => {
+const layDanhSachLo = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "", status = "all", categoryId = "all", sortBy = "newest" } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
@@ -97,7 +97,10 @@ duongDan.get("/lo", xacThucTruyCap, async (req, res) => {
     console.error("Lỗi lấy tồn kho:", loi);
     return res.status(500).json({ thongBao: "Lỗi khi lấy dữ liệu tồn kho" });
   }
-});
+};
+
+duongDan.get("/lo", xacThucTruyCap, layDanhSachLo);
+duongDan.get("/", xacThucTruyCap, layDanhSachLo);
 
 duongDan.get("/thong-ke", xacThucTruyCap, async (req, res) => {
   try {
