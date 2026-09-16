@@ -7,8 +7,7 @@ const MockData = {
 
         const currentProducts = Storage.get('products');
         const hasValidImages = currentProducts && currentProducts.length > 0 && currentProducts[0].image && currentProducts[0].image.includes('v1/static');
-        const hasCheapTestItems = currentProducts && currentProducts.some(p => p.price <= 2000);
-        const needsProductReset = !currentProducts || currentProducts.length < 50 || !hasValidImages || !hasCheapTestItems;
+        const needsProductReset = !currentProducts || currentProducts.length < 50 || !hasValidImages;
 
         if (!Storage.get('users')) this.initUsers();
         if (!Storage.get('suppliers')) this.initSuppliers();
@@ -126,78 +125,8 @@ const MockData = {
             }
         ];
 
-        let products = [
-            {
-                id: 'SP000',
-                name: 'Băng cá nhân Urgo (Test 1K)',
-                sku: 'SP000-SKU',
-                barcode: '893000000001',
-                brand: 'Urgo',
-                category: 'Vật tư y tế',
-                activeIngredient: 'Vải co giãn',
-                description: 'Sản phẩm thử nghiệm thanh toán 1.000đ',
-                ingredient: 'Vải co giãn và keo acrylic y tế',
-                usage: 'Dán bảo vệ vết thương nhỏ.',
-                price: 1000,
-                oldPrice: 2000,
-                cost: 500,
-                discount: 50,
-                rating: '5.0',
-                sold: 150,
-                stock: 100,
-                minStock: 10,
-                unit: 'Miếng',
-                image: 'https://cdn.nhathuoclongchau.com.vn/v1/static/chai_xit_nhiet_mieng_tay_chan_mieng_aloclair_plus_15ml_00502899_1_b6e114616e.jpg',
-                images: ['https://cdn.nhathuoclongchau.com.vn/v1/static/chai_xit_nhiet_mieng_tay_chan_mieng_aloclair_plus_15ml_00502899_1_b6e114616e.jpg'],
-                supplierId: 'NCC001',
-                tags: ['Khuyến mãi', 'Bán chạy']
-            },
-            {
-                id: 'SP000B',
-                name: 'Khẩu trang y tế 4 lớp (Test 2K)',
-                sku: 'SP000B-SKU',
-                barcode: '893000000002',
-                brand: 'AINA',
-                category: 'Thiết bị y tế',
-                activeIngredient: 'Vải không dệt',
-                description: 'Sản phẩm thử nghiệm thanh toán 2.000đ',
-                ingredient: 'Vải không dệt và màng lọc khuẩn',
-                usage: 'Đeo ngăn ngừa vi khuẩn và khói bụi.',
-                price: 2000,
-                oldPrice: 3000,
-                cost: 1000,
-                discount: 33,
-                rating: '5.0',
-                sold: 210,
-                stock: 100,
-                minStock: 10,
-                unit: 'Cái',
-                image: 'https://cdn.nhathuoclongchau.com.vn/v1/static/00503325_sua_rua_mat_ngua_mun_duong_am_va_lam_sang_da_reihaku_hatomugi_acne_care_and_facial_washing_130g_9270_63ed_large_3f5868bde7.jpg',
-                images: ['https://cdn.nhathuoclongchau.com.vn/v1/static/00503325_sua_rua_mat_ngua_mun_duong_am_va_lam_sang_da_reihaku_hatomugi_acne_care_and_facial_washing_130g_9270_63ed_large_3f5868bde7.jpg'],
-                supplierId: 'NCC001',
-                tags: ['Khuyến mãi', 'Bán chạy']
-            }
-        ];
-        let batches = [
-            {
-                id: 'LO-SP000-1',
-                productId: 'SP000',
-                productName: 'Băng cá nhân Urgo (Test 1K)',
-                quantity: 100,
-                expiryDate: getExpiry(700),
-                manufacturingDate: getExpiry(-30),
-                status: 'ACTIVE'
-            },
-            {
-                id: 'LO-SP000B-1',
-                productId: 'SP000B',
-                productName: 'Khẩu trang y tế 4 lớp (Test 2K)',
-                quantity: 100,
-                expiryDate: getExpiry(700),
-                manufacturingDate: getExpiry(-30),
-                status: 'ACTIVE'
-            }
-        ];
+        let products = [];
+        let batches = [];
         let idCounter = 1;
 
         for (let i = 0; i < 50; i++) {

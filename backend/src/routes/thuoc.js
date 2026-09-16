@@ -54,7 +54,7 @@ duongDan.get("/", async (req, res) => {
       danhMucThuoc: true,
       loTonKho: true,
     },
-    orderBy: { id: "desc" },
+    orderBy: { id: "asc" },
   });
 
   return res.json(danhSach);
