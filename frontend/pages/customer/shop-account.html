@@ -44,6 +44,108 @@
         .btn-save:hover {
             background: var(--shop-secondary);
         }
+        .account-sidebar {
+            position: sticky;
+            top: 90px;
+        }
+        .order-status-tabs {
+            display: flex;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 4px;
+            gap: 4px;
+            overflow-x: auto;
+            margin-bottom: 1.25rem;
+        }
+        .order-tab-btn {
+            flex: 1;
+            min-width: 110px;
+            padding: 9px 12px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #64748b;
+            cursor: pointer;
+            text-align: center;
+            white-space: nowrap;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .order-tab-btn:hover {
+            color: var(--shop-primary);
+            background: #f0fdf4;
+        }
+        .order-tab-btn.active {
+            color: #fff;
+            background: var(--shop-primary);
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(14, 165, 233, 0.25);
+        }
+        .order-tab-btn .badge-count {
+            background: rgba(0, 0, 0, 0.07);
+            padding: 1px 7px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+        .order-tab-btn.active .badge-count {
+            background: rgba(255, 255, 255, 0.25);
+            color: #fff;
+        }
+        .order-pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.25rem;
+            padding: 0.85rem 1.25rem;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .order-pagination-buttons {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .order-page-btn {
+            min-width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #334155;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 0 8px;
+        }
+        .order-page-btn:hover:not(:disabled) {
+            border-color: var(--shop-primary);
+            color: var(--shop-primary);
+            background: #f0fdf4;
+        }
+        .order-page-btn.active {
+            background: var(--shop-primary);
+            color: #fff;
+            border-color: var(--shop-primary);
+            font-weight: 600;
+        }
+        .order-page-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #f8fafc;
+        }
     </style>
     <script>
 
@@ -153,10 +255,47 @@
                 </div>
 
                 <div id="tab-orders" class="tab-pane" style="display: none;">
-                    <h2 style="margin-top: 0; margin-bottom: 2rem;">Lịch sử đơn hàng</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+                        <div>
+                            <h2 style="margin: 0; font-size: 1.35rem; color: #0f172a;">Lịch sử đơn hàng</h2>
+                            <p style="margin: 4px 0 0 0; color: var(--shop-text-muted); font-size: 0.88rem;">Theo dõi trạng thái và lịch sử mua sắm của bạn</p>
+                        </div>
+                        <div style="position: relative; width: 100%; max-width: 280px;">
+                            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.85rem;"></i>
+                            <input type="text" id="order-search-input" placeholder="Tìm theo mã đơn hoặc thuốc..." 
+                                   style="width: 100%; padding: 8px 12px 8px 34px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; outline: none; background: #fff;"
+                                   oninput="handleOrderSearch(this.value)">
+                        </div>
+                    </div>
+
+                    <div class="order-status-tabs">
+                        <button class="order-tab-btn active" onclick="filterOrderStatus('ALL', this)">
+                            <span>Tất cả</span>
+                            <span class="badge-count" id="count-all">0</span>
+                        </button>
+                        <button class="order-tab-btn" onclick="filterOrderStatus('MOI_TAO', this)">
+                            <span>Chờ xác nhận</span>
+                            <span class="badge-count" id="count-moi-tao">0</span>
+                        </button>
+                        <button class="order-tab-btn" onclick="filterOrderStatus('SHIPPING', this)">
+                            <span>Đang giao</span>
+                            <span class="badge-count" id="count-shipping">0</span>
+                        </button>
+                        <button class="order-tab-btn" onclick="filterOrderStatus('HOAN_TAT', this)">
+                            <span>Hoàn tất</span>
+                            <span class="badge-count" id="count-hoan-tat">0</span>
+                        </button>
+                        <button class="order-tab-btn" onclick="filterOrderStatus('HUY', this)">
+                            <span>Đã hủy</span>
+                            <span class="badge-count" id="count-huy">0</span>
+                        </button>
+                    </div>
+
                     <div id="orders-list">
                         <div style="text-align:center; padding: 2rem;">Đang tải đơn hàng...</div>
                     </div>
+
+                    <div id="orders-pagination" class="order-pagination" style="display: none;"></div>
                 </div>
 
                 <div id="tab-wishlist" class="tab-pane" style="display: none;">
@@ -233,43 +372,129 @@
             }
         }
 
+        let allMyOrders = [];
+        let filteredOrders = [];
+        let currentOrderPage = 1;
+        const ORDERS_PER_PAGE = 5;
+        let currentStatusFilter = 'ALL';
+        let currentSearchQuery = '';
         let isOrdersLoaded = false;
+
         async function loadMyOrders() {
-            if (isOrdersLoaded) return;
             const container = document.getElementById('orders-list');
+            const paginationEl = document.getElementById('orders-pagination');
+            if (paginationEl) paginationEl.style.display = 'none';
+
             container.innerHTML = '<div style="text-align:center; padding: 3rem;"><i class="fa-solid fa-circle-notch fa-spin fa-2x" style="color:var(--shop-primary);"></i><div style="margin-top:15px; color:var(--shop-text-muted); font-size:0.95rem;">Đang tải danh sách đơn hàng...</div></div>';
             
-            let myOrders = [];
             try {
                 const res = await API.get('/api/don-hang/lich-su');
                 if (Array.isArray(res)) {
-                    myOrders = res;
+                    allMyOrders = res;
                 } else if (res && res.data) {
-                    myOrders = res.data;
+                    allMyOrders = res.data;
                 }
             } catch (err) {
                 console.error('Lỗi tải đơn hàng:', err);
+                allMyOrders = [];
             }
             
-            if (!myOrders || myOrders.length === 0) {
+            updateOrderCounts();
+            applyOrderFilters();
+            isOrdersLoaded = true;
+        }
+
+        function updateOrderCounts() {
+            const total = allMyOrders.length;
+            const moiTao = allMyOrders.filter(o => o.trangThai === 'MOI_TAO').length;
+            const shipping = allMyOrders.filter(o => ['DA_XAC_NHAN', 'DANG_GIAO'].includes(o.trangThai)).length;
+            const hoanTat = allMyOrders.filter(o => o.trangThai === 'HOAN_TAT').length;
+            const huy = allMyOrders.filter(o => ['HUY', 'YEU_CAU_HOAN_TIEN', 'DA_HOAN_TIEN'].includes(o.trangThai)).length;
+
+            const elAll = document.getElementById('count-all');
+            if (elAll) elAll.innerText = total;
+            const elMoiTao = document.getElementById('count-moi-tao');
+            if (elMoiTao) elMoiTao.innerText = moiTao;
+            const elShipping = document.getElementById('count-shipping');
+            if (elShipping) elShipping.innerText = shipping;
+            const elHoanTat = document.getElementById('count-hoan-tat');
+            if (elHoanTat) elHoanTat.innerText = hoanTat;
+            const elHuy = document.getElementById('count-huy');
+            if (elHuy) elHuy.innerText = huy;
+        }
+
+        function filterOrderStatus(status, btn) {
+            currentStatusFilter = status;
+            currentOrderPage = 1;
+            document.querySelectorAll('.order-tab-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            applyOrderFilters();
+        }
+
+        function handleOrderSearch(query) {
+            currentSearchQuery = (query || '').trim().toLowerCase();
+            currentOrderPage = 1;
+            applyOrderFilters();
+        }
+
+        function applyOrderFilters() {
+            filteredOrders = allMyOrders.filter(o => {
+                // Filter by status tab
+                if (currentStatusFilter === 'MOI_TAO' && o.trangThai !== 'MOI_TAO') return false;
+                if (currentStatusFilter === 'SHIPPING' && !['DA_XAC_NHAN', 'DANG_GIAO'].includes(o.trangThai)) return false;
+                if (currentStatusFilter === 'HOAN_TAT' && o.trangThai !== 'HOAN_TAT') return false;
+                if (currentStatusFilter === 'HUY' && !['HUY', 'YEU_CAU_HOAN_TIEN', 'DA_HOAN_TIEN'].includes(o.trangThai)) return false;
+
+                // Filter by search keyword
+                if (currentSearchQuery) {
+                    const code = String(o.maDonHang || o.id || '').toLowerCase();
+                    const items = o.chiTietDonHang || o.chiTiet || o.items || [];
+                    const matchItem = items.some(i => {
+                        const name = (i.thuoc ? i.thuoc.tenThuoc : (i.tenThuoc || i.name || '')).toLowerCase();
+                        return name.includes(currentSearchQuery);
+                    });
+                    if (!code.includes(currentSearchQuery) && !matchItem) return false;
+                }
+
+                return true;
+            });
+
+            renderOrdersPage();
+        }
+
+        function renderOrdersPage() {
+            const container = document.getElementById('orders-list');
+            const paginationEl = document.getElementById('orders-pagination');
+
+            if (!filteredOrders || filteredOrders.length === 0) {
                 container.innerHTML = `
-                    <div style="text-align:center; padding:4rem 2rem; background:white; border-radius:12px; border:1px dashed #cbd5e1;">
+                    <div style="text-align:center; padding:3.5rem 2rem; background:white; border-radius:12px; border:1px dashed #cbd5e1;">
                         <i class="fa-solid fa-box-open" style="font-size:3rem; color:#cbd5e1; margin-bottom:1rem;"></i>
-                        <h3 style="color:var(--shop-text); margin-bottom:0.5rem;">Bạn chưa có đơn hàng nào</h3>
-                        <p style="color:var(--shop-text-muted); margin-bottom:1.5rem; font-size:0.95rem;">Hãy khám phá các sản phẩm tuyệt vời của nhà thuốc nhé!</p>
+                        <h3 style="color:var(--shop-text); margin-bottom:0.5rem;">Không tìm thấy đơn hàng nào</h3>
+                        <p style="color:var(--shop-text-muted); margin-bottom:1.5rem; font-size:0.92rem;">
+                            ${currentSearchQuery ? 'Không có đơn hàng nào khớp với từ khóa tìm kiếm.' : 'Bạn chưa có đơn hàng nào trong mục này.'}
+                        </p>
                         <a href="../public/index.html" class="btn-save" style="text-decoration:none; display:inline-block;"><i class="fa-solid fa-cart-plus" style="margin-right:8px;"></i>Tiếp tục mua sắm</a>
                     </div>
                 `;
-                isOrdersLoaded = true;
+                if (paginationEl) paginationEl.style.display = 'none';
                 return;
             }
 
+            const totalPages = Math.ceil(filteredOrders.length / ORDERS_PER_PAGE) || 1;
+            if (currentOrderPage > totalPages) currentOrderPage = totalPages;
+            if (currentOrderPage < 1) currentOrderPage = 1;
+
+            const startIndex = (currentOrderPage - 1) * ORDERS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ORDERS_PER_PAGE, filteredOrders.length);
+            const pageOrders = filteredOrders.slice(startIndex, endIndex);
+
             let html = '';
-            myOrders.forEach(o => {
+            pageOrders.forEach(o => {
                 let itemsHtml = '';
                 const items = o.chiTietDonHang || o.chiTiet || o.items || [];
                 items.forEach(i => {
-                    const name = i.thuoc ? i.thuoc.tenThuoc : (i.tenThuoc || 'Sản phẩm');
+                    const name = i.thuoc ? i.thuoc.tenThuoc : (i.tenThuoc || i.name || 'Sản phẩm');
                     const price = i.donGia || i.price || 0;
                     const qty = i.soLuong || i.quantity || 1;
                     itemsHtml += `
@@ -304,8 +529,7 @@
                 }
 
                 html += `
-                    <div class="order-card" style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 1rem; border: 1px solid #e2e8f0;">
-                        
+                    <div class="order-card" style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 1rem; border: 1px solid #e2e8f0; transition: transform 0.2s, box-shadow 0.2s;">
                         <div style="background: #f8fafc; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; border-radius: 8px 8px 0 0;">
                             <div>
                                 <div style="font-weight: 700; font-size: 0.95rem; color: #0f172a; display: flex; align-items: center; flex-wrap: wrap; gap: 6px;">
@@ -319,13 +543,11 @@
                             </div>
                         </div>
                         
-                        
                         <div style="padding: 0.75rem 1rem 0.25rem 1rem;">
-                            <div style="max-height: 120px; overflow-y: auto; padding-right: 4px;" class="custom-scrollbar">
+                            <div style="max-height: 140px; overflow-y: auto; padding-right: 4px;" class="custom-scrollbar">
                                 ${itemsHtml}
                             </div>
                         </div>
-                        
                         
                         <div style="background: #fff; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9;">
                             <div>${orderActions}</div>
@@ -338,7 +560,53 @@
                 `;
             });
             container.innerHTML = html;
-            isOrdersLoaded = true;
+
+            if (paginationEl) {
+                if (totalPages <= 1) {
+                    paginationEl.style.display = 'none';
+                } else {
+                    paginationEl.style.display = 'flex';
+                    let buttonsHtml = `
+                        <button class="order-page-btn" ${currentOrderPage === 1 ? 'disabled' : ''} onclick="changeOrderPage(${currentOrderPage - 1})">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                    `;
+
+                    for (let p = 1; p <= totalPages; p++) {
+                        if (p === 1 || p === totalPages || (p >= currentOrderPage - 1 && p <= currentOrderPage + 1)) {
+                            buttonsHtml += `
+                                <button class="order-page-btn ${p === currentOrderPage ? 'active' : ''}" onclick="changeOrderPage(${p})">${p}</button>
+                            `;
+                        } else if (p === currentOrderPage - 2 || p === currentOrderPage + 2) {
+                            buttonsHtml += `<span style="padding: 0 4px; color: #94a3b8;">...</span>`;
+                        }
+                    }
+
+                    buttonsHtml += `
+                        <button class="order-page-btn" ${currentOrderPage === totalPages ? 'disabled' : ''} onclick="changeOrderPage(${currentOrderPage + 1})">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    `;
+
+                    paginationEl.innerHTML = `
+                        <div style="font-size: 0.85rem; color: #64748b;">
+                            Hiển thị <strong>${startIndex + 1} - ${endIndex}</strong> trên tổng số <strong>${filteredOrders.length}</strong> đơn hàng
+                        </div>
+                        <div class="order-pagination-buttons">
+                            ${buttonsHtml}
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function changeOrderPage(newPage) {
+            currentOrderPage = newPage;
+            renderOrdersPage();
+            const tabEl = document.getElementById('tab-orders');
+            if (tabEl) {
+                tabEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
 
         async function confirmReceivedOrder(id) {
