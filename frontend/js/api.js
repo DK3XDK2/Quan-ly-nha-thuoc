@@ -157,22 +157,28 @@
       
       if (cleanEndpoint.includes('/dat-hang')) {
         const body = options.body ? (typeof options.body === 'string' ? JSON.parse(options.body) : options.body) : {};
+        const items = body.chiTiet || [];
+        const calculatedTotal = items.reduce((sum, ct) => sum + ((Number(ct.donGia) || 0) * Number(ct.soLuong || 1)), 0);
+        const orderTotal = Number(body.tongThanhToan) > 0 ? Number(body.tongThanhToan) : (calculatedTotal > 0 ? calculatedTotal : 3000);
+
         const newOrder = {
           id: Date.now(),
-          maDonHang: `DH${Date.now().toString().slice(-6)}`,
+          maDonHang: `DH${Date.now()}`,
           tenNguoiNhan: body.tenNguoiNhan || 'Khách hàng',
           soDienThoaiNhan: body.soDienThoaiNhan || '0900000000',
           diaChiGiao: body.diaChiGiao || 'Địa chỉ demo',
-          tongTienHang: 150000,
-          tongThanhToan: 150000,
+          tongTienHang: orderTotal,
+          phiGiaoHang: Number(body.phiGiaoHang || 0),
+          tongThanhToan: orderTotal + Number(body.phiGiaoHang || 0),
           trangThai: 'MOI_TAO',
           phuongThucThanhToan: body.phuongThucThanhToan || 'CASH',
           taoLuc: new Date().toISOString(),
-          chiTietDonHang: (body.chiTiet || []).map(ct => ({
+          chiTietDonHang: items.map(ct => ({
             thuocId: ct.thuocId,
-            soLuong: ct.soLuong,
-            donGia: 50000,
-            thuoc: { tenThuoc: `Thuốc #${ct.thuocId}` }
+            soLuong: ct.soLuong || 1,
+            donGia: ct.donGia || (orderTotal / (items.length || 1)),
+            thanhTien: (ct.donGia || (orderTotal / (items.length || 1))) * (ct.soLuong || 1),
+            thuoc: ct.thuoc || { tenThuoc: `Thuốc #${ct.thuocId}` }
           }))
         };
         orders.unshift(newOrder);

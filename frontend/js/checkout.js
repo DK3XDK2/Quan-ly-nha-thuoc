@@ -306,10 +306,13 @@ const Checkout = {
                 diaChiGiao: address,
                 ghiChu: note,
                 phiGiaoHang: 0,
+                tongThanhToan: this.total,
+                tongTienHang: this.total,
                 phuongThucThanhToan: payment === 'SEPAY' ? 'SEPAY' : 'CASH',
                 chiTiet: this.cartItems.map(item => ({
                     thuocId: Number(item.dbId || item.id),
-                    soLuong: Number(item.quantity || 1)
+                    soLuong: Number(item.quantity || 1),
+                    donGia: Number(item.price || item.giaBan || 0)
                 }))
             };
 
@@ -344,7 +347,8 @@ const Checkout = {
     openSepayModal: function(order) {
         this.currentOrder = order;
         const maDonHang = order.maDonHang || `DH${order.id || Date.now()}`;
-        const tongTien = Number(order.tongThanhToan || this.total || 0);
+        const orderTotal = Number(order.tongThanhToan || order.tongTienHang || 0);
+        const tongTien = (orderTotal > 0) ? orderTotal : Number(this.total || 0);
         const bankId = order.bankId || 'VietinBank';
         const accountNo = order.accountNo || '102882794225';
         const accountName = order.accountName || 'VU QUANG HUY';
@@ -386,7 +390,12 @@ const Checkout = {
         const modal = document.getElementById('sepay-modal');
         if (modal) modal.style.display = 'none';
 
-        window.location.href = `shop-account.html#orders`;
+        if (typeof App !== 'undefined' && App.showToast) {
+            App.showToast('Đơn hàng đã được lưu! Bạn có thể thanh toán tiếp trong Lịch sử đơn mua.', 'info');
+        }
+        setTimeout(() => {
+            window.location.href = `shop-account.html#orders`;
+        }, 1000);
     },
 
     startSepayPolling: function(maDonHang) {

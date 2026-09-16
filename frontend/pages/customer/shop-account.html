@@ -554,7 +554,15 @@
                 if (o.trangThai === 'DANG_GIAO' || o.trangThai === 'DA_XAC_NHAN') {
                     orderActions = `<button class="btn-save" style="padding: 6px 14px; font-size: 0.85rem; background: #22c55e;" onclick="confirmReceivedOrder(${o.id})"><i class="fa-solid fa-circle-check" style="margin-right: 4px;"></i>Đã nhận được hàng</button>`;
                 } else if (o.trangThai === 'MOI_TAO') {
-                    orderActions = `<button class="btn-save" style="padding: 6px 14px; font-size: 0.85rem; background: #ef4444;" onclick="cancelMyOrder(${o.id})"><i class="fa-solid fa-ban" style="margin-right: 4px;"></i>Hủy đơn hàng</button>`;
+                    const isSepay = (o.phuongThucThanhToan === 'SEPAY' || o.paymentMethod === 'SEPAY');
+                    const orderCode = o.maDonHang || `DH${o.id}`;
+                    const amount = Number(o.tongThanhToan || o.tongTien || 0);
+                    orderActions = `
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            ${isSepay ? `<button class="btn-save" style="padding: 6px 14px; font-size: 0.85rem; background: #2563eb; color: white; display: inline-flex; align-items: center; gap: 4px;" onclick="openOrderSepayModal('${orderCode}', ${amount})"><i class="fa-solid fa-qrcode"></i> Thanh toán QR ngay</button>` : ''}
+                            <button class="btn-save" style="padding: 6px 14px; font-size: 0.85rem; background: #ef4444; color: white; display: inline-flex; align-items: center; gap: 4px;" onclick="cancelMyOrder(${o.id})"><i class="fa-solid fa-ban"></i> Hủy đơn hàng</button>
+                        </div>
+                    `;
                 } else if (o.trangThai === 'HOAN_TAT') {
                     orderActions = `<button class="btn-save" style="padding: 6px 14px; font-size: 0.85rem; background: #f59e0b;" onclick="requestReturnOrder(${o.id})"><i class="fa-solid fa-rotate-left" style="margin-right: 4px;"></i>Trả hàng / Hoàn tiền</button>`;
                 }
@@ -716,7 +724,184 @@
             e.preventDefault();
             Auth.logout();
         }
+
+        let accSepayPolling = null;
+        let currentAccOrderCode = null;
+
+        function openOrderSepayModal(maDonHang, tongTien) {
+            currentAccOrderCode = maDonHang;
+            const bankId = 'VietinBank';
+            const accountNo = '102882794225';
+            const accountName = 'VU QUANG HUY';
+            const amount = Number(tongTien) || 0;
+
+            const qrUrl = `https://qr.sepay.vn/img?acc=${accountNo}&bank=${bankId}&amount=${amount}&des=${encodeURIComponent(maDonHang)}`;
+            const fallbackQrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(maDonHang)}&accountName=${encodeURIComponent(accountName)}`;
+
+            const img = document.getElementById('acc-sepay-qr-img');
+            if (img) {
+                img.src = qrUrl;
+                img.onerror = function() { this.src = fallbackQrUrl; };
+            }
+
+            const accEl = document.getElementById('acc-sepay-acc-no');
+            if (accEl) accEl.innerText = accountNo;
+            const nameEl = document.getElementById('acc-sepay-acc-name');
+            if (nameEl) nameEl.innerText = accountName;
+            const amtEl = document.getElementById('acc-sepay-amount');
+            if (amtEl) amtEl.innerText = App.formatCurrency(amount);
+            const codeEl = document.getElementById('acc-sepay-order-code');
+            if (codeEl) codeEl.innerText = maDonHang;
+
+            const statusBox = document.getElementById('acc-sepay-status-box');
+            if (statusBox) {
+                statusBox.style.background = '#f8fafc';
+                statusBox.style.borderColor = '#e2e8f0';
+                statusBox.style.color = '#334155';
+                statusBox.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin" style="color: #2563eb;"></i> <span>Đang chờ nhận tiền chuyển khoản...</span>`;
+            }
+
+            const modal = document.getElementById('account-sepay-modal');
+            if (modal) modal.style.display = 'flex';
+
+            if (accSepayPolling) clearInterval(accSepayPolling);
+            accSepayPolling = setInterval(async () => {
+                try {
+                    const res = await API.get(`/api/thanh-toan/kiem-tra/${maDonHang}`);
+                    if (res && res.daThanhToan) {
+                        clearInterval(accSepayPolling);
+                        if (statusBox) {
+                            statusBox.style.background = '#dcfce7';
+                            statusBox.style.borderColor = '#86efac';
+                            statusBox.style.color = '#15803d';
+                            statusBox.innerHTML = `<i class="fa-solid fa-circle-check" style="font-size:1.2rem; color:#22c55e;"></i> <strong>Đã nhận thanh toán thành công!</strong>`;
+                        }
+                        App.showToast('Thanh toán SePay thành công!', 'success');
+                        setTimeout(() => {
+                            closeOrderSepayModal();
+                            isOrdersLoaded = false;
+                            loadMyOrders();
+                        }, 1500);
+                    }
+                } catch(e) {}
+            }, 3000);
+        }
+
+        function closeOrderSepayModal() {
+            if (accSepayPolling) clearInterval(accSepayPolling);
+            const m = document.getElementById('account-sepay-modal');
+            if (m) m.style.display = 'none';
+        }
+
+        async function confirmManualOrderPayment() {
+            if (!currentAccOrderCode) return;
+            try {
+                App.showLoading();
+                await API.post(`/api/don-hang/${currentAccOrderCode}/trang-thai`, { trangThai: 'DA_XAC_NHAN' }).catch(() => null);
+                
+                const orders = Storage.get('orders') || [];
+                const target = orders.find(o => o.maDonHang === currentAccOrderCode || String(o.id) === currentAccOrderCode);
+                if (target) {
+                    target.trangThai = 'DA_XAC_NHAN';
+                    target.status = 'DA_XAC_NHAN';
+                    Storage.set('orders', orders);
+                }
+
+                App.showToast('Đã ghi nhận thanh toán! Đơn hàng sẽ được chuyển đi sớm.', 'success');
+                closeOrderSepayModal();
+                isOrdersLoaded = false;
+                await loadMyOrders();
+            } catch(e) {
+                App.showToast('Lỗi xác nhận', 'error');
+            } finally {
+                App.hideLoading();
+            }
+        }
+
+        function copyAccText(id, isCurrency = false) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            let text = el.innerText.trim();
+            if (isCurrency) text = text.replace(/[^0-9]/g, '');
+            navigator.clipboard.writeText(text).then(() => {
+                App.showToast('Đã copy: ' + text, 'success');
+            }).catch(() => {
+                App.showToast('Không thể copy', 'error');
+            });
+        }
     </script>
+
+    <!-- Modal Thanh toán QR SePay trong Lịch sử Đơn Mua -->
+    <div id="account-sepay-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: white; border-radius: 16px; padding: 24px; max-width: 420px; width: 92%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); position: relative; text-align: center; animation: modalPop 0.25s ease-out; max-height: 95vh; overflow-y: auto;">
+            <button onclick="closeOrderSepayModal()" style="position: absolute; right: 16px; top: 16px; border: none; background: #f1f5f9; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1rem; color: #64748b;" title="Đóng">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div style="margin-bottom: 12px;">
+                <span style="background: #e0f2fe; color: #0369a1; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">
+                    <i class="fa-solid fa-shield-check"></i> Cổng Thanh Toán SePay
+                </span>
+            </div>
+            
+            <h3 style="margin: 0 0 4px; color: #0f172a; font-size: 1.3rem;">Quét mã QR thanh toán</h3>
+            <p style="margin: 0 0 14px; font-size: 0.85rem; color: #64748b;">Mở ứng dụng Ngân hàng hoặc Ví điện tử để quét mã</p>
+            
+            <div style="background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 12px; padding: 12px; display: inline-block; margin-bottom: 14px;">
+                <img id="acc-sepay-qr-img" src="" alt="SePay QR Code" style="width: 220px; height: 220px; object-fit: contain; display: block; border-radius: 8px;">
+            </div>
+            
+            <div id="acc-sepay-status-box" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; color: #334155; margin-bottom: 14px;">
+                <i class="fa-solid fa-circle-notch fa-spin" id="acc-sepay-status-icon" style="color: #2563eb;"></i>
+                <span id="acc-sepay-status-text">Đang chờ nhận tiền chuyển khoản...</span>
+            </div>
+
+            <div style="background: #f1f5f9; border-radius: 8px; padding: 12px 14px; text-align: left; font-size: 0.85rem; margin-bottom: 14px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #64748b;">Ngân hàng:</span>
+                    <strong id="acc-sepay-bank-name" style="color: #1e293b;">VietinBank</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="color: #64748b;">Số tài khoản:</span>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <strong id="acc-sepay-acc-no" style="color: #1e293b; font-size: 0.95rem; font-family: monospace;">102882794225</strong>
+                        <button type="button" onclick="copyAccText('acc-sepay-acc-no')" style="border: none; background: #e2e8f0; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; color: #1e293b;"><i class="fa-regular fa-copy"></i> Copy</button>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #64748b;">Chủ tài khoản:</span>
+                    <strong id="acc-sepay-acc-name" style="color: #1e293b;">VU QUANG HUY</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="color: #64748b;">Số tiền:</span>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <strong id="acc-sepay-amount" style="color: #ef4444; font-size: 1.1rem;">0 ₫</strong>
+                        <button type="button" onclick="copyAccText('acc-sepay-amount', true)" style="border: none; background: #e2e8f0; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; color: #1e293b;"><i class="fa-regular fa-copy"></i> Copy</button>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #64748b;">Nội dung CK:</span>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <strong id="acc-sepay-order-code" style="color: #2563eb; font-family: monospace; font-size: 0.95rem;">DH...</strong>
+                        <button type="button" onclick="copyAccText('acc-sepay-order-code')" style="border: none; background: #e2e8f0; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; color: #1e293b;"><i class="fa-regular fa-copy"></i> Copy</button>
+                    </div>
+                </div>
+            </div>
+            
+            <p style="font-size: 0.75rem; color: #dc2626; margin: 0 0 14px; line-height: 1.4;">
+                <i class="fa-solid fa-triangle-exclamation"></i> <em>Lưu ý: Quý khách vui lòng giữ đúng nội dung chuyển khoản để hệ thống SePay tự động xác nhận trong 3-5 giây!</em>
+            </p>
+            
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button type="button" onclick="confirmManualOrderPayment()" style="width: 100%; padding: 11px; background: #22c55e; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem;">
+                    <i class="fa-solid fa-circle-check"></i> Xác nhận tôi đã chuyển khoản thành công
+                </button>
+                <button type="button" onclick="closeOrderSepayModal()" style="width: 100%; padding: 8px; background: transparent; color: #64748b; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; cursor: pointer;">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
 <script src="../../js/shop-ai.js"></script>
 </body>
 </html>

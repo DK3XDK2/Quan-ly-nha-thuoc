@@ -30,10 +30,15 @@
         .form-control:focus { outline: none; border-color: var(--shop-primary); }
 
         .payment-method {
-            display: flex; align-items: center; gap: 10px; padding: 15px; border: 1px solid var(--shop-border); border-radius: 4px; margin-bottom: 10px; cursor: pointer;
+            display: flex; align-items: center; gap: 12px; padding: 14px; border: 1.5px solid var(--shop-border); border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s ease;
         }
         .payment-method:hover { background: var(--shop-bg); }
-        .payment-method input { margin: 0; }
+        .payment-method:has(input:checked), .payment-method.selected {
+            border-color: #2563eb !important;
+            background: #eff6ff !important;
+            box-shadow: 0 0 0 1px #2563eb;
+        }
+        .payment-method input { margin: 0; width: 18px; height: 18px; accent-color: #2563eb; cursor: pointer; }
 
         .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
         .summary-total { display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: bold; color: var(--shop-primary); margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--shop-border); }
@@ -114,7 +119,7 @@
                             <div style="font-size:0.8rem; color:var(--shop-text-muted);">Nhận hàng, kiểm tra và thanh toán tiền mặt trực tiếp cho shipper</div>
                         </div>
                     </label>
-                    <label class="payment-method" style="border-color: #3b82f6; background: #f8faff;">
+                    <label class="payment-method">
                         <input type="radio" name="payment" value="SEPAY">
                         <i class="fa-solid fa-qrcode" style="font-size:1.6rem; color:#2563eb;"></i>
                         <div>
