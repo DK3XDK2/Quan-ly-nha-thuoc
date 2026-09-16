@@ -6,6 +6,41 @@
 
   const API_BASE = isLocalhost ? "http://localhost:4000" : window.location.origin;
 
+  function safeGetStorage(key) {
+    try {
+      if (window.Storage && typeof window.Storage.get === 'function') {
+        return window.Storage.get(key);
+      }
+      if (window.AppStorage && typeof window.AppStorage.get === 'function') {
+        return window.AppStorage.get(key);
+      }
+      const item = localStorage.getItem(key);
+      if (!item || item === 'null' || item === 'undefined') return null;
+      return JSON.parse(item);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function safeSetStorage(key, val) {
+    try {
+      if (window.Storage && typeof window.Storage.set === 'function') {
+        return window.Storage.set(key, val);
+      }
+      if (window.AppStorage && typeof window.AppStorage.set === 'function') {
+        return window.AppStorage.set(key, val);
+      }
+      if (val === null || val === undefined) {
+        localStorage.removeItem(key);
+      } else {
+        localStorage.setItem(key, JSON.stringify(val));
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   function handleMockFallback(endpoint, options = {}) {
     if (window.MockData && typeof window.MockData.initialize === 'function') {
       window.MockData.initialize();
@@ -29,7 +64,7 @@
 
     // 2. Danh sách thuốc
     if (cleanEndpoint.includes('/api/thuoc')) {
-      const rawProducts = (window.Storage && window.Storage.get('products')) || [];
+      const rawProducts = safeGetStorage('products') || [];
       const mapped = rawProducts.map(p => {
         const numericId = parseInt((p.id || '').replace(/\D/g, '')) || Math.floor(Math.random() * 1000) + 1;
         return {
@@ -65,7 +100,7 @@
     if (cleanEndpoint.includes('/api/khach-hang/dang-nhap') || cleanEndpoint.includes('/api/xac-thuc/khach-hang/dang-nhap')) {
       const body = options.body ? (typeof options.body === 'string' ? JSON.parse(options.body) : options.body) : {};
       const email = body.email || 'customer@ainapharmacy.com';
-      const customers = (window.Storage && window.Storage.get('customers')) || [];
+      const customers = safeGetStorage('customers') || [];
       let cust = customers.find(c => c.email && c.email.toLowerCase() === email.toLowerCase());
       const custName = cust ? cust.name : (email.split('@')[0] || 'Khách Hàng Demo');
 
@@ -118,7 +153,7 @@
 
     // 5. Quản lý Đơn hàng
     if (cleanEndpoint.includes('/api/don-hang')) {
-      let orders = (window.Storage && window.Storage.get('orders')) || [];
+      let orders = safeGetStorage('orders') || [];
       
       if (cleanEndpoint.includes('/dat-hang')) {
         const body = options.body ? (typeof options.body === 'string' ? JSON.parse(options.body) : options.body) : {};
@@ -141,7 +176,7 @@
           }))
         };
         orders.unshift(newOrder);
-        if (window.Storage) window.Storage.set('orders', orders);
+        safeSetStorage('orders', orders);
 
         if (body.phuongThucThanhToan === 'SEPAY') {
           return Promise.resolve({
@@ -161,13 +196,13 @@
       if (cleanEndpoint.includes('/trang-thai') || cleanEndpoint.includes('/khach-hang-nhan-hang') || cleanEndpoint.includes('/khach-hang-huy-don') || cleanEndpoint.includes('/yeu-cau-tra-hang')) {
         const body = options.body ? (typeof options.body === 'string' ? JSON.parse(options.body) : options.body) : {};
         const idMatch = cleanEndpoint.match(/\/api\/don-hang\/([^\/]+)\//);
-        if (idMatch && window.Storage) {
-          const currentOrders = window.Storage.get('orders') || [];
+        if (idMatch) {
+          const currentOrders = safeGetStorage('orders') || [];
           const target = currentOrders.find(o => String(o.id) === idMatch[1] || String(o.dbId) === idMatch[1] || o.id === idMatch[1]);
           if (target && body.trangThai) {
             target.trangThai = body.trangThai;
             target.status = body.trangThai;
-            window.Storage.set('orders', currentOrders);
+            safeSetStorage('orders', currentOrders);
           }
         }
         return Promise.resolve({ thongBao: 'Cập nhật thành công (Chế độ Demo)' });
@@ -195,7 +230,7 @@
 
     // 6. Quản lý Hóa đơn POS & Thống kê
     if (cleanEndpoint.includes('/api/hoa-don')) {
-      let invoices = (window.Storage && window.Storage.get('invoices')) || [];
+      let invoices = safeGetStorage('invoices') || [];
       if (options.method === 'POST') {
         const body = options.body ? (typeof options.body === 'string' ? JSON.parse(options.body) : options.body) : {};
         const calcTotal = (body.chiTiet || []).reduce((sum, item) => sum + (item.soLuong || 1) * 65000, 0) || 130000;
@@ -214,7 +249,7 @@
           }))
         };
         invoices.unshift(newInvoice);
-        if (window.Storage) window.Storage.set('invoices', invoices);
+        safeSetStorage('invoices', invoices);
         return Promise.resolve(newInvoice);
       }
 
@@ -224,7 +259,7 @@
           { id: 102, maHoaDon: 'HD100102', tongTien: 450000, phuongThucThanhToan: 'CHUYEN_KHOAN', taoLuc: new Date(Date.now() - 7200000).toISOString(), chiTietHoaDon: [{ soLuong: 1, donGia: 450000, thanhTien: 450000, thuoc: { tenThuoc: 'Glucosamine 1500mg' } }] },
           { id: 103, maHoaDon: 'HD100103', tongTien: 950000, phuongThucThanhToan: 'TIEN_MAT', taoLuc: new Date(Date.now() - 86400000).toISOString(), chiTietHoaDon: [{ soLuong: 1, donGia: 950000, thanhTien: 950000, thuoc: { tenThuoc: 'Máy đo huyết áp Omron' } }] }
         ];
-        if (window.Storage) window.Storage.set('invoices', invoices);
+        safeSetStorage('invoices', invoices);
       }
 
       return Promise.resolve(invoices);
@@ -232,7 +267,7 @@
 
     // 7. Danh sách Khách hàng
     if (cleanEndpoint.includes('/api/khach-hang')) {
-      const customers = (window.Storage && window.Storage.get('customers')) || [];
+      const customers = safeGetStorage('customers') || [];
       return Promise.resolve(customers.map(c => ({
         id: c.id,
         hoTen: c.name,
@@ -245,7 +280,7 @@
 
     // 8. Danh sách Nhân viên
     if (cleanEndpoint.includes('/api/xac-thuc/nhan-vien')) {
-      const users = (window.Storage && window.Storage.get('users')) || [];
+      const users = safeGetStorage('users') || [];
       return Promise.resolve(users.map(u => ({
         id: u.id,
         hoTen: u.name,
@@ -256,14 +291,14 @@
 
     // 9. Nhà cung cấp
     if (cleanEndpoint.includes('/api/nha-cung-cap')) {
-      const suppliers = (window.Storage && window.Storage.get('suppliers')) || [];
+      const suppliers = safeGetStorage('suppliers') || [];
       return Promise.resolve(suppliers);
     }
 
     // 10. Kiểm tra thanh toán SePay
     if (cleanEndpoint.includes('/api/thanh-toan/kiem-tra')) {
       const maDon = cleanEndpoint.split('/').pop();
-      const orders = (window.Storage && window.Storage.get('orders')) || [];
+      const orders = safeGetStorage('orders') || [];
       const ord = orders.find(o => o.maDonHang === maDon || String(o.id) === maDon);
       const daThanhToan = ord && (ord.trangThai === 'DA_XAC_NHAN' || ord.status === 'CONFIRMED' || ord.daThanhToan);
       return Promise.resolve({ success: true, daThanhToan: !!daThanhToan });
