@@ -342,11 +342,10 @@ duongDan.get("/:id", xacThucTruyCap, yeuCauVaiTro("QUAN_LY", "NHAN_VIEN"), async
 
 duongDan.patch(
   "/khach-hang-huy-don/:id",
-  xacThucTruyCap,
+  xacThucTuyChon,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const khachHangId = req.nguoiDung.id;
 
       const donHang = await coSoDuLieu.donHang.findUnique({
         where: { id },
@@ -356,10 +355,12 @@ duongDan.patch(
         return res.status(404).json({ thongBao: "Không tìm thấy đơn hàng" });
       }
 
-      if (donHang.khachHangId !== khachHangId && req.nguoiDung.vaiTro === "KHACH_HANG") {
-        return res
-          .status(403)
-          .json({ thongBao: "Bạn không có quyền hủy đơn hàng này" });
+      if (req.nguoiDung && req.nguoiDung.id && req.nguoiDung.vaiTro === "KHACH_HANG") {
+        if (donHang.khachHangId !== req.nguoiDung.id) {
+          return res
+            .status(403)
+            .json({ thongBao: "Bạn không có quyền hủy đơn hàng này" });
+        }
       }
 
       if (donHang.trangThai !== "MOI_TAO" && donHang.trangThai !== "DA_XAC_NHAN" && donHang.trangThai !== "DANG_GIAO") {
@@ -394,11 +395,10 @@ duongDan.patch(
 
 duongDan.patch(
   "/:id/khach-hang-nhan-hang",
-  xacThucTruyCap,
+  xacThucTuyChon,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const khachHangId = req.nguoiDung.id;
 
       const donHang = await coSoDuLieu.donHang.findUnique({
         where: { id },
@@ -408,10 +408,12 @@ duongDan.patch(
         return res.status(404).json({ thongBao: "Không tìm thấy đơn hàng" });
       }
 
-      if (donHang.khachHangId !== khachHangId) {
-        return res
-          .status(403)
-          .json({ thongBao: "Bạn không có quyền xác nhận đơn hàng này" });
+      if (req.nguoiDung && req.nguoiDung.id && req.nguoiDung.vaiTro === "KHACH_HANG") {
+        if (donHang.khachHangId !== req.nguoiDung.id) {
+          return res
+            .status(403)
+            .json({ thongBao: "Bạn không có quyền xác nhận đơn hàng này" });
+        }
       }
 
       if (donHang.trangThai !== "DA_XAC_NHAN" && donHang.trangThai !== "DANG_GIAO") {
@@ -440,7 +442,7 @@ duongDan.patch(
 
 duongDan.patch(
   "/:id/yeu-cau-tra-hang",
-  xacThucTruyCap,
+  xacThucTuyChon,
   async (req, res) => {
     try {
       const id = Number(req.params.id);
