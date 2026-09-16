@@ -102,7 +102,7 @@ router.get("/kiem-tra/:maDonHang", async (req, res) => {
           data: { 
             trangThai: "DA_XAC_NHAN",
             ghiChu: (donHang.ghiChu ? donHang.ghiChu + "\n" : "") + 
-                    `[SePay API Check] Confirmed. Amt: ${matchingTx.amount}. TxID: ${matchingTx.id}`
+                    `[SePay API Check] Confirmed. Amt: ${matchingTx.amount_in || matchingTx.amount}. TxID: ${matchingTx.id}`
           },
         });
 
