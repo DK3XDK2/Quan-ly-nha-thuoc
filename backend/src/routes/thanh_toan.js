@@ -79,17 +79,34 @@ router.get("/kiem-tra/:maDonHang", async (req, res) => {
       return res.json({ success: true, daThanhToan: false, note: "API Token missing" });
     }
 
-    const response = await fetch("https://my.sepay.vn/userapi/transactions/list?limit=20", {
-      headers: {
-        Authorization: `Bearer ${apiToken}`,
-      },
-    });
+    let transactions = [];
+    try {
+      // SePay v2 API chính thức
+      const response = await fetch("https://userapi.sepay.vn/v2/transactions?limit=20", {
+        headers: {
+          Authorization: `Bearer ${apiToken}`,
+          Accept: "application/json",
+          "User-Agent": "PharmacyApp/1.0",
+        },
+      });
 
-    const data = await response.json();
-    
-    if (data.transactions && Array.isArray(data.transactions)) {
-      const matchingTx = data.transactions.find(tx => {
-        const contentMatch = tx.transaction_content && tx.transaction_content.includes(maDonHang);
+      if (response.ok) {
+        const data = await response.json();
+        transactions = Array.isArray(data.data) ? data.data : (Array.isArray(data.transactions) ? data.transactions : []);
+      } else {
+        console.warn(`[SEPAY] v2 API responded with status ${response.status}`);
+      }
+    } catch (errApi) {
+      console.error("[SEPAY] Lỗi gọi SePay v2 API:", errApi);
+    }
+
+    if (transactions.length > 0) {
+      const matchingTx = transactions.find(tx => {
+        const content = (tx.transaction_content || "").toLowerCase();
+        const targetCode = maDonHang.toLowerCase();
+        const txCode = (tx.code || "").toLowerCase();
+
+        const contentMatch = content.includes(targetCode) || (txCode && (targetCode.includes(txCode) || txCode.includes(targetCode)));
         const amountMatch = Number(tx.amount_in || tx.amount || 0) >= (Number(donHang.tongThanhToan) - 100);
         return contentMatch && amountMatch;
       });
