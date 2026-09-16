@@ -3,10 +3,12 @@ const POS = {
     cart: [],
     products: [],
     customers: [],
+    categories: [],
     currentCustomer: 'GUEST',
 
     init: async function() {
         await this.loadData();
+        this.renderCategoryOptions();
         this.renderProducts();
         this.renderCustomers();
         this.bindEvents();
@@ -15,27 +17,60 @@ const POS = {
     loadData: async function() {
         try {
             App.showLoading();
-            const [listThuoc, listKhach] = await Promise.all([
-                API.get('/api/thuoc'),
-                API.get('/api/khach-hang/quan-ly').catch(() => [])
+            const [listThuoc, listKhach, listDanhMuc] = await Promise.all([
+                API.get('/api/thuoc').catch(() => []),
+                API.get('/api/khach-hang/quan-ly').catch(() => []),
+                API.get('/api/thuoc/danh-muc').catch(() => [])
             ]);
 
-            this.products = (listThuoc || []).map(item => ({
-                id: item.maThuoc || item.id,
-                dbId: item.id,
-                name: item.tenThuoc,
-                category: item.danhMucThuoc?.tenDanhMuc || item.danhMuc || 'Khác',
-                price: Number(item.giaBan),
-                stock: item.loTonKho ? item.loTonKho.reduce((sum, lo) => sum + lo.soLuongTon, 0) : (item.tonKho || 0),
-                unit: item.donViTinh || 'Viên',
-                imageUrl: item.hinhAnh
-            }));
+            this.products = (listThuoc || []).map(item => {
+                let stock = 0;
+                if (Array.isArray(item.loTonKho) && item.loTonKho.length > 0) {
+                    stock = item.loTonKho.reduce((sum, lo) => sum + (Number(lo.soLuongTon) || 0), 0);
+                } else {
+                    stock = Number(item.soLuongTon || item.tonKho || 0);
+                }
+
+                return {
+                    id: (item.maThuoc || item.id).toString(),
+                    dbId: item.id,
+                    name: item.tenThuoc || 'Sản phẩm',
+                    category: item.danhMucThuoc?.tenDanhMuc || item.danhMuc || 'Khác',
+                    price: Number(item.giaBan || 0),
+                    stock: stock,
+                    minStock: Number(item.tonToiThieu || 10),
+                    unit: item.donViTinh || 'Hộp',
+                    imageUrl: item.hinhAnh,
+                    status: (item.conKinhDoanh !== false) ? 'ACTIVE' : 'INACTIVE',
+                    activeIngredient: item.hoatChat || ''
+                };
+            });
+
             this.customers = listKhach || [];
+            this.categories = listDanhMuc || [];
         } catch (e) {
             App.showToast('Lỗi khi tải dữ liệu POS từ máy chủ', 'error');
         } finally {
             App.hideLoading();
         }
+    },
+
+    renderCategoryOptions: function() {
+        const select = document.getElementById('pos-category');
+        if (!select) return;
+
+        let categories = [];
+        if (this.categories && this.categories.length > 0) {
+            categories = this.categories.map(c => c.tenDanhMuc).filter(Boolean);
+        } else {
+            categories = [...new Set(this.products.map(p => p.category).filter(Boolean))];
+        }
+
+        let html = '<option value="">Tất cả danh mục</option>';
+        categories.forEach(cat => {
+            html += `<option value="${cat}">${cat}</option>`;
+        });
+        select.innerHTML = html;
     },
 
     bindEvents: function() {
@@ -59,19 +94,26 @@ const POS = {
                 this.updateCartSummary();
             });
         }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'F2') {
+                e.preventDefault();
+                if (searchInput) searchInput.focus();
+            }
+        });
     },
 
     renderProducts: function(searchTerm = '', category = '') {
         const grid = document.getElementById('product-grid');
         if (!grid) return;
 
-        let filtered = this.products.filter(p => p.status === 'ACTIVE');
+        let filtered = this.products.filter(p => p.status !== 'INACTIVE');
 
         if (searchTerm) {
-            const term = searchTerm.toLowerCase();
+            const term = searchTerm.toLowerCase().trim();
             filtered = filtered.filter(p => 
-                p.name.toLowerCase().includes(term) || 
-                p.id.toLowerCase().includes(term) ||
+                (p.name && p.name.toLowerCase().includes(term)) || 
+                (p.id && p.id.toLowerCase().includes(term)) ||
                 (p.activeIngredient && p.activeIngredient.toLowerCase().includes(term))
             );
         }
@@ -88,7 +130,7 @@ const POS = {
         let html = '';
         filtered.forEach(p => {
             const isOutOfStock = p.stock <= 0;
-            const stockClass = isOutOfStock ? 'badge-danger' : (p.stock <= p.minStock ? 'badge-warning' : 'badge-success');
+            const stockClass = isOutOfStock ? 'badge-danger' : (p.stock <= (p.minStock || 10) ? 'badge-warning' : 'badge-success');
             const stockText = isOutOfStock ? 'Hết hàng' : `Tồn: ${p.stock}`;
 
             html += `
@@ -392,5 +434,60 @@ const POS = {
 
         document.getElementById('invoice-content').innerHTML = invoiceHtml;
         document.getElementById('invoice-modal').classList.add('active');
+    },
+
+    showAddCustomerModal: function() {
+        const modal = document.getElementById('add-customer-modal');
+        if (modal) {
+            const nameEl = document.getElementById('new-customer-name');
+            const phoneEl = document.getElementById('new-customer-phone');
+            if (nameEl) nameEl.value = '';
+            if (phoneEl) phoneEl.value = '';
+            modal.classList.add('active');
+        }
+    },
+
+    saveNewCustomer: async function() {
+        const nameInput = document.getElementById('new-customer-name');
+        const phoneInput = document.getElementById('new-customer-phone');
+        const name = nameInput ? nameInput.value.trim() : '';
+        const phone = phoneInput ? phoneInput.value.trim() : '';
+
+        if (!name || !phone) {
+            App.showToast('Vui lòng nhập tên và số điện thoại khách hàng!', 'warning');
+            return;
+        }
+
+        try {
+            App.showLoading();
+            const email = `khach_${phone}@nhathuoc.local`;
+            const payload = {
+                hoTen: name,
+                soDienThoai: phone,
+                email: email,
+                matKhau: "123456"
+            };
+
+            const res = await API.post('/api/khach-hang/quan-ly', payload);
+            const created = (res && res.duLieu) ? res.duLieu : res;
+            App.showToast('Thêm khách hàng thành công!', 'success');
+
+            const listKhach = await API.get('/api/khach-hang/quan-ly').catch(() => []);
+            this.customers = listKhach || [];
+            this.renderCustomers();
+
+            const select = document.getElementById('customer-select');
+            if (select && created && created.id) {
+                select.value = created.id;
+                this.currentCustomer = created.id;
+            }
+
+            const modal = document.getElementById('add-customer-modal');
+            if (modal) modal.classList.remove('active');
+        } catch (e) {
+            App.showToast(e.message || 'Lỗi khi tạo khách hàng!', 'error');
+        } finally {
+            App.hideLoading();
+        }
     }
 };
