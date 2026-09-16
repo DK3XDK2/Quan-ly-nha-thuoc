@@ -343,6 +343,8 @@ const Checkout = {
 
     currentOrder: null,
     pollingInterval: null,
+    countdownTimer: null,
+    remainingSeconds: 600, // 10 phút = 600 giây
 
     openSepayModal: function(order) {
         this.currentOrder = order;
@@ -358,10 +360,23 @@ const Checkout = {
 
         const qrImg = document.getElementById('sepay-qr-img');
         if (qrImg) {
+            qrImg.style.filter = 'none';
+            qrImg.style.opacity = '1';
             qrImg.src = qrUrl;
             qrImg.onerror = function() {
                 this.src = fallbackQrUrl;
             };
+        }
+
+        const expiredOverlay = document.getElementById('sepay-qr-expired');
+        if (expiredOverlay) expiredOverlay.style.display = 'none';
+
+        const statusBox = document.getElementById('sepay-status-box');
+        if (statusBox) {
+            statusBox.style.background = '#f8fafc';
+            statusBox.style.borderColor = '#e2e8f0';
+            statusBox.style.color = '#334155';
+            statusBox.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin" id="sepay-status-icon" style="color: #2563eb;"></i> <span id="sepay-status-text">Đang chờ nhận tiền chuyển khoản...</span>`;
         }
 
         const bankEl = document.getElementById('sepay-bank-name');
@@ -382,10 +397,105 @@ const Checkout = {
         const modal = document.getElementById('sepay-modal');
         if (modal) modal.style.display = 'flex';
 
+        this.startCountdown();
+        this.startSepayPolling(maDonHang);
+    },
+
+    startCountdown: function() {
+        this.stopCountdown();
+        this.remainingSeconds = 600; // Reset 10 phút
+        this.updateTimerDisplay();
+
+        this.countdownTimer = setInterval(() => {
+            this.remainingSeconds--;
+            this.updateTimerDisplay();
+
+            if (this.remainingSeconds <= 0) {
+                this.onQrExpired();
+            }
+        }, 1000);
+    },
+
+    stopCountdown: function() {
+        if (this.countdownTimer) {
+            clearInterval(this.countdownTimer);
+            this.countdownTimer = null;
+        }
+    },
+
+    updateTimerDisplay: function() {
+        const timerEl = document.getElementById('sepay-timer');
+        if (!timerEl) return;
+        const minutes = Math.floor(this.remainingSeconds / 60);
+        const seconds = this.remainingSeconds % 60;
+        timerEl.innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    },
+
+    onQrExpired: function() {
+        this.stopCountdown();
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+        }
+
+        const qrImg = document.getElementById('sepay-qr-img');
+        if (qrImg) {
+            qrImg.style.filter = 'blur(4px)';
+            qrImg.style.opacity = '0.35';
+        }
+
+        const expiredOverlay = document.getElementById('sepay-qr-expired');
+        if (expiredOverlay) expiredOverlay.style.display = 'flex';
+
+        const statusBox = document.getElementById('sepay-status-box');
+        if (statusBox) {
+            statusBox.style.background = '#fef2f2';
+            statusBox.style.borderColor = '#fecaca';
+            statusBox.style.color = '#b91c1c';
+            statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i> <span>Mã QR đã hết hạn (quá 10 phút). Vui lòng nhấn <strong>Làm mới</strong> để tiếp tục!</span>`;
+        }
+    },
+
+    refreshQrCode: function() {
+        if (!this.currentOrder) return;
+        const maDonHang = this.currentOrder.maDonHang || `DH${this.currentOrder.id || Date.now()}`;
+        const orderTotal = Number(this.currentOrder.tongThanhToan || this.currentOrder.tongTienHang || 0);
+        const tongTien = (orderTotal > 0) ? orderTotal : Number(this.total || 0);
+        const bankId = this.currentOrder.bankId || 'VietinBank';
+        const accountNo = this.currentOrder.accountNo || '102882794225';
+        const accountName = this.currentOrder.accountName || 'VU QUANG HUY';
+
+        const t = Date.now();
+        const qrUrl = `https://qr.sepay.vn/img?acc=${accountNo}&bank=${bankId}&amount=${tongTien}&des=${encodeURIComponent(maDonHang)}&_t=${t}`;
+
+        const qrImg = document.getElementById('sepay-qr-img');
+        if (qrImg) {
+            qrImg.style.filter = 'none';
+            qrImg.style.opacity = '1';
+            qrImg.src = qrUrl;
+        }
+
+        const expiredOverlay = document.getElementById('sepay-qr-expired');
+        if (expiredOverlay) expiredOverlay.style.display = 'none';
+
+        const statusBox = document.getElementById('sepay-status-box');
+        if (statusBox) {
+            statusBox.style.background = '#f8fafc';
+            statusBox.style.borderColor = '#e2e8f0';
+            statusBox.style.color = '#334155';
+            statusBox.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin" style="color: #2563eb;"></i> <span>Đang chờ nhận tiền chuyển khoản...</span>`;
+        }
+
+        if (typeof App !== 'undefined' && App.showToast) {
+            App.showToast('Đã làm mới mã QR! Bạn có 10 phút để quét mã.', 'info');
+        }
+
+        this.startCountdown();
         this.startSepayPolling(maDonHang);
     },
 
     closeSepayModal: function() {
+        this.stopCountdown();
         if (this.pollingInterval) clearInterval(this.pollingInterval);
         const modal = document.getElementById('sepay-modal');
         if (modal) modal.style.display = 'none';
@@ -420,6 +530,7 @@ const Checkout = {
     },
 
     onPaymentSuccess: function(maDonHang) {
+        this.stopCountdown();
         if (this.pollingInterval) clearInterval(this.pollingInterval);
 
         const statusBox = document.getElementById('sepay-status-box');

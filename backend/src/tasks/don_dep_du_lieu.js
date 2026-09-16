@@ -78,13 +78,38 @@ async function thucHienDonDepLog(ngayGiuLai = 90) {
 }
 
 /**
- * 
+ * Khởi tạo các cron job định kỳ
  */
 function khoiTaoCronDonDep() {
+  // Dọn dẹp log, hóa đơn, chat cũ vào lúc 3h sáng mỗi ngày
   cron.schedule("0 3 * * *", () => {
     thucHienDonDepLog(90);
   });
   console.log("[CRON] Đã kích hoạt lịch dọn dẹp dữ liệu tự động (3:00 AM hàng ngày - Giữ lại 90 ngày).");
+
+  // Tự động kiểm tra và hủy các đơn hàng SePay chưa thanh toán quá 15 phút (chạy mỗi 5 phút)
+  cron.schedule("*/5 * * * *", async () => {
+    try {
+      const hanHuy = new Date(Date.now() - 15 * 60 * 1000);
+      const ketQua = await coSoDuLieu.donHang.updateMany({
+        where: {
+          trangThai: "MOI_TAO",
+          phuongThucThanhToan: "SEPAY",
+          taoLuc: { lt: hanHuy }
+        },
+        data: {
+          trangThai: "HUY",
+          ghiChu: "[Hệ thống] Tự động hủy do quá hạn thanh toán chuyển khoản SePay (15 phút)"
+        }
+      });
+      if (ketQua.count > 0) {
+        console.log(`[CRON] Đã tự động hủy ${ketQua.count} đơn hàng SePay quá hạn 15 phút.`);
+      }
+    } catch (err) {
+      console.error("[CRON] Lỗi tự động hủy đơn SePay quá hạn:", err);
+    }
+  });
+  console.log("[CRON] Đã kích hoạt lịch tự động hủy đơn hàng SePay quá hạn 15 phút (chạy mỗi 5 phút).");
 }
 
 module.exports = { khoiTaoCronDonDep, thucHienDonDepLog };

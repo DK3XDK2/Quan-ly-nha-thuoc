@@ -729,23 +729,146 @@
         }
 
         let accSepayPolling = null;
+        let accSepayCountdownTimer = null;
+        let accSepayRemainingSeconds = 600;
         let currentAccOrderCode = null;
+        let currentAccOrderAmount = 0;
+
+        function updateAccTimerDisplay() {
+            const el = document.getElementById('acc-sepay-timer');
+            if (!el) return;
+            const m = Math.floor(accSepayRemainingSeconds / 60);
+            const s = accSepayRemainingSeconds % 60;
+            el.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function stopAccSepayCountdown() {
+            if (accSepayCountdownTimer) {
+                clearInterval(accSepayCountdownTimer);
+                accSepayCountdownTimer = null;
+            }
+        }
+
+        function startAccSepayCountdown() {
+            stopAccSepayCountdown();
+            accSepayRemainingSeconds = 600;
+            updateAccTimerDisplay();
+
+            accSepayCountdownTimer = setInterval(() => {
+                accSepayRemainingSeconds--;
+                updateAccTimerDisplay();
+                if (accSepayRemainingSeconds <= 0) {
+                    onAccQrExpired();
+                }
+            }, 1000);
+        }
+
+        function onAccQrExpired() {
+            stopAccSepayCountdown();
+            if (accSepayPolling) {
+                clearInterval(accSepayPolling);
+                accSepayPolling = null;
+            }
+
+            const img = document.getElementById('acc-sepay-qr-img');
+            if (img) {
+                img.style.filter = 'blur(4px)';
+                img.style.opacity = '0.35';
+            }
+
+            const exp = document.getElementById('acc-sepay-qr-expired');
+            if (exp) exp.style.display = 'flex';
+
+            const statusBox = document.getElementById('acc-sepay-status-box');
+            if (statusBox) {
+                statusBox.style.background = '#fef2f2';
+                statusBox.style.borderColor = '#fecaca';
+                statusBox.style.color = '#b91c1c';
+                statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i> <span>Mã QR đã hết hạn (quá 10 phút). Vui lòng nhấn <strong>Làm mới</strong>!</span>`;
+            }
+        }
+
+        function refreshAccOrderQrCode() {
+            if (!currentAccOrderCode) return;
+            const bankId = 'VietinBank';
+            const accountNo = '102882794225';
+            const t = Date.now();
+            const qrUrl = `https://qr.sepay.vn/img?acc=${accountNo}&bank=${bankId}&amount=${currentAccOrderAmount}&des=${encodeURIComponent(currentAccOrderCode)}&_t=${t}`;
+
+            const img = document.getElementById('acc-sepay-qr-img');
+            if (img) {
+                img.style.filter = 'none';
+                img.style.opacity = '1';
+                img.src = qrUrl;
+            }
+
+            const exp = document.getElementById('acc-sepay-qr-expired');
+            if (exp) exp.style.display = 'none';
+
+            const statusBox = document.getElementById('acc-sepay-status-box');
+            if (statusBox) {
+                statusBox.style.background = '#f8fafc';
+                statusBox.style.borderColor = '#e2e8f0';
+                statusBox.style.color = '#334155';
+                statusBox.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin" style="color: #2563eb;"></i> <span>Đang chờ nhận tiền chuyển khoản...</span>`;
+            }
+
+            if (typeof App !== 'undefined' && App.showToast) {
+                App.showToast('Đã làm mới mã QR! Bạn có 10 phút để quét mã.', 'info');
+            }
+
+            startAccSepayCountdown();
+            startAccSepayPolling(currentAccOrderCode);
+        }
+
+        function startAccSepayPolling(maDonHang) {
+            if (accSepayPolling) clearInterval(accSepayPolling);
+            const statusBox = document.getElementById('acc-sepay-status-box');
+
+            accSepayPolling = setInterval(async () => {
+                try {
+                    const res = await API.get(`/api/thanh-toan/kiem-tra/${maDonHang}`);
+                    if (res && res.daThanhToan) {
+                        stopAccSepayCountdown();
+                        clearInterval(accSepayPolling);
+                        if (statusBox) {
+                            statusBox.style.background = '#dcfce7';
+                            statusBox.style.borderColor = '#86efac';
+                            statusBox.style.color = '#15803d';
+                            statusBox.innerHTML = `<i class="fa-solid fa-circle-check" style="font-size:1.2rem; color:#22c55e;"></i> <strong>Đã nhận thanh toán thành công!</strong>`;
+                        }
+                        App.showToast('Thanh toán SePay thành công!', 'success');
+                        setTimeout(() => {
+                            closeOrderSepayModal();
+                            isOrdersLoaded = false;
+                            loadMyOrders();
+                        }, 1500);
+                    }
+                } catch(e) {}
+            }, 3000);
+        }
 
         function openOrderSepayModal(maDonHang, tongTien) {
             currentAccOrderCode = maDonHang;
+            currentAccOrderAmount = Number(tongTien) || 0;
             const bankId = 'VietinBank';
             const accountNo = '102882794225';
             const accountName = 'VU QUANG HUY';
-            const amount = Number(tongTien) || 0;
+            const amount = currentAccOrderAmount;
 
             const qrUrl = `https://qr.sepay.vn/img?acc=${accountNo}&bank=${bankId}&amount=${amount}&des=${encodeURIComponent(maDonHang)}`;
             const fallbackQrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(maDonHang)}&accountName=${encodeURIComponent(accountName)}`;
 
             const img = document.getElementById('acc-sepay-qr-img');
             if (img) {
+                img.style.filter = 'none';
+                img.style.opacity = '1';
                 img.src = qrUrl;
                 img.onerror = function() { this.src = fallbackQrUrl; };
             }
+
+            const exp = document.getElementById('acc-sepay-qr-expired');
+            if (exp) exp.style.display = 'none';
 
             const accEl = document.getElementById('acc-sepay-acc-no');
             if (accEl) accEl.innerText = accountNo;
@@ -767,30 +890,12 @@
             const modal = document.getElementById('account-sepay-modal');
             if (modal) modal.style.display = 'flex';
 
-            if (accSepayPolling) clearInterval(accSepayPolling);
-            accSepayPolling = setInterval(async () => {
-                try {
-                    const res = await API.get(`/api/thanh-toan/kiem-tra/${maDonHang}`);
-                    if (res && res.daThanhToan) {
-                        clearInterval(accSepayPolling);
-                        if (statusBox) {
-                            statusBox.style.background = '#dcfce7';
-                            statusBox.style.borderColor = '#86efac';
-                            statusBox.style.color = '#15803d';
-                            statusBox.innerHTML = `<i class="fa-solid fa-circle-check" style="font-size:1.2rem; color:#22c55e;"></i> <strong>Đã nhận thanh toán thành công!</strong>`;
-                        }
-                        App.showToast('Thanh toán SePay thành công!', 'success');
-                        setTimeout(() => {
-                            closeOrderSepayModal();
-                            isOrdersLoaded = false;
-                            loadMyOrders();
-                        }, 1500);
-                    }
-                } catch(e) {}
-            }, 3000);
+            startAccSepayCountdown();
+            startAccSepayPolling(maDonHang);
         }
 
         function closeOrderSepayModal() {
+            stopAccSepayCountdown();
             if (accSepayPolling) clearInterval(accSepayPolling);
             const m = document.getElementById('account-sepay-modal');
             if (m) m.style.display = 'none';
@@ -802,6 +907,7 @@
                 App.showLoading();
                 const res = await API.get(`/api/thanh-toan/kiem-tra/${currentAccOrderCode}`);
                 if (res && res.daThanhToan) {
+                    stopAccSepayCountdown();
                     App.showToast('Thanh toán SePay thành công! Đơn hàng đã được xác nhận.', 'success');
                     closeOrderSepayModal();
                     isOrdersLoaded = false;
@@ -843,10 +949,26 @@
             </div>
             
             <h3 style="margin: 0 0 4px; color: #0f172a; font-size: 1.3rem;">Quét mã QR thanh toán</h3>
-            <p style="margin: 0 0 14px; font-size: 0.85rem; color: #64748b;">Mở ứng dụng Ngân hàng hoặc Ví điện tử để quét mã</p>
+            <p style="margin: 0 0 8px; font-size: 0.85rem; color: #64748b;">Mở ứng dụng Ngân hàng hoặc Ví điện tử để quét mã</p>
             
-            <div style="background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 12px; padding: 12px; display: inline-block; margin-bottom: 14px;">
-                <img id="acc-sepay-qr-img" src="" alt="SePay QR Code" style="width: 220px; height: 220px; object-fit: contain; display: block; border-radius: 8px;">
+            <!-- Đếm ngược thời gian hết hạn (10 phút) -->
+            <div id="acc-sepay-countdown-box" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; background: #fef2f2; border: 1px solid #fee2e2; border-radius: 20px; font-size: 0.82rem; color: #b91c1c; font-weight: 600; margin-bottom: 12px;">
+                <i class="fa-regular fa-clock"></i> Mã QR hết hạn sau: <span id="acc-sepay-timer" style="font-family: monospace; font-size: 0.95rem; font-weight: 700;">10:00</span>
+            </div>
+            
+            <!-- Ảnh QR Code & Lớp phủ hết hạn -->
+            <div style="position: relative; background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 12px; padding: 12px; display: inline-block; margin-bottom: 14px; overflow: hidden;">
+                <img id="acc-sepay-qr-img" src="" alt="SePay QR Code" style="width: 220px; height: 220px; object-fit: contain; display: block; border-radius: 8px; transition: filter 0.3s ease, opacity 0.3s ease;">
+                
+                <!-- Overlay khi QR hết hạn -->
+                <div id="acc-sepay-qr-expired" style="display: none; position: absolute; inset: 0; background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(4px); flex-direction: column; align-items: center; justify-content: center; padding: 16px; border-radius: 12px; z-index: 10;">
+                    <i class="fa-solid fa-clock-rotate-left" style="font-size: 2.2rem; color: #ef4444; margin-bottom: 8px;"></i>
+                    <strong style="color: #0f172a; font-size: 0.95rem; margin-bottom: 4px;">Mã QR đã hết hạn</strong>
+                    <p style="color: #64748b; font-size: 0.78rem; margin: 0 0 10px; line-height: 1.3;">Đã quá 10 phút chưa nhận được thanh toán</p>
+                    <button type="button" onclick="refreshAccOrderQrCode()" style="background: #2563eb; color: white; border: none; padding: 7px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">
+                        <i class="fa-solid fa-rotate-right"></i> Làm mới mã QR
+                    </button>
+                </div>
             </div>
             
             <div id="acc-sepay-status-box" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; color: #334155; margin-bottom: 14px;">
