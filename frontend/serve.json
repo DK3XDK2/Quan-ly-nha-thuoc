@@ -1,7 +1,9 @@
 {
   "cleanUrls": false,
-  "trailingSlash": true,
+  "directoryListing": false,
+  "trailingSlash": false,
   "redirects": [
+    { "source": "/", "destination": "/pages/public/index.html" },
     { "source": "/admin/login", "destination": "/pages/admin/login.html" },
     { "source": "/admin", "destination": "/pages/admin/dashboard.html" },
     { "source": "/login", "destination": "/pages/public/shop-login.html" },
