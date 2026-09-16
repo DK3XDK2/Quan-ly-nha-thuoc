@@ -4,6 +4,23 @@ const Checkout = {
     total: 0,
     isBuyNow: false,
 
+    getCurrentUser: function() {
+        try {
+            if (typeof Auth !== 'undefined' && typeof Auth.getCurrentUser === 'function') {
+                const u = Auth.getCurrentUser();
+                if (u) return u;
+            }
+            if (typeof API !== 'undefined' && typeof API.getCurrentUser === 'function') {
+                const u = API.getCurrentUser();
+                if (u) return u;
+            }
+            const s = localStorage.getItem('shop_user') || localStorage.getItem('currentUser');
+            return s ? JSON.parse(s) : null;
+        } catch(e) {
+            return null;
+        }
+    },
+
     init: function() {
         const urlParams = new URLSearchParams(window.location.search);
         this.isBuyNow = urlParams.get('mode') === 'buynow';
@@ -15,20 +32,24 @@ const Checkout = {
         }
 
         if (this.cartItems.length === 0) {
-            alert('Không có sản phẩm để thanh toán! Đang quay lại trang chủ.');
-            window.location.href = 'index.html';
+            const container = document.getElementById('co-items');
+            if (container) {
+                container.innerHTML = '<div style="color:#ef4444; padding:10px 0; font-size:0.875rem;"><i class="fa-solid fa-circle-exclamation"></i> Giỏ hàng đang trống. Vui lòng chọn sản phẩm trước khi thanh toán.</div>';
+            }
+            const btn = document.querySelector('.btn-checkout');
+            if (btn) btn.disabled = true;
             return;
         }
 
-        const user = Auth.getCurrentUser();
+        const user = this.getCurrentUser();
         if (user) {
             const nameEl = document.getElementById('co-name');
             const phoneEl = document.getElementById('co-phone');
             const addrEl = document.getElementById('co-address');
 
-            if (nameEl && !nameEl.value) nameEl.value = user.name || '';
-            if (phoneEl && !phoneEl.value) phoneEl.value = user.phone || '';
-            if (addrEl && !addrEl.value) addrEl.value = user.address || '';
+            if (nameEl && !nameEl.value) nameEl.value = user.name || user.hoTen || '';
+            if (phoneEl && !phoneEl.value) phoneEl.value = user.phone || user.soDienThoai || '';
+            if (addrEl && !addrEl.value) addrEl.value = user.address || user.diaChi || '';
         }
 
         this.bindEvents();
@@ -89,11 +110,13 @@ const Checkout = {
         this.total = 0;
 
         this.cartItems.forEach(item => {
-            const itemTotal = item.price * item.quantity;
+            const price = Number(item.price || item.giaBan || 0);
+            const qty = Number(item.quantity || 1);
+            const itemTotal = price * qty;
             this.total += itemTotal;
             html += `
                 <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.875rem;">
-                    <div style="flex:1; padding-right:10px;">${item.name} <strong style="color:var(--shop-primary);">x${item.quantity}</strong></div>
+                    <div style="flex:1; padding-right:10px;">${item.name || item.tenThuoc || 'Sản phẩm'} <strong style="color:var(--shop-primary);">x${qty}</strong></div>
                     <div style="font-weight:600;">${App.formatCurrency(itemTotal)}</div>
                 </div>
             `;
@@ -148,7 +171,7 @@ const Checkout = {
         try {
             App.showLoading();
 
-            const user = Auth.getCurrentUser();
+            const user = this.getCurrentUser();
             const payload = {
                 tenNguoiNhan: name,
                 soDienThoaiNhan: phone,
@@ -159,7 +182,7 @@ const Checkout = {
                 phuongThucThanhToan: payment === 'SEPAY' ? 'SEPAY' : 'CASH',
                 chiTiet: this.cartItems.map(item => ({
                     thuocId: Number(item.dbId || item.id),
-                    soLuong: Number(item.quantity)
+                    soLuong: Number(item.quantity || 1)
                 }))
             };
 
