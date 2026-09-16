@@ -46,37 +46,60 @@ const Checkout = {
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
                 try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=vi`, {
-                        headers: { 'Accept': 'application/json' }
-                    });
-                    if (!res.ok) throw new Error('Không thể tải thông tin địa chỉ');
-                    const data = await res.json();
-                    
                     let addressText = '';
-                    if (data.address) {
-                        const a = data.address;
-                        const parts = [];
-                        const street = (a.house_number ? a.house_number + ' ' : '') + (a.road || a.pedestrian || a.street || '');
-                        if (street.trim()) parts.push(street.trim());
-                        if (a.suburb || a.neighbourhood || a.quarter || a.village) {
-                            parts.push(a.suburb || a.neighbourhood || a.quarter || a.village);
+
+                    // 1. Thử qua ArcGIS World Geocode (chính xác đến số nhà, tên đường, không bị chặn tại VN)
+                    try {
+                        const arcgisUrl = `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?f=pjson&location=${lon},${lat}`;
+                        const resArcgis = await fetch(arcgisUrl);
+                        if (resArcgis.ok) {
+                            const data = await resArcgis.json();
+                            if (data && data.address) {
+                                const a = data.address;
+                                addressText = a.Match_addr || a.LongLabel || [a.Address, a.District, a.City, a.Region].filter(Boolean).join(', ');
+                            }
                         }
-                        if (a.city_district || a.district || a.county) {
-                            parts.push(a.city_district || a.district || a.county);
-                        }
-                        if (a.city || a.province || a.state) {
-                            parts.push(a.city || a.province || a.state);
-                        }
-                        if (parts.length >= 2) {
-                            addressText = parts.join(', ');
+                    } catch (eArcgis) {
+                        console.warn('ArcGIS geocoding failed, trying fallback:', eArcgis);
+                    }
+
+                    // 2. Dự phòng qua BigDataCloud Reverse Geocode Client
+                    if (!addressText) {
+                        try {
+                            const bdcUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=vi`;
+                            const resBdc = await fetch(bdcUrl);
+                            if (resBdc.ok) {
+                                const data = await resBdc.json();
+                                const parts = [];
+                                if (data.locality) parts.push(data.locality);
+                                if (data.city && data.city !== data.locality) parts.push(data.city);
+                                else if (data.principalSubdivision && data.principalSubdivision !== data.locality) parts.push(data.principalSubdivision);
+                                if (data.countryName) parts.push(data.countryName);
+                                if (parts.length > 0) addressText = parts.join(', ');
+                            }
+                        } catch (eBdc) {
+                            console.warn('BigDataCloud fallback failed:', eBdc);
                         }
                     }
 
-                    if (!addressText && data.display_name) {
-                        addressText = data.display_name;
+                    // 3. Dự phòng qua Nominatim
+                    if (!addressText) {
+                        try {
+                            const resNom = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=vi`);
+                            if (resNom.ok) {
+                                const data = await resNom.json();
+                                addressText = data.display_name || '';
+                            }
+                        } catch (eNom) {
+                            console.warn('Nominatim fallback failed:', eNom);
+                        }
                     }
 
-                    if (addrInput && addressText) {
+                    if (!addressText) {
+                        throw new Error('Không thể giải mã địa chỉ từ các nguồn định vị');
+                    }
+
+                    if (addrInput) {
                         addrInput.value = addressText;
                         if (errEl) errEl.style.display = 'none';
                         addrInput.classList.remove('is-invalid');
@@ -84,7 +107,7 @@ const Checkout = {
                     }
 
                     if (typeof App !== 'undefined' && App.showToast) {
-                        App.showToast('Đã xác định vị trí hiện tại thành công!', 'success');
+                        App.showToast('Đã lấy vị trí hiện tại thành công!', 'success');
                     }
                 } catch (err) {
                     console.error('Lỗi định vị:', err);
