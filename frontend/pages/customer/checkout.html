@@ -89,7 +89,12 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Địa chỉ giao hàng *</label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label style="margin-bottom: 0;">Địa chỉ giao hàng *</label>
+                            <button type="button" id="btn-detect-location" onclick="Checkout.detectLocation()" style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.3); color: var(--shop-primary, #0ea5e9); font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-weight: 600; padding: 4px 10px; border-radius: 6px; transition: all 0.2s ease;">
+                                <i class="fa-solid fa-location-crosshairs"></i> Lấy vị trí hiện tại
+                            </button>
+                        </div>
                         <input type="text" id="co-address" class="form-control" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố">
                         <div id="err-address" style="color: #ef4444; font-size: 0.8rem; margin-top: 4px; display: none;"></div>
                     </div>

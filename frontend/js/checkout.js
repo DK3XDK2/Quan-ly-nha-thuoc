@@ -21,6 +21,110 @@ const Checkout = {
         }
     },
 
+    detectLocation: function() {
+        if (!navigator.geolocation) {
+            if (typeof App !== 'undefined' && App.showToast) {
+                App.showToast('Trình duyệt của bạn không hỗ trợ định vị GPS.', 'warning');
+            } else {
+                alert('Trình duyệt của bạn không hỗ trợ định vị GPS.');
+            }
+            return;
+        }
+
+        const btn = document.getElementById('btn-detect-location');
+        const addrInput = document.getElementById('co-address');
+        const errEl = document.getElementById('err-address');
+        const origContent = btn ? btn.innerHTML : '';
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang định vị...';
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=vi`, {
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    if (!res.ok) throw new Error('Không thể tải thông tin địa chỉ');
+                    const data = await res.json();
+                    
+                    let addressText = '';
+                    if (data.address) {
+                        const a = data.address;
+                        const parts = [];
+                        const street = (a.house_number ? a.house_number + ' ' : '') + (a.road || a.pedestrian || a.street || '');
+                        if (street.trim()) parts.push(street.trim());
+                        if (a.suburb || a.neighbourhood || a.quarter || a.village) {
+                            parts.push(a.suburb || a.neighbourhood || a.quarter || a.village);
+                        }
+                        if (a.city_district || a.district || a.county) {
+                            parts.push(a.city_district || a.district || a.county);
+                        }
+                        if (a.city || a.province || a.state) {
+                            parts.push(a.city || a.province || a.state);
+                        }
+                        if (parts.length >= 2) {
+                            addressText = parts.join(', ');
+                        }
+                    }
+
+                    if (!addressText && data.display_name) {
+                        addressText = data.display_name;
+                    }
+
+                    if (addrInput && addressText) {
+                        addrInput.value = addressText;
+                        if (errEl) errEl.style.display = 'none';
+                        addrInput.classList.remove('is-invalid');
+                        addrInput.focus();
+                    }
+
+                    if (typeof App !== 'undefined' && App.showToast) {
+                        App.showToast('Đã xác định vị trí hiện tại thành công!', 'success');
+                    }
+                } catch (err) {
+                    console.error('Lỗi định vị:', err);
+                    if (typeof App !== 'undefined' && App.showToast) {
+                        App.showToast('Không thể giải mã địa chỉ từ tọa độ GPS.', 'warning');
+                    }
+                } finally {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = origContent;
+                    }
+                }
+            },
+            (error) => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = origContent;
+                }
+                let msg = 'Không thể lấy vị trí hiện tại.';
+                if (error.code === 1) {
+                    msg = 'Bạn đã từ chối quyền truy cập vị trí. Vui lòng cho phép quyền vị trí trên trình duyệt.';
+                } else if (error.code === 2) {
+                    msg = 'Không thể xác định vị trí GPS từ thiết bị/mạng.';
+                } else if (error.code === 3) {
+                    msg = 'Quá thời gian chờ lấy vị trí.';
+                }
+                if (typeof App !== 'undefined' && App.showToast) {
+                    App.showToast(msg, 'warning');
+                } else {
+                    alert(msg);
+                }
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 30000
+            }
+        );
+    },
+
     init: function() {
         const urlParams = new URLSearchParams(window.location.search);
         this.isBuyNow = urlParams.get('mode') === 'buynow';
