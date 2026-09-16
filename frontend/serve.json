@@ -10,6 +10,7 @@
     { "source": "/shop", "destination": "/pages/public/index.html" },
     { "source": "/public/:slug", "destination": "/pages/public/:slug.html" },
     { "source": "/customer/:slug", "destination": "/pages/customer/:slug.html" },
-    { "source": "/admin/:slug", "destination": "/pages/admin/:slug.html" }
+    { "source": "/admin/:slug", "destination": "/pages/admin/:slug.html" },
+    { "source": "/pages/public/pages/:path*", "destination": "/pages/:path*" }
   ]
 }

@@ -329,7 +329,9 @@ const Cart = {
         let checkoutPath = '../customer/checkout.html';
         if (path.includes('/customer')) {
             checkoutPath = 'checkout.html';
-        } else if (path.endsWith('/frontend/') || path.endsWith('index.html') || path === '/' || path === '') {
+        } else if (path.includes('/public') || path.includes('/admin')) {
+            checkoutPath = '../customer/checkout.html';
+        } else if (path === '/' || path === '' || path === '/index.html' || path.endsWith('/frontend/') || path.endsWith('/frontend/index.html')) {
             checkoutPath = 'pages/customer/checkout.html';
         }
         
@@ -340,7 +342,7 @@ const Cart = {
                 loginPath = '../public/shop-login.html';
             } else if (path.includes('/public')) {
                 loginPath = 'shop-login.html';
-            } else if (path.endsWith('/frontend/') || path.endsWith('index.html') || path === '/' || path === '') {
+            } else if (path === '/' || path === '' || path === '/index.html' || path.endsWith('/frontend/') || path.endsWith('/frontend/index.html')) {
                 loginPath = 'pages/public/shop-login.html';
             }
             if (typeof App !== 'undefined' && App.showToast) {
