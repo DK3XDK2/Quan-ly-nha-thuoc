@@ -355,8 +355,9 @@ const Checkout = {
         const accountNo = order.accountNo || '102882794225';
         const accountName = order.accountName || 'VU QUANG HUY';
 
-        const qrUrl = `https://qr.sepay.vn/img?acc=${accountNo}&bank=${bankId}&amount=${tongTien}&des=${encodeURIComponent(maDonHang)}`;
-        const fallbackQrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${tongTien}&addInfo=${encodeURIComponent(maDonHang)}&accountName=${encodeURIComponent(accountName)}`;
+        const noiDungCK = `SEVQR ${maDonHang}`;
+        const qrUrl = `https://qr.sepay.vn/img?acc=${accountNo}&bank=${bankId}&amount=${tongTien}&des=${encodeURIComponent(noiDungCK)}`;
+        const fallbackQrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${tongTien}&addInfo=${encodeURIComponent(noiDungCK)}&accountName=${encodeURIComponent(accountName)}`;
 
         const qrImg = document.getElementById('sepay-qr-img');
         if (qrImg) {
@@ -392,7 +393,7 @@ const Checkout = {
         if (amtEl) amtEl.innerText = App.formatCurrency(tongTien);
 
         const codeEl = document.getElementById('sepay-order-code');
-        if (codeEl) codeEl.innerText = maDonHang;
+        if (codeEl) codeEl.innerText = noiDungCK;
 
         const modal = document.getElementById('sepay-modal');
         if (modal) modal.style.display = 'flex';
@@ -466,7 +467,8 @@ const Checkout = {
         const accountName = this.currentOrder.accountName || 'VU QUANG HUY';
 
         const t = Date.now();
-        const qrUrl = `https://qr.sepay.vn/img?acc=${accountNo}&bank=${bankId}&amount=${tongTien}&des=${encodeURIComponent(maDonHang)}&_t=${t}`;
+        const noiDungCK = `SEVQR ${maDonHang}`;
+        const qrUrl = `https://qr.sepay.vn/img?acc=${accountNo}&bank=${bankId}&amount=${tongTien}&des=${encodeURIComponent(noiDungCK)}&_t=${t}`;
 
         const qrImg = document.getElementById('sepay-qr-img');
         if (qrImg) {

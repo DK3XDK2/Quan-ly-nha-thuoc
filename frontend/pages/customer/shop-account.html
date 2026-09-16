@@ -793,7 +793,8 @@
             const bankId = 'VietinBank';
             const accountNo = '102882794225';
             const t = Date.now();
-            const qrUrl = `https://qr.sepay.vn/img?acc=${accountNo}&bank=${bankId}&amount=${currentAccOrderAmount}&des=${encodeURIComponent(currentAccOrderCode)}&_t=${t}`;
+            const noiDungCK = `SEVQR ${currentAccOrderCode}`;
+            const qrUrl = `https://qr.sepay.vn/img?acc=${accountNo}&bank=${bankId}&amount=${currentAccOrderAmount}&des=${encodeURIComponent(noiDungCK)}&_t=${t}`;
 
             const img = document.getElementById('acc-sepay-qr-img');
             if (img) {
@@ -856,8 +857,9 @@
             const accountName = 'VU QUANG HUY';
             const amount = currentAccOrderAmount;
 
-            const qrUrl = `https://qr.sepay.vn/img?acc=${accountNo}&bank=${bankId}&amount=${amount}&des=${encodeURIComponent(maDonHang)}`;
-            const fallbackQrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(maDonHang)}&accountName=${encodeURIComponent(accountName)}`;
+            const noiDungCK = `SEVQR ${maDonHang}`;
+            const qrUrl = `https://qr.sepay.vn/img?acc=${accountNo}&bank=${bankId}&amount=${amount}&des=${encodeURIComponent(noiDungCK)}`;
+            const fallbackQrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(noiDungCK)}&accountName=${encodeURIComponent(accountName)}`;
 
             const img = document.getElementById('acc-sepay-qr-img');
             if (img) {
@@ -877,7 +879,7 @@
             const amtEl = document.getElementById('acc-sepay-amount');
             if (amtEl) amtEl.innerText = App.formatCurrency(amount);
             const codeEl = document.getElementById('acc-sepay-order-code');
-            if (codeEl) codeEl.innerText = maDonHang;
+            if (codeEl) codeEl.innerText = noiDungCK;
 
             const statusBox = document.getElementById('acc-sepay-status-box');
             if (statusBox) {
@@ -1009,7 +1011,7 @@
             </div>
             
             <p style="font-size: 0.75rem; color: #dc2626; margin: 0 0 14px; line-height: 1.4;">
-                <i class="fa-solid fa-triangle-exclamation"></i> <em>Lưu ý: Quý khách vui lòng giữ đúng nội dung chuyển khoản để hệ thống SePay tự động xác nhận trong 3-5 giây!</em>
+                <i class="fa-solid fa-triangle-exclamation"></i> <em>Lưu ý: Bắt buộc giữ nguyên nội dung chuyển khoản (bắt đầu bằng <strong>SEVQR</strong>) để VietinBank & SePay tự động xác nhận trong 3-5 giây!</em>
             </p>
             
             <div style="display: flex; flex-direction: column; gap: 8px;">
