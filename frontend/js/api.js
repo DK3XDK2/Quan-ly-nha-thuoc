@@ -239,20 +239,28 @@
       let invoices = safeGetStorage('invoices') || [];
       if (options.method === 'POST') {
         const body = options.body ? (typeof options.body === 'string' ? JSON.parse(options.body) : options.body) : {};
-        const calcTotal = (body.chiTiet || []).reduce((sum, item) => sum + (item.soLuong || 1) * 65000, 0) || 130000;
+        const rawProducts = safeGetStorage('products') || [];
+        const mappedItems = (body.chiTiet || []).map(ct => {
+          const prod = rawProducts.find(p => p.id === ct.thuocId || p.dbId === ct.thuocId || String(p.id) === String(ct.thuocId));
+          const donGia = prod ? (prod.price || prod.giaBan || 50000) : 50000;
+          const qty = Number(ct.soLuong || 1);
+          return {
+            thuocId: ct.thuocId,
+            soLuong: qty,
+            donGia: donGia,
+            thanhTien: qty * donGia,
+            thuoc: { tenThuoc: prod ? (prod.name || prod.tenThuoc) : (ct.tenThuoc || `Thuốc #${ct.thuocId}`) }
+          };
+        });
+        const calcTotal = mappedItems.reduce((sum, item) => sum + item.thanhTien, 0) || 50000;
         const newInvoice = {
           id: Date.now(),
           maHoaDon: `HD${Date.now().toString().slice(-6)}`,
           tongTien: calcTotal,
           phuongThucThanhToan: body.phuongThucThanhToan || 'TIEN_MAT',
           taoLuc: new Date().toISOString(),
-          khachHang: { hoTen: body.khachHangId ? 'Khách hàng thân thiết' : 'Khách lẻ' },
-          chiTietHoaDon: (body.chiTiet || []).map(ct => ({
-            soLuong: ct.soLuong || 1,
-            donGia: 65000,
-            thanhTien: (ct.soLuong || 1) * 65000,
-            thuoc: { tenThuoc: `Thuốc #${ct.thuocId}` }
-          }))
+          khachHang: { hoTen: body.khachHangId ? 'Khách hàng' : 'Khách lẻ' },
+          chiTietHoaDon: mappedItems
         };
         invoices.unshift(newInvoice);
         safeSetStorage('invoices', invoices);
@@ -402,33 +410,35 @@
         options.headers["Content-Type"] = "application/json";
       }
 
+      let response;
       try {
-        const response = await fetch(url, options);
-        let data;
-        const contentType = response.headers.get("content-type");
-
-        if (contentType && contentType.includes("application/json")) {
-          data = await response.json();
-        } else {
-          data = await response.text();
-        }
-
-        if (!response.ok) {
-          const message =
-            (typeof data === "object" && (data.thongBao || data.message)) ||
-            `Lỗi kết nối máy chủ (${response.status})`;
-          
-          if (response.status === 401) {
-            console.warn("Phiên làm việc hết hạn hoặc chưa xác thực.");
-          }
-          throw new Error(message);
-        }
-
-        return data;
-      } catch (error) {
-        console.warn(`[API Offline Mode] Không thể kết nối tới Backend server (${endpoint}). Tự động dùng dữ liệu mẫu cho Demo.`, error.message);
+        response = await fetch(url, options);
+      } catch (networkError) {
+        console.warn(`[API Offline Mode] Không thể kết nối tới Backend server (${endpoint}). Tự động dùng dữ liệu mẫu cho Demo.`, networkError.message);
         return handleMockFallback(endpoint, options);
       }
+
+      let data;
+      const contentType = response.headers.get("content-type");
+
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        data = await response.text();
+      }
+
+      if (!response.ok) {
+        const message =
+          (typeof data === "object" && (data.thongBao || data.message)) ||
+          `Lỗi máy chủ (${response.status})`;
+        
+        if (response.status === 401) {
+          console.warn("Phiên làm việc hết hạn hoặc chưa xác thực.");
+        }
+        throw new Error(message);
+      }
+
+      return data;
     },
 
     handleMockFallback: handleMockFallback,

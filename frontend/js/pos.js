@@ -392,11 +392,12 @@ const POS = {
 
         let itemsHtml = '';
         (hoaDon.chiTietHoaDon || []).forEach(item => {
-            const tenThuoc = item.thuoc ? item.thuoc.tenThuoc : 'Sản phẩm';
+            const cartMatch = (this.cart || []).find(c => c.dbId === item.thuocId);
+            const tenThuoc = item.thuoc?.tenThuoc || item.tenThuoc || (cartMatch ? cartMatch.name : (item.thuocId ? `Thuốc #${item.thuocId}` : 'Sản phẩm'));
             itemsHtml += `
                 <tr>
-                    <td>${tenThuoc}<br><small>${item.soLuong} x ${parseFloat(item.donGia).toLocaleString('vi-VN')}</small></td>
-                    <td style="text-align: right;">${parseFloat(item.thanhTien).toLocaleString('vi-VN')}</td>
+                    <td>${tenThuoc}<br><small>${item.soLuong} x ${parseFloat(item.donGia).toLocaleString('vi-VN')} ₫</small></td>
+                    <td style="text-align: right;">${parseFloat(item.thanhTien).toLocaleString('vi-VN')} ₫</td>
                 </tr>
             `;
         });

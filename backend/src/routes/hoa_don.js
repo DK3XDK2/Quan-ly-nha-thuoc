@@ -6,22 +6,28 @@ const { ghiNhatKy } = require("../services/audit");
 const duongDan = express.Router();
 
 duongDan.get("/", xacThucTruyCap, async (req, res) => {
-  const danhSach = await coSoDuLieu.hoaDon.findMany({
-    include: {
-      chiTietHoaDon: {
-        include: {
-          thuoc: {
-            include: { danhMucThuoc: true }
+  try {
+    const danhSach = await coSoDuLieu.hoaDon.findMany({
+      include: {
+        chiTietHoaDon: {
+          include: {
+            thuoc: {
+              include: { danhMucThuoc: true }
+            }
           }
-        }
+        },
+        nguoiTao: true,
+        donThuoc: true,
+        khachHang: true,
       },
-      nguoiTao: true,
-      donThuoc: true,
-    },
-    orderBy: { taoLuc: "desc" },
-  });
+      orderBy: { taoLuc: "desc" },
+    });
 
-  return res.json(danhSach);
+    return res.json(danhSach);
+  } catch (error) {
+    console.error("Lỗi lấy danh sách hóa đơn:", error);
+    return res.status(500).json({ thongBao: "Lỗi máy chủ khi lấy danh sách hóa đơn" });
+  }
 });
 
 duongDan.get("/:id", xacThucTruyCap, async (req, res) => {
@@ -39,6 +45,7 @@ duongDan.get("/:id", xacThucTruyCap, async (req, res) => {
         },
         nguoiTao: true,
         donThuoc: true,
+        khachHang: true,
       }
     });
 
@@ -78,7 +85,7 @@ duongDan.post(
         (chiTiet || []).map((dong) =>
           coSoDuLieu.thuoc.findUnique({
             where: { id: dong.thuocId },
-            select: { id: true, giaBan: true, donViTinh: true },
+            select: { id: true, giaBan: true, donViTinh: true, tenThuoc: true, maThuoc: true },
           }),
         ),
       );
@@ -110,7 +117,21 @@ duongDan.post(
             create: duLieuChiTiet,
           },
         },
-        include: { chiTietHoaDon: true },
+        include: {
+          chiTietHoaDon: {
+            include: {
+              thuoc: {
+                select: { id: true, maThuoc: true, tenThuoc: true, donViTinh: true }
+              }
+            }
+          },
+          nguoiTao: {
+            select: { id: true, hoTen: true, email: true }
+          },
+          khachHang: {
+            select: { id: true, hoTen: true, soDienThoai: true }
+          }
+        },
       });
 
       for (const item of duLieuChiTiet) {
@@ -135,7 +156,7 @@ duongDan.post(
               loTonKhoId: lo.id,
               soLuongXuat: truNay,
               nguoiXuatId: req.nguoiDung.id,
-              liDoXuat: "BAN_TAI_QUAY",
+              liDoXuat: "BAN_HANG",
               thamChieuId: hoaDon.id,
               loaiThamChieu: "HOA_DON",
             }
@@ -151,12 +172,13 @@ duongDan.post(
         "HOA_DON",
         hoaDon.id,
         null,
-        hoaDon,
+        JSON.parse(JSON.stringify(hoaDon)),
       );
 
       return res.status(201).json(hoaDon);
     } catch (loi) {
-      return res.status(400).json({ thongBao: "Loi tao hoa don" });
+      console.error("Lỗi tạo hóa đơn:", loi);
+      return res.status(400).json({ thongBao: loi.message || "Lỗi tạo hóa đơn" });
     }
   },
 );

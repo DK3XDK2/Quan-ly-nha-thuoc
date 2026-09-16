@@ -1,9 +1,13 @@
+// @ts-nocheck
 
 const OrderManager = {
+    currentTab: 'online', // 'online' | 'pos'
     orders: [],
+    invoices: [],
     currentPage: 1,
     itemsPerPage: 10,
     filteredOrders: [],
+    filteredInvoices: [],
 
     mapOrder: function(o) {
         let statusText = 'Mới tạo';
@@ -48,22 +52,143 @@ const OrderManager = {
         };
     },
 
+    mapInvoice: function(inv) {
+        const items = (inv.chiTietHoaDon || []).map(ct => ({
+            id: ct.thuocId,
+            name: ct.thuoc ? ct.thuoc.tenThuoc : (ct.tenThuoc || `Thuốc #${ct.thuocId}`),
+            price: parseFloat(ct.donGia),
+            quantity: ct.soLuong,
+            thanhTien: parseFloat(ct.thanhTien || (ct.soLuong * ct.donGia))
+        }));
+
+        let paymentText = 'Tiền mặt';
+        let paymentBadge = 'badge-success';
+        if (inv.phuongThucThanhToan === 'CHUYEN_KHOAN' || inv.phuongThucThanhToan === 'BANK') {
+            paymentText = 'Chuyển khoản';
+            paymentBadge = 'badge-info';
+        }
+
+        return {
+            dbId: inv.id,
+            id: inv.maHoaDon || `HD${inv.id}`,
+            timestamp: inv.taoLuc,
+            customerName: inv.khachHang ? inv.khachHang.hoTen : 'Khách lẻ',
+            customerPhone: inv.khachHang ? (inv.khachHang.soDienThoai || '') : '',
+            cashierName: inv.nguoiTao ? (inv.nguoiTao.hoTen || inv.nguoiTao.tenDangNhap) : 'Admin Hệ Thống',
+            paymentMethod: inv.phuongThucThanhToan,
+            paymentText,
+            paymentBadge,
+            items,
+            summary: {
+                total: parseFloat(inv.tongTien)
+            },
+            raw: inv
+        };
+    },
+
     init: async function() {
-        await this.loadOrders();
+        if (this.initialized) return;
+        this.initialized = true;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('tab') === 'pos' || window.location.hash === '#pos') {
+            this.currentTab = 'pos';
+        }
+
         this.bindEvents();
+        await Promise.all([this.loadOrders(), this.loadInvoices()]);
+        this.switchTab(this.currentTab);
+    },
+
+    switchTab: function(tab) {
+        this.currentTab = tab;
+        this.currentPage = 1;
+
+        const tabOnline = document.getElementById('tab-online');
+        const tabPos = document.getElementById('tab-pos');
+        const filterStatus = document.getElementById('filter-status');
+        const filterPayment = document.getElementById('filter-payment');
+        const searchInput = document.getElementById('search-order');
+        const theadRow = document.getElementById('table-header-row');
+
+        if (tab === 'online') {
+            if (tabOnline) {
+                tabOnline.style.borderBottom = '3px solid var(--primary-color)';
+                tabOnline.style.color = 'var(--primary-color)';
+            }
+            if (tabPos) {
+                tabPos.style.borderBottom = '3px solid transparent';
+                tabPos.style.color = 'var(--text-secondary)';
+            }
+            if (filterStatus) filterStatus.style.display = 'block';
+            if (filterPayment) filterPayment.style.display = 'none';
+            if (searchInput) searchInput.placeholder = '🔍 Tìm theo Mã đơn (DH...), Tên KH, SĐT...';
+
+            if (theadRow) {
+                theadRow.innerHTML = `
+                    <th>Mã Đơn</th>
+                    <th>Ngày tạo</th>
+                    <th>Khách hàng</th>
+                    <th>Kênh bán</th>
+                    <th>Trạng thái</th>
+                    <th style="text-align: right;">Tổng tiền</th>
+                `;
+            }
+        } else {
+            if (tabPos) {
+                tabPos.style.borderBottom = '3px solid var(--primary-color)';
+                tabPos.style.color = 'var(--primary-color)';
+            }
+            if (tabOnline) {
+                tabOnline.style.borderBottom = '3px solid transparent';
+                tabOnline.style.color = 'var(--text-secondary)';
+            }
+            if (filterStatus) filterStatus.style.display = 'none';
+            if (filterPayment) filterPayment.style.display = 'block';
+            if (searchInput) searchInput.placeholder = '🔍 Tìm theo Mã HĐ (HD...), Khách hàng, Thu ngân...';
+
+            if (theadRow) {
+                theadRow.innerHTML = `
+                    <th>Mã Hóa Đơn</th>
+                    <th>Ngày tạo</th>
+                    <th>Khách hàng</th>
+                    <th>Thu ngân</th>
+                    <th>PT Thanh toán</th>
+                    <th style="text-align: right;">Tổng tiền</th>
+                `;
+            }
+        }
+
+        try {
+            history.replaceState(null, '', `?tab=${tab}`);
+        } catch (e) {}
+
+        this.renderList();
     },
 
     loadOrders: async function() {
         try {
-            App.showLoading();
             const list = await API.get('/api/don-hang/quan-ly');
             this.orders = (list || []).map(o => this.mapOrder(o));
             this.filteredOrders = [...this.orders];
-            this.renderList();
+            
+            const badgeOnline = document.getElementById('badge-online-count');
+            if (badgeOnline) badgeOnline.innerText = this.orders.length;
         } catch (e) {
-            App.showToast('Lỗi khi tải danh sách đơn hàng từ máy chủ', 'error');
-        } finally {
-            App.hideLoading();
+            console.warn('Lỗi khi tải đơn hàng online:', e);
+        }
+    },
+
+    loadInvoices: async function() {
+        try {
+            const list = await API.get('/api/hoa-don');
+            this.invoices = (list || []).map(inv => this.mapInvoice(inv));
+            this.filteredInvoices = [...this.invoices];
+
+            const badgePos = document.getElementById('badge-pos-count');
+            if (badgePos) badgePos.innerText = this.invoices.length;
+        } catch (e) {
+            console.warn('Lỗi khi tải hóa đơn POS:', e);
         }
     },
 
@@ -76,6 +201,10 @@ const OrderManager = {
         if (statusSelect) {
             statusSelect.addEventListener('change', () => { this.currentPage = 1; this.renderList(); });
         }
+        const paymentSelect = document.getElementById('filter-payment');
+        if (paymentSelect) {
+            paymentSelect.addEventListener('change', () => { this.currentPage = 1; this.renderList(); });
+        }
     },
 
     renderList: function() {
@@ -83,10 +212,19 @@ const OrderManager = {
         if (!tbody) return;
 
         const searchInput = document.getElementById('search-order');
+        const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+        if (this.currentTab === 'online') {
+            this.renderOnlineList(tbody, searchTerm);
+        } else {
+            this.renderPosList(tbody, searchTerm);
+        }
+    },
+
+    renderOnlineList: function(tbody, searchTerm) {
         const statusSelect = document.getElementById('filter-status');
-        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
         const selectedStatus = statusSelect ? statusSelect.value : '';
-        
+
         this.filteredOrders = this.orders;
 
         if (selectedStatus) {
@@ -109,6 +247,89 @@ const OrderManager = {
         const endIdx = startIdx + this.itemsPerPage;
         const paginatedItems = this.filteredOrders.slice(startIdx, endIdx);
 
+        this.updatePagination(paginatedItems.length, startIdx, endIdx, totalItems, totalPages, 'đơn hàng');
+
+        if (paginatedItems.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem;">Không tìm thấy đơn hàng online nào</td></tr>`;
+            return;
+        }
+
+        let html = '';
+        paginatedItems.forEach(o => {
+            const date = new Date(o.timestamp).toLocaleString('vi-VN');
+
+            html += `
+                <tr class="order-row" onclick="OrderManager.viewOrder(${o.dbId})">
+                    <td style="font-weight: 600; color: var(--primary-color);">${o.id}</td>
+                    <td>${date}</td>
+                    <td>
+                        <div style="font-weight: 500;">${o.customerName}</div>
+                        ${o.customerPhone ? `<small class="text-muted">${o.customerPhone}</small>` : ''}
+                    </td>
+                    <td><span class="badge badge-secondary"><i class="fa-solid fa-globe"></i> Website</span></td>
+                    <td><span class="badge ${o.statusClass}">${o.statusText}</span></td>
+                    <td style="text-align: right; font-weight: 600;">${App.formatCurrency(o.summary.total)}</td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    },
+
+    renderPosList: function(tbody, searchTerm) {
+        const paymentSelect = document.getElementById('filter-payment');
+        const selectedPayment = paymentSelect ? paymentSelect.value : '';
+
+        this.filteredInvoices = this.invoices;
+
+        if (selectedPayment) {
+            this.filteredInvoices = this.filteredInvoices.filter(inv => inv.paymentMethod === selectedPayment || (selectedPayment === 'CHUYEN_KHOAN' && inv.paymentMethod === 'BANK'));
+        }
+
+        if (searchTerm) {
+            this.filteredInvoices = this.filteredInvoices.filter(inv => 
+                inv.id.toLowerCase().includes(searchTerm) || 
+                (inv.customerName && inv.customerName.toLowerCase().includes(searchTerm)) ||
+                (inv.cashierName && inv.cashierName.toLowerCase().includes(searchTerm))
+            );
+        }
+
+        const totalItems = this.filteredInvoices.length;
+        const totalPages = Math.ceil(totalItems / this.itemsPerPage) || 1;
+        if (this.currentPage > totalPages) this.currentPage = totalPages;
+
+        const startIdx = (this.currentPage - 1) * this.itemsPerPage;
+        const endIdx = startIdx + this.itemsPerPage;
+        const paginatedItems = this.filteredInvoices.slice(startIdx, endIdx);
+
+        this.updatePagination(paginatedItems.length, startIdx, endIdx, totalItems, totalPages, 'hóa đơn POS');
+
+        if (paginatedItems.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem;">Chưa có hóa đơn bán tại quầy nào</td></tr>`;
+            return;
+        }
+
+        let html = '';
+        paginatedItems.forEach(inv => {
+            const date = new Date(inv.timestamp).toLocaleString('vi-VN');
+
+            html += `
+                <tr class="order-row" onclick="OrderManager.viewInvoice(${inv.dbId})">
+                    <td style="font-weight: 600; color: #16a34a;">${inv.id}</td>
+                    <td>${date}</td>
+                    <td>
+                        <div style="font-weight: 500;">${inv.customerName}</div>
+                        ${inv.customerPhone ? `<small class="text-muted">${inv.customerPhone}</small>` : ''}
+                    </td>
+                    <td><i class="fa-solid fa-user-tie text-muted"></i> ${inv.cashierName}</td>
+                    <td><span class="badge ${inv.paymentBadge}">${inv.paymentText}</span></td>
+                    <td style="text-align: right; font-weight: 600; color: #16a34a;">${App.formatCurrency(inv.summary.total)}</td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    },
+
+    updatePagination: function(itemsCount, startIdx, endIdx, totalItems, totalPages, label) {
         let paginationWrapper = document.getElementById('order-pagination');
         if (!paginationWrapper) {
             const tableContainer = document.querySelector('.table-container');
@@ -117,7 +338,7 @@ const OrderManager = {
                 paginationWrapper.id = 'order-pagination';
                 paginationWrapper.style.cssText = 'padding: var(--spacing-md); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;';
                 paginationWrapper.innerHTML = `
-                    <span class="text-muted" style="font-size: 0.875rem;" id="o-pagination-info">Hiển thị 0 đơn hàng</span>
+                    <span class="text-muted" style="font-size: 0.875rem;" id="o-pagination-info">Hiển thị 0 ${label}</span>
                     <div style="display: flex; gap: 0.5rem;">
                         <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;" id="o-btn-prev"><i class="fa-solid fa-chevron-left"></i></button>
                         <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;" id="o-btn-next"><i class="fa-solid fa-chevron-right"></i></button>
@@ -132,37 +353,19 @@ const OrderManager = {
 
         const pagInfo = document.getElementById('o-pagination-info');
         if (pagInfo) {
-            pagInfo.innerText = `Hiển thị ${paginatedItems.length > 0 ? startIdx + 1 : 0}-${Math.min(endIdx, totalItems)} / ${totalItems} đơn hàng`;
-            document.getElementById('o-btn-prev').disabled = this.currentPage === 1;
-            document.getElementById('o-btn-next').disabled = this.currentPage === totalPages;
+            pagInfo.innerText = `Hiển thị ${itemsCount > 0 ? startIdx + 1 : 0}-${Math.min(endIdx, totalItems)} / ${totalItems} ${label}`;
+            const btnPrev = document.getElementById('o-btn-prev');
+            const btnNext = document.getElementById('o-btn-next');
+            if (btnPrev) btnPrev.disabled = this.currentPage === 1;
+            if (btnNext) btnNext.disabled = this.currentPage >= totalPages;
         }
-
-        if (paginatedItems.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem;">Chưa có đơn hàng nào</td></tr>`;
-            return;
-        }
-
-        let html = '';
-        paginatedItems.forEach(o => {
-            const date = new Date(o.timestamp).toLocaleString('vi-VN');
-
-            html += `
-                <tr class="order-row" onclick="OrderManager.viewOrder(${o.dbId})">
-                    <td style="font-weight: 600; color: var(--primary-color);">${o.id}</td>
-                    <td>${date}</td>
-                    <td>${o.customerName}</td>
-                    <td>Online</td>
-                    <td><span class="badge ${o.statusClass}">${o.statusText}</span></td>
-                    <td style="text-align: right; font-weight: 600;">${App.formatCurrency(o.summary.total)}</td>
-                </tr>
-            `;
-        });
-        tbody.innerHTML = html;
     },
 
     viewOrder: function(dbId) {
         const order = this.orders.find(o => o.dbId === dbId);
         if (!order) return;
+
+        document.getElementById('modal-title').innerText = `Chi tiết Đơn hàng Online: ${order.id}`;
 
         let itemsHtml = '';
         order.items.forEach(item => {
@@ -202,13 +405,69 @@ const OrderManager = {
             </table>
             <div style="text-align: right; font-size: 0.875rem; margin-top: 1rem;">
                 <div style="font-size: 1.25rem; font-weight: bold; margin-top: 0.5rem; color: var(--primary-color);">
-                    TỔNG TỔNG THANH TOÁN: ${order.summary.total.toLocaleString('vi-VN')} ₫
+                    TỔNG THANH TOÁN: ${order.summary.total.toLocaleString('vi-VN')} ₫
                 </div>
             </div>
         `;
 
         document.getElementById('order-details-content').innerHTML = html;
         this.renderOrderActions(order);
+        document.getElementById('order-modal').classList.add('active');
+    },
+
+    viewInvoice: function(dbId) {
+        const inv = this.invoices.find(i => i.dbId === dbId);
+        if (!inv) return;
+
+        document.getElementById('modal-title').innerText = `Hóa đơn Bán lẻ: ${inv.id}`;
+
+        let itemsHtml = '';
+        inv.items.forEach(item => {
+            itemsHtml += `
+                <tr>
+                    <td>${item.name}<br><small>${item.quantity} x ${item.price.toLocaleString('vi-VN')} ₫</small></td>
+                    <td style="text-align: right;">${item.thanhTien.toLocaleString('vi-VN')} ₫</td>
+                </tr>
+            `;
+        });
+
+        const html = `
+            <div style="text-align: center; margin-bottom: 20px; border-bottom: 1px dashed #000; padding-bottom: 10px;">
+                <h2 style="font-size: 1.35rem; margin-bottom: 4px;">NHÀ THUỐC PHARMACY</h2>
+                <p style="font-size: 0.85rem; color: #555; margin: 0;">Địa chỉ: Cửa hàng Dược phẩm AINA<br>ĐT: 0900.000.000</p>
+            </div>
+            <h3 style="margin: 0.75rem 0; text-align: center;">HÓA ĐƠN BÁN HÀNG TẠI QUẦY</h3>
+            <div style="text-align: left; margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.6;">
+                <div><strong>Mã HĐ:</strong> ${inv.id}</div>
+                <div><strong>Ngày:</strong> ${new Date(inv.timestamp).toLocaleString('vi-VN')}</div>
+                <div><strong>Thu ngân:</strong> ${inv.cashierName}</div>
+                <div><strong>Khách hàng:</strong> ${inv.customerName} ${inv.customerPhone ? `(${inv.customerPhone})` : ''}</div>
+                <div><strong>Thanh toán:</strong> <span class="badge ${inv.paymentBadge}">${inv.paymentText}</span></div>
+            </div>
+            
+            <table class="invoice-table">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th style="text-align: right;">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemsHtml}
+                </tbody>
+            </table>
+            <div style="text-align: right; font-size: 0.875rem; margin-top: 1rem;">
+                <div style="font-size: 1.25rem; font-weight: bold; color: #16a34a;">
+                    TỔNG CỘNG: ${inv.summary.total.toLocaleString('vi-VN')} ₫
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 1.5rem; font-style: italic; color: #666; font-size: 0.875rem;">
+                Cảm ơn quý khách và hẹn gặp lại!
+            </div>
+        `;
+
+        document.getElementById('order-details-content').innerHTML = html;
+        document.getElementById('order-actions-container')?.remove();
         document.getElementById('order-modal').classList.add('active');
     },
 
@@ -241,6 +500,7 @@ const OrderManager = {
                 App.showToast('Cập nhật trạng thái đơn hàng thành công!', 'success');
                 this.closeModal();
                 await this.loadOrders();
+                this.renderList();
             } catch (e) {
                 App.showToast(e.message || 'Cập nhật trạng thái thất bại!', 'error');
             } finally {
@@ -253,3 +513,7 @@ const OrderManager = {
         document.getElementById('order-modal').classList.remove('active');
     }
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+    OrderManager.init();
+});
