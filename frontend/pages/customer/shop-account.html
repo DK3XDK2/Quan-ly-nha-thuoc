@@ -308,7 +308,10 @@
                         
                         <div style="background: #f8fafc; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; border-radius: 8px 8px 0 0;">
                             <div>
-                                <div style="font-weight: 700; font-size: 0.95rem; color: #0f172a;"><i class="fa-solid fa-hashtag" style="color:var(--shop-primary); margin-right:4px;"></i>${o.maDonHang || o.id}</div>
+                                <div style="font-weight: 700; font-size: 0.95rem; color: #0f172a; display: flex; align-items: center; flex-wrap: wrap; gap: 6px;">
+                                    <span><i class="fa-solid fa-hashtag" style="color:var(--shop-primary); margin-right:4px;"></i>${o.maDonHang || o.id}</span>
+                                    ${(o.phuongThucThanhToan === 'SEPAY' || o.paymentMethod === 'SEPAY') ? '<span style="font-size:0.75rem; background:#eff6ff; color:#2563eb; padding:2px 8px; border-radius:10px; font-weight:600;"><i class="fa-solid fa-qrcode"></i> SePay QR</span>' : '<span style="font-size:0.75rem; background:#f0fdf4; color:#16a34a; padding:2px 8px; border-radius:10px; font-weight:600;"><i class="fa-solid fa-money-bill"></i> COD</span>'}
+                                </div>
                                 <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;"><i class="fa-regular fa-clock" style="margin-right:4px;"></i>${new Date(o.taoLuc || o.createdAt || Date.now()).toLocaleString('vi-VN')}</div>
                             </div>
                             <div style="padding: 4px 10px; border-radius: 20px; font-weight: 600; font-size: 0.75rem; display: flex; align-items: center; gap: 4px; color: ${st.color}; background: ${st.bg}; border: 1px solid ${st.color}30;">

@@ -156,7 +156,7 @@ const Checkout = {
                 diaChiGiao: address,
                 ghiChu: note,
                 phiGiaoHang: 0,
-                phuongThucThanhToan: payment === 'SEPAY' || payment === 'BANK' ? 'SEPAY' : 'CASH',
+                phuongThucThanhToan: payment === 'SEPAY' ? 'SEPAY' : 'CASH',
                 chiTiet: this.cartItems.map(item => ({
                     thuocId: Number(item.dbId || item.id),
                     soLuong: Number(item.quantity)
@@ -164,7 +164,6 @@ const Checkout = {
             };
 
             const endpoint = '/api/don-hang/dat-hang';
-
             const res = await API.post(endpoint, payload);
 
             if (this.isBuyNow) {
@@ -176,13 +175,147 @@ const Checkout = {
             const createdOrder = res.duLieu || res;
             const orderCode = createdOrder.maDonHang || `DH${createdOrder.id || Date.now()}`;
 
-            App.showToast('Đặt hàng thành công!', 'success');
-            window.location.href = `order-success.html?id=${orderCode}`;
+            if (payment === 'SEPAY') {
+                this.openSepayModal(createdOrder);
+            } else {
+                App.showToast('Đặt hàng thành công!', 'success');
+                window.location.href = `order-success.html?id=${orderCode}`;
+            }
         } catch (error) {
             App.showToast(error.message || 'Đặt hàng thất bại!', 'error');
         } finally {
             App.hideLoading();
         }
+    },
+
+    currentOrder: null,
+    pollingInterval: null,
+
+    openSepayModal: function(order) {
+        this.currentOrder = order;
+        const maDonHang = order.maDonHang || `DH${order.id || Date.now()}`;
+        const tongTien = Number(order.tongThanhToan || this.total || 0);
+        const bankId = order.bankId || 'VietinBank';
+        const accountNo = order.accountNo || '102882794225';
+        const accountName = order.accountName || 'VU QUANG HUY';
+
+        const qrUrl = `https://qr.sepay.vn/img?acc=${accountNo}&bank=${bankId}&amount=${tongTien}&des=${encodeURIComponent(maDonHang)}`;
+        const fallbackQrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${tongTien}&addInfo=${encodeURIComponent(maDonHang)}&accountName=${encodeURIComponent(accountName)}`;
+
+        const qrImg = document.getElementById('sepay-qr-img');
+        if (qrImg) {
+            qrImg.src = qrUrl;
+            qrImg.onerror = function() {
+                this.src = fallbackQrUrl;
+            };
+        }
+
+        const bankEl = document.getElementById('sepay-bank-name');
+        if (bankEl) bankEl.innerText = `${bankId} (Ngân hàng Công Thương Việt Nam)`;
+
+        const accNoEl = document.getElementById('sepay-acc-no');
+        if (accNoEl) accNoEl.innerText = accountNo;
+
+        const accNameEl = document.getElementById('sepay-acc-name');
+        if (accNameEl) accNameEl.innerText = accountName;
+
+        const amtEl = document.getElementById('sepay-amount');
+        if (amtEl) amtEl.innerText = App.formatCurrency(tongTien);
+
+        const codeEl = document.getElementById('sepay-order-code');
+        if (codeEl) codeEl.innerText = maDonHang;
+
+        const modal = document.getElementById('sepay-modal');
+        if (modal) modal.style.display = 'flex';
+
+        this.startSepayPolling(maDonHang);
+    },
+
+    closeSepayModal: function() {
+        if (this.pollingInterval) clearInterval(this.pollingInterval);
+        const modal = document.getElementById('sepay-modal');
+        if (modal) modal.style.display = 'none';
+
+        window.location.href = `shop-account.html#orders`;
+    },
+
+    startSepayPolling: function(maDonHang) {
+        if (this.pollingInterval) clearInterval(this.pollingInterval);
+
+        let checkCount = 0;
+        this.pollingInterval = setInterval(async () => {
+            checkCount++;
+            try {
+                const res = await API.get(`/api/thanh-toan/kiem-tra/${maDonHang}`);
+                if (res && res.daThanhToan) {
+                    this.onPaymentSuccess(maDonHang);
+                }
+            } catch (e) {
+                // Ignore network error during polling
+            }
+
+            if (checkCount > 200) {
+                clearInterval(this.pollingInterval);
+            }
+        }, 3000);
+    },
+
+    onPaymentSuccess: function(maDonHang) {
+        if (this.pollingInterval) clearInterval(this.pollingInterval);
+
+        const statusBox = document.getElementById('sepay-status-box');
+        if (statusBox) {
+            statusBox.style.background = '#dcfce7';
+            statusBox.style.borderColor = '#86efac';
+            statusBox.style.color = '#15803d';
+            statusBox.innerHTML = `<i class="fa-solid fa-circle-check" style="font-size:1.2rem; color:#22c55e;"></i> <strong>Đã nhận được thanh toán thành công!</strong>`;
+        }
+
+        App.showToast('Thanh toán SePay thành công! Đang chuyển hướng...', 'success');
+
+        setTimeout(() => {
+            window.location.href = `order-success.html?id=${maDonHang}`;
+        }, 1500);
+    },
+
+    confirmManualPayment: async function() {
+        if (!this.currentOrder) return;
+        const maDonHang = this.currentOrder.maDonHang || `DH${this.currentOrder.id || Date.now()}`;
+
+        try {
+            App.showLoading();
+            await API.post(`/api/don-hang/${this.currentOrder.id || maDonHang}/trang-thai`, {
+                trangThai: 'DA_XAC_NHAN'
+            }).catch(() => null);
+
+            const orders = Storage.get('orders') || [];
+            const target = orders.find(o => o.maDonHang === maDonHang || String(o.id) === String(this.currentOrder.id));
+            if (target) {
+                target.trangThai = 'DA_XAC_NHAN';
+                target.status = 'DA_XAC_NHAN';
+                Storage.set('orders', orders);
+            }
+
+            this.onPaymentSuccess(maDonHang);
+        } catch(e) {
+            this.onPaymentSuccess(maDonHang);
+        } finally {
+            App.hideLoading();
+        }
+    },
+
+    copyText: function(elementId, isAmount = false) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        let text = el.innerText.trim();
+        if (isAmount) {
+            text = text.replace(/[^0-9]/g, '');
+        }
+        navigator.clipboard.writeText(text).then(() => {
+            App.showToast(`Đã sao chép: ${text}`, 'success');
+        }).catch(() => {
+            App.showToast('Không thể sao chép tự động', 'info');
+        });
     }
 };
 

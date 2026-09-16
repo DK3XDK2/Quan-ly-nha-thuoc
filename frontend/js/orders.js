@@ -182,6 +182,7 @@ const OrderManager = {
                 <div><strong>Thời gian:</strong> ${new Date(order.timestamp).toLocaleString('vi-VN')}</div>
                 <div><strong>Người nhận:</strong> ${order.customerName} (${order.customerPhone})</div>
                 <div><strong>Địa chỉ giao:</strong> ${order.customerAddress}</div>
+                <div><strong>Phương thức TT:</strong> ${order.paymentMethod === 'SEPAY' ? '<span style="color:#2563eb; font-weight:600;"><i class="fa-solid fa-qrcode"></i> Chuyển khoản QR (SePay)</span>' : '<span style="color:#16a34a; font-weight:600;"><i class="fa-solid fa-money-bill-1"></i> Tiền mặt (COD)</span>'}</div>
                 <div><strong>Trạng thái:</strong> <span class="badge ${order.statusClass}">${order.statusText}</span></div>
                 ${noteHtml}
             </div>

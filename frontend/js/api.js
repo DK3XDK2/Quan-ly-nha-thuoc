@@ -142,6 +142,19 @@
         };
         orders.unshift(newOrder);
         if (window.Storage) window.Storage.set('orders', orders);
+
+        if (body.phuongThucThanhToan === 'SEPAY') {
+          return Promise.resolve({
+            thongBao: 'Khởi tạo thanh toán SePay thành công',
+            duLieu: {
+              ...newOrder,
+              bankId: 'VietinBank',
+              accountNo: '102882794225',
+              accountName: 'VU QUANG HUY'
+            }
+          });
+        }
+
         return Promise.resolve(newOrder);
       }
 
@@ -245,6 +258,15 @@
     if (cleanEndpoint.includes('/api/nha-cung-cap')) {
       const suppliers = (window.Storage && window.Storage.get('suppliers')) || [];
       return Promise.resolve(suppliers);
+    }
+
+    // 10. Kiểm tra thanh toán SePay
+    if (cleanEndpoint.includes('/api/thanh-toan/kiem-tra')) {
+      const maDon = cleanEndpoint.split('/').pop();
+      const orders = (window.Storage && window.Storage.get('orders')) || [];
+      const ord = orders.find(o => o.maDonHang === maDon || String(o.id) === maDon);
+      const daThanhToan = ord && (ord.trangThai === 'DA_XAC_NHAN' || ord.status === 'CONFIRMED' || ord.daThanhToan);
+      return Promise.resolve({ success: true, daThanhToan: !!daThanhToan });
     }
 
     return Promise.resolve([]);
