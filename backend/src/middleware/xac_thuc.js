@@ -5,7 +5,7 @@ async function xacThucTruyCap(req, res, next) {
   const tieuDe = req.headers.authorization;
 
   if (!tieuDe || !tieuDe.startsWith("Bearer ")) {
-    return res.status(401).json({ thongBao: "Thieu token truy cap" });
+    return res.status(401).json({ thongBao: "Vui lòng đăng nhập tài khoản để sử dụng tính năng này" });
   }
 
   const token = tieuDe.split(" ")[1];
@@ -16,7 +16,7 @@ async function xacThucTruyCap(req, res, next) {
     if (duLieu.loaiTaiKhoan !== "KHACH_HANG") {
       const taiKhoanNhanVien = await coSoDuLieu.nguoiDung.findUnique({
         where: { id: duLieu.id },
-        select: { id: true, vaiTro: true, trangThai: true },
+        select: { id: true, vaiTro: true, trangThai: true, hoTen: true, email: true },
       });
 
       if (!taiKhoanNhanVien) {
@@ -29,6 +29,8 @@ async function xacThucTruyCap(req, res, next) {
 
       req.nguoiDung = {
         ...duLieu,
+        hoTen: taiKhoanNhanVien.hoTen,
+        email: taiKhoanNhanVien.email,
         vaiTro: taiKhoanNhanVien.vaiTro,
         trangThai: taiKhoanNhanVien.trangThai,
       };

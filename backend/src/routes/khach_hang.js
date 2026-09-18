@@ -293,6 +293,7 @@ async function dangNhapKhachHang(req, res) {
         id: khachHang.id,
         email: khachHang.email,
         hoTen: khachHang.hoTen,
+        soDienThoai: khachHang.soDienThoai,
         vaiTro: "KHACH_HANG",
         loaiTaiKhoan: "KHACH_HANG",
       },

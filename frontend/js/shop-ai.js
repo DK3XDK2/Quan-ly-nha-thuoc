@@ -140,7 +140,26 @@ const ShopAI = {
         `;
 
         const greeting = this.getTimeGreeting();
-        const firstMsg = `${greeting}! Tôi là AINA. ${this.getContextHelp()}`;
+        const currentUser = this.getCurrentUser();
+        const isLoggedIn = this.isLoggedIn();
+
+        const firstMsg = isLoggedIn
+            ? `${greeting}, <strong>${currentUser?.name || currentUser?.hoTen || 'Quý khách'}</strong>! Tôi là Trợ lý Dược sĩ AINA. ${this.getContextHelp()}`
+            : `${greeting}! Tôi là Trợ lý Dược sĩ AINA. Để được tư vấn chi tiết về thuốc và sức khỏe, bạn vui lòng đăng nhập tài khoản nhé!`;
+
+        const authNoticeHtml = !isLoggedIn ? `
+            <div id="shop-ai-auth-banner" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:10px 14px; margin-bottom:10px; color:#1e40af; font-size:0.83rem; line-height:1.4; display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; align-items:flex-start; gap:8px;">
+                    <i class="fa-solid fa-lock" style="color:#2563eb; margin-top:2px; font-size:0.95rem;"></i>
+                    <div>
+                        <strong>Yêu cầu đăng nhập:</strong> Chỉ khách hàng có tài khoản đã đăng nhập mới được phép hỏi đáp với Trợ lý AI để đảm bảo an toàn tư vấn.
+                    </div>
+                </div>
+                <a href="${this.getLoginUrl()}" style="display:inline-flex; align-items:center; gap:6px; align-self:flex-end; background:#2563eb; color:white; padding:5px 12px; border-radius:20px; text-decoration:none; font-weight:600; font-size:0.78rem; box-shadow:0 2px 6px rgba(37,99,235,0.3);">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Đăng nhập ngay
+                </a>
+            </div>
+        ` : '';
 
         const html = `
             ${styleHtml}
@@ -171,6 +190,7 @@ const ShopAI = {
                 </div>
 
                 <div id="shop-ai-messages" style="flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; background:#f8fafc;">
+                    ${authNoticeHtml}
                     <div style="align-self:flex-start; background:white; padding:12px 16px; border-radius:18px; border-top-left-radius:4px; max-width:85%; font-size:0.95rem; border:1px solid var(--shop-border); box-shadow:0 2px 8px rgba(0,0,0,0.04); color:var(--shop-text);">
                         ${firstMsg}
                     </div>
@@ -183,12 +203,30 @@ const ShopAI = {
                 </div>
 
                 <div style="display:flex; border-top:1px solid var(--shop-border); padding:12px 15px; background:white; align-items:center; gap:10px;">
-                    <input type="text" id="shop-ai-input" placeholder="Nhập câu hỏi cho AINA..." style="flex:1; border:none; background:#f1f5f9; border-radius:24px; font-family:inherit; font-size:0.95rem; padding:12px 16px; outline:none;" onkeypress="if(event.key==='Enter') ShopAI.send()">
+                    <input type="text" id="shop-ai-input" placeholder="${isLoggedIn ? 'Nhập câu hỏi cho AINA...' : 'Vui lòng đăng nhập để gửi câu hỏi...'}" style="flex:1; border:none; background:#f1f5f9; border-radius:24px; font-family:inherit; font-size:0.95rem; padding:12px 16px; outline:none;" onkeypress="if(event.key==='Enter') ShopAI.send()">
                     <button onclick="ShopAI.send()" style="background:linear-gradient(135deg, #3b82f6, #2563eb); border:none; color:white; width:42px; height:42px; border-radius:50%; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform 0.2s, box-shadow 0.2s; flex-shrink:0; box-shadow: 0 4px 10px rgba(37,99,235,0.3);" onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 15px rgba(37,99,235,0.5)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 10px rgba(37,99,235,0.3)'"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', html);
+    },
+
+    isLoggedIn: function() {
+        const token = (window.API && typeof API.getToken === 'function') ? API.getToken() : (localStorage.getItem('shop_token') || localStorage.getItem('token'));
+        const user = (window.API && typeof API.getCurrentUser === 'function') ? API.getCurrentUser() : (window.Storage ? Storage.get('shop_user') : null);
+        return !!(token && user);
+    },
+
+    getCurrentUser: function() {
+        return (window.API && typeof API.getCurrentUser === 'function') ? API.getCurrentUser() : (window.Storage ? Storage.get('shop_user') : null);
+    },
+
+    getLoginUrl: function() {
+        const path = window.location.pathname;
+        if (path.includes('/pages/customer/')) {
+            return '../public/shop-login.html';
+        }
+        return 'shop-login.html';
     },
 
     getTimeGreeting: function() {
@@ -243,20 +281,46 @@ const ShopAI = {
         this.send();
     },
 
-    send: function() {
+    send: async function() {
         const input = document.getElementById('shop-ai-input');
         const text = input.value.trim();
         if(!text) return;
+
+        if (!this.isLoggedIn()) {
+            this.appendMsg('user', text);
+            input.value = '';
+            this.appendMsg('ai', `🔒 <strong>Bạn chưa đăng nhập!</strong><br><br>Tính năng Trợ lý Dược sĩ AI yêu cầu đăng nhập tài khoản khách hàng để đảm bảo an toàn tư vấn và lưu trữ lịch sử.<br><br><a href="${this.getLoginUrl()}" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:#2563eb; color:white; border-radius:20px; text-decoration:none; font-weight:600; font-size:0.85rem; box-shadow:0 3px 8px rgba(37,99,235,0.3);"><i class="fa-solid fa-arrow-right-to-bracket"></i> Đăng nhập ngay</a>`);
+            return;
+        }
         
         input.value = '';
         this.appendMsg('user', text);
         this.appendTyping();
 
-        const delay = 800 + Math.random() * 500 + (text.length * 10);
-        setTimeout(() => {
+        try {
+            const res = await API.post('/api/goi-y-ai/hoi', { cauHoi: text });
             this.removeTyping();
+            if (res && res.traLoi) {
+                let formatted = res.traLoi
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\n\n/g, '<br><br>')
+                    .replace(/\n/g, '<br>');
+                this.appendMsg('ai', formatted);
+                return;
+            }
+        } catch (err) {
+            this.removeTyping();
+            console.warn('Lỗi gọi AI backend:', err);
+            if (err.message && (err.message.includes('401') || err.message.toLowerCase().includes('đăng nhập') || err.message.toLowerCase().includes('token'))) {
+                this.appendMsg('ai', `🔒 Phiên đăng nhập của bạn đã hết hạn hoặc chưa hợp lệ. Vui lòng <a href="${this.getLoginUrl()}" style="color:#2563eb; font-weight:600; text-decoration:underline;">đăng nhập lại</a> để tiếp tục sử dụng trợ lý AI.`);
+                return;
+            }
             this.processQuery(text.toLowerCase());
-        }, delay);
+            return;
+        }
+
+        this.removeTyping();
+        this.processQuery(text.toLowerCase());
     },
 
     appendMsg: function(sender, text) {
