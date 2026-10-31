@@ -104,10 +104,10 @@ const CustomerManager = {
                     <td style="font-weight: 600;">${c.name}</td>
                     <td>${c.phone}</td>
                     <td>${c.email || '-'}</td>
-                    <td>${c.orderCount} đơn</td>
-                    <td><span class="badge badge-primary">Thành viên</span></td>
+                    <td><span class="badge badge-info">${c.orderCount} đơn</span></td>
+                    <td style="color: var(--text-secondary); font-size: 0.875rem;">${c.address || '-'}</td>
                     <td style="text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
-                        <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;" onclick="CustomerManager.editCustomer(${c.dbId})"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn btn-outline" title="Chỉnh sửa" style="padding: 0.25rem 0.5rem;" onclick="CustomerManager.editCustomer(${c.dbId})"><i class="fa-solid fa-pen"></i></button>
                     </td>
                 </tr>
             `;
@@ -119,6 +119,8 @@ const CustomerManager = {
         const form = document.getElementById('customer-form');
         if (form) form.reset();
         document.getElementById('edit-id').value = '';
+        const addr = document.getElementById('c-address');
+        if (addr) addr.value = '';
         document.getElementById('modal-title').innerText = 'Thêm khách hàng';
         document.getElementById('customer-modal').classList.add('active');
     },
@@ -135,6 +137,8 @@ const CustomerManager = {
         document.getElementById('c-name').value = c.name;
         document.getElementById('c-phone').value = c.phone;
         document.getElementById('c-email').value = c.email || '';
+        const addr = document.getElementById('c-address');
+        if (addr) addr.value = c.address || '';
 
         document.getElementById('modal-title').innerText = 'Sửa thông tin khách hàng';
         document.getElementById('customer-modal').classList.add('active');
@@ -144,6 +148,8 @@ const CustomerManager = {
         const hoTen = document.getElementById('c-name').value.trim();
         const soDienThoai = document.getElementById('c-phone').value.trim();
         const email = document.getElementById('c-email').value.trim();
+        const addrInput = document.getElementById('c-address');
+        const diaChi = addrInput ? addrInput.value.trim() : '';
         const editId = document.getElementById('edit-id').value;
 
         if (!hoTen) return App.showToast('Tên không được bỏ trống!', 'error');
@@ -152,13 +158,14 @@ const CustomerManager = {
         try {
             App.showLoading();
             if (editId) {
-                await API.patch(`/api/khach-hang/${editId}`, { hoTen, soDienThoai, email });
+                await API.patch(`/api/khach-hang/${editId}`, { hoTen, soDienThoai, email, diaChi });
                 App.showToast('Cập nhật khách hàng thành công!', 'success');
             } else {
                 await API.post('/api/khach-hang/quan-ly', {
                     hoTen,
                     soDienThoai,
                     email: email || `khach${Date.now()}@domain.com`,
+                    diaChi,
                     matKhau: '123456'
                 });
                 App.showToast('Thêm khách hàng mới thành công!', 'success');

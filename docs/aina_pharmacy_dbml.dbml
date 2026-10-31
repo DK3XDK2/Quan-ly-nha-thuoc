@@ -1,0 +1,175 @@
+// ERD Hệ thống Quản lý và Bán thuốc AINA Pharmacy
+// Chuẩn thiết kế 3NF khớp 100% với Đề tài và Báo cáo Chương 3
+// Hỗ trợ copy & paste trực tiếp vào https://dbdiagram.io
+
+Table nguoi_dung {
+  id int [pk, increment]
+  ho_ten varchar(191) [not null]
+  email varchar(191) [not null]
+  mat_khau varchar(191) [not null]
+  vai_tro ENUM('QUAN_LY', [not null]
+  trang_thai ENUM('HOAT_DONG', [not null, default: 'HOAT_DONG']
+  tao_luc datetime [not null, default: CURRENT_TIMESTAMP(3)]
+  cap_nhat_luc datetime [not null]
+}
+
+Table danh_muc_thuoc {
+  id int [pk, increment]
+  ten_danh_muc varchar(191) [not null]
+  tao_luc datetime [not null, default: CURRENT_TIMESTAMP(3)]
+  cap_nhat_luc datetime [not null]
+}
+
+Table thuoc {
+  id int [pk, increment]
+  ma_thuoc varchar(191) [not null]
+  ten_thuoc varchar(191) [not null]
+  hoat_chat varchar(191)
+  ham_luong varchar(191)
+  don_vi_tinh varchar(191) [not null]
+  gia_ban decimal(12,2) [not null]
+  can_don_thuoc boolean [not null, default: false]
+  con_kinh_doanh boolean [not null, default: true]
+  danh_muc_thuoc_id int [not null]
+  tao_luc datetime [not null, default: CURRENT_TIMESTAMP(3)]
+  cap_nhat_luc datetime [not null]
+}
+
+Table lo_ton_kho {
+  id int [pk, increment]
+  thuoc_id int [not null]
+  so_lo varchar(191) [not null]
+  han_su_dung datetime [not null]
+  so_luong_ton int [not null, default: 0]
+  gia_nhap decimal(12,2) [not null]
+  tao_luc datetime [not null, default: CURRENT_TIMESTAMP(3)]
+  cap_nhat_luc datetime [not null]
+}
+
+Table don_thuoc {
+  id int [pk, increment]
+  ten_benh_nhan varchar(191)
+  ten_bac_si varchar(191)
+  trang_thai ENUM('MOI_TAO', [not null, default: 'MOI_TAO']
+  nguoi_tao_id int [not null]
+  tao_luc datetime [not null, default: CURRENT_TIMESTAMP(3)]
+  cap_nhat_luc datetime [not null]
+}
+
+Table chi_tiet_don_thuoc {
+  id int [pk, increment]
+  don_thuoc_id int [not null]
+  thuoc_id int [not null]
+  so_luong int [not null]
+  lieu_dung varchar(191) [not null]
+  tao_luc datetime [not null, default: CURRENT_TIMESTAMP(3)]
+}
+
+Table hoa_don {
+  id int [pk, increment]
+  nguoi_tao_id int [not null]
+  don_thuoc_id int
+  tong_tien decimal(12,2) [not null]
+  phuong_thuc_thanh_toan varchar(191) [not null]
+  tao_luc datetime [not null, default: CURRENT_TIMESTAMP(3)]
+}
+
+Table chi_tiet_hoa_don {
+  id int [pk, increment]
+  hoa_don_id int [not null]
+  thuoc_id int [not null]
+  so_luong int [not null]
+  don_vi_tinh varchar(191) [not null]
+  don_gia decimal(12,2) [not null]
+  thanh_tien decimal(12,2) [not null]
+}
+
+Table goi_y_ai {
+  id int [pk, increment]
+  loai ENUM('TON_KHO_THAP', [not null]
+  du_lieu_dau_vao json [not null]
+  du_lieu_dau_ra json [not null]
+  do_tin_cay double [not null]
+  trang_thai ENUM('CHO_DUYET', [not null, default: 'CHO_DUYET']
+  duyet_boi_id int
+  ghi_chu_duyet varchar(191)
+  tao_luc datetime [not null, default: CURRENT_TIMESTAMP(3)]
+}
+
+Table nhat_ky_he_thong {
+  id int [pk, increment]
+  nguoi_thuc_hien_id int
+  loai_tac_nhan ENUM('USER', [not null, default: 'USER']
+  hanh_dong varchar(191) [not null]
+  doi_tuong varchar(191) [not null]
+  doi_tuong_id int
+  truoc_thay_doi json
+  sau_thay_doi json
+  tao_luc datetime [not null, default: CURRENT_TIMESTAMP(3)]
+}
+
+Table khach_hang {
+  id int [pk, increment]
+  ho_ten varchar(191) [not null]
+  email varchar(191) [not null]
+  so_dien_thoai varchar(191) [not null]
+  dia_chi varchar(191)
+  mat_khau varchar(191) [not null]
+  tao_luc datetime [not null, default: CURRENT_TIMESTAMP(3)]
+  cap_nhat_luc datetime [not null]
+}
+
+Table don_hang {
+  id int [pk, increment]
+  ma_don_hang varchar(191) [not null]
+  khach_hang_id int
+  ten_nguoi_nhan varchar(191) [not null]
+  so_dien_thoai_nhan varchar(191) [not null]
+  email_nguoi_nhan varchar(191)
+  dia_chi_giao varchar(191) [not null]
+  ghi_chu varchar(191)
+  tong_tien_hang decimal(12,2) [not null]
+  phi_giao_hang decimal(12,2) [not null, default: 0]
+  tong_thanh_toan decimal(12,2) [not null]
+  trang_thai ENUM('MOI_TAO', [not null, default: 'MOI_TAO']
+  tao_luc datetime [not null, default: CURRENT_TIMESTAMP(3)]
+  cap_nhat_luc datetime [not null]
+}
+
+Table chi_tiet_don_hang {
+  id int [pk, increment]
+  don_hang_id int [not null]
+  thuoc_id int [not null]
+  so_luong int [not null]
+  don_gia decimal(12,2) [not null]
+  thanh_tien decimal(12,2) [not null]
+}
+
+Table lich_su_xuat_kho {
+  id int [pk, increment]
+  lo_ton_kho_id int [not null]
+  so_luong_xuat int [not null]
+  nguoi_xuat_id int [not null]
+  li_do_xuat ENUM('BAN_HANG', [not null]
+  tham_chieu_id int
+  loai_tham_chieu ENUM('HOA_DON',
+  tao_luc datetime [not null, default: CURRENT_TIMESTAMP(3)]
+}
+
+// =================== RELATIONSHIPS ===================
+Ref: thuoc.danh_muc_thuoc_id > danh_muc_thuoc.id
+Ref: lo_ton_kho.thuoc_id > thuoc.id
+Ref: don_thuoc.nguoi_tao_id > nguoi_dung.id
+Ref: chi_tiet_don_thuoc.don_thuoc_id > don_thuoc.id [delete: cascade]
+Ref: chi_tiet_don_thuoc.thuoc_id > thuoc.id
+Ref: hoa_don.nguoi_tao_id > nguoi_dung.id
+Ref: hoa_don.don_thuoc_id > don_thuoc.id
+Ref: chi_tiet_hoa_don.hoa_don_id > hoa_don.id [delete: cascade]
+Ref: chi_tiet_hoa_don.thuoc_id > thuoc.id
+Ref: goi_y_ai.duyet_boi_id > nguoi_dung.id
+Ref: nhat_ky_he_thong.nguoi_thuc_hien_id > nguoi_dung.id
+Ref: don_hang.khach_hang_id > khach_hang.id
+Ref: chi_tiet_don_hang.don_hang_id > don_hang.id [delete: cascade]
+Ref: chi_tiet_don_hang.thuoc_id > thuoc.id
+Ref: lich_su_xuat_kho.lo_ton_kho_id > lo_ton_kho.id
+Ref: lich_su_xuat_kho.nguoi_xuat_id > nguoi_dung.id

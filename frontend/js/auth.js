@@ -78,10 +78,30 @@ const Auth = {
     },
 
     logout: function() {
+        try {
+            const token = (window.API && API.getToken && API.getToken()) || localStorage.getItem('shop_token') || localStorage.getItem('token');
+            const backendUrl = (window.__ENV__ && window.__ENV__.BACKEND_URL) || (window.API && API.baseUrl) || 'http://localhost:4000';
+            if (token && typeof navigator !== 'undefined' && navigator.sendBeacon) {
+                navigator.sendBeacon(`${backendUrl}/api/tu-van/khach-hang-ket-thuc?token=${token}`, JSON.stringify({ lyDo: "Khách hàng đã đăng xuất khỏi hệ thống" }));
+            }
+        } catch (e) {}
+
         API.clearAuth();
-        Storage.remove('shop_user');
-        localStorage.removeItem('shop_user');
-        localStorage.removeItem('shop_token');
+        try {
+            if (window.Storage && typeof Storage.clear === 'function') {
+                Storage.clear();
+            }
+        } catch (e) {}
+        try {
+            sessionStorage.clear();
+        } catch (e) {}
+
+        // Dọn sạch các biến lưu tạm trong bộ nhớ RAM
+        window.allBatches = null;
+        window.allProducts = null;
+        window.currentCart = null;
+        window.currentCustomer = null;
+
         const path = window.location.pathname;
         if (path.includes('/customer/')) {
             window.location.href = '../public/shop-login.html';
@@ -124,11 +144,13 @@ const Auth = {
         const user = this.getCurrentUser();
         if (!user) return false;
         
-        const role = user.role;
+        const role = user.role || user.vaiTro;
         
         if (role === 'QUAN_LY' || role === 'ADMIN') return true;
         if (role === 'NHAN_VIEN' || role === 'PHARMACIST') {
-            return module !== 'employees';
+            // Nhân viên KHÔNG ĐƯỢC PHÉP xem & thao tác: Nhà cung cấp, Báo cáo kinh doanh, Quản lý nhân viên, Giám sát API
+            const forbiddenModules = ['employees', 'suppliers', 'reports', 'api-monitor'];
+            return !forbiddenModules.includes(module);
         }
         if (role === 'KHACH_HANG') {
             return ['shop', 'checkout', 'my-orders', 'profile'].includes(module);

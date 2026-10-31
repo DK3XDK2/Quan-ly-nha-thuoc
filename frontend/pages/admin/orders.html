@@ -57,9 +57,14 @@
             <div class="page-content">
                 <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
                     <h1 class="page-title">Quản lý Đơn hàng & Hóa đơn</h1>
-                    <a href="pos.html" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
-                        <i class="fa-solid fa-cash-register"></i> Bán hàng (POS)
-                    </a>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn btn-outline" onclick="OrderManager.refresh()" style="display: inline-flex; align-items: center; gap: 6px;" title="Tải lại dữ liệu mới nhất từ máy chủ">
+                            <i class="fa-solid fa-rotate-right"></i> Làm mới
+                        </button>
+                        <a href="pos.html" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                            <i class="fa-solid fa-cash-register"></i> Bán hàng (POS)
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Navigation Tabs -->
@@ -107,7 +112,14 @@
                                     <th style="text-align: right;">Tổng tiền</th>
                                 </tr>
                             </thead>
-                            <tbody id="order-list"></tbody>
+                            <tbody id="order-list">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 45px 20px; color: var(--text-muted);">
+                                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 12px;"></i>
+                                        <div style="font-weight: 500; font-size: 0.95rem; color: var(--text-secondary);">Đang đồng bộ dữ liệu đơn hàng từ cơ sở dữ liệu...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>

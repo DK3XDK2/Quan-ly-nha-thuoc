@@ -87,17 +87,63 @@ const OrderManager = {
     },
 
     init: async function() {
-        if (this.initialized) return;
-        this.initialized = true;
-
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('tab') === 'pos' || window.location.hash === '#pos') {
             this.currentTab = 'pos';
         }
 
         this.bindEvents();
-        await Promise.all([this.loadOrders(), this.loadInvoices()]);
-        this.switchTab(this.currentTab);
+
+        // Hiển thị hiệu ứng loading trên bảng ngay lập tức
+        const tbody = document.getElementById('order-list');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 45px 20px; color: var(--text-muted);">
+                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 12px;"></i>
+                        <div style="font-weight: 500; font-size: 0.95rem; color: var(--text-secondary);">Đang đồng bộ dữ liệu đơn hàng từ cơ sở dữ liệu...</div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        try {
+            if (window.App && typeof App.showLoading === 'function') {
+                App.showLoading();
+            }
+            await Promise.all([this.loadOrders(), this.loadInvoices()]);
+        } catch (error) {
+            console.error('Lỗi khi tải dữ liệu đơn hàng:', error);
+            if (window.App && typeof App.showToast === 'function') {
+                App.showToast('Lỗi khi tải danh sách đơn hàng từ máy chủ', 'error');
+            }
+        } finally {
+            if (window.App && typeof App.hideLoading === 'function') {
+                App.hideLoading();
+            }
+            this.switchTab(this.currentTab);
+        }
+    },
+
+    refresh: async function() {
+        try {
+            if (window.App && typeof App.showLoading === 'function') {
+                App.showLoading();
+            }
+            await Promise.all([this.loadOrders(), this.loadInvoices()]);
+            this.switchTab(this.currentTab);
+            if (window.App && typeof App.showToast === 'function') {
+                App.showToast('Đã làm mới dữ liệu đơn hàng!', 'success');
+            }
+        } catch (e) {
+            if (window.App && typeof App.showToast === 'function') {
+                App.showToast('Lỗi khi làm mới dữ liệu!', 'error');
+            }
+        } finally {
+            if (window.App && typeof App.hideLoading === 'function') {
+                App.hideLoading();
+            }
+        }
     },
 
     switchTab: function(tab) {

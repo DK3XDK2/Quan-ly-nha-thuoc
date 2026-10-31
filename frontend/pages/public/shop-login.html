@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -120,16 +120,85 @@
                 <div class="auth-links">
                     <a onclick="switchForm('register-form')">Đăng ký tài khoản mới</a>
                 </div>
-                <div style="margin-top: 1.5rem; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1; font-size: 0.85rem; text-align: left;">
-                    <p style="font-weight: 600; color: #475569; margin-bottom: 6px;"><i class="fa-solid fa-key"></i> Tài khoản mẫu chấm bài / demo:</p>
-                    <div style="cursor: pointer; color: var(--shop-primary); margin-bottom: 4px;" onclick="fillCustomerDemo('khachhang1@gmail.com', '123456')">
-                        👉 <strong>khachhang1@gmail.com</strong> / <code>123456</code> <span style="font-size:0.75rem; color:#64748b;">(Bấm để điền)</span>
-                    </div>
-                </div>
+                <button type="button" class="btn-auth" onclick="moModalChonTaiKhoanKhach()" style="background: #f1f5f9; color: var(--shop-text); border: 1px dashed var(--shop-primary); margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-user-check" style="color: var(--shop-primary);"></i> Chọn tài khoản mẫu (1-Click Fill)
+                </button>
             </form>
         </div>
 
         
+        
+        <!-- Modal Chọn Tài Khoản Khách Hàng Mẫu Đúng Trong Database -->
+        <div id="modal-sample-customers" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center;">
+            <div style="background: white; border-radius: 12px; width: 90%; max-width: 480px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); overflow: hidden;">
+                <div style="padding: 16px 20px; background: #f8fafc; border-bottom: 1px solid var(--shop-border); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-weight: 700; font-size: 1.05rem; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-user-check" style="color: var(--shop-primary);"></i>
+                        Chọn Tài Khoản Khách Mẫu (Có thật trong DB)
+                    </div>
+                    <button type="button" onclick="dongModalChonTaiKhoanKhach()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b;">&times;</button>
+                </div>
+                
+                <div style="padding: 16px 20px; max-height: 440px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Khách hàng 1: Nguyễn Văn Khách Hàng -->
+                    <div onclick="chonTaiKhoanKhach('khachhang@thuoc.com', '123456', 'Nguyễn Văn Khách Hàng')" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; background: #fff;" onmouseover="this.style.borderColor='var(--shop-primary)'; this.style.background='#f0fdf4';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#fff';">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <strong style="color: #0f172a; font-size: 0.95rem;">Nguyễn Văn Khách Hàng</strong>
+                                <span style="background: #dcfce7; color: #16a34a; font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;">KH THÂN THIẾT</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #64748b; font-family: monospace;">khachhang@thuoc.com / 123456</div>
+                            <div style="font-size: 0.78rem; color: #0284c7; margin-top: 4px;"><i class="fa-solid fa-phone"></i> 0987654321 • Có sẵn đơn hàng & lịch sử tư vấn AI</div>
+                        </div>
+                        <button type="button" class="btn-auth" style="width: auto; padding: 6px 12px; font-size: 0.8rem; pointer-events: none;">Chọn</button>
+                    </div>
+
+                    <!-- Khách hàng 2: Đặng Văn Trang -->
+                    <div onclick="chonTaiKhoanKhach('kh1@gmail.com', '123456', 'Đặng Văn Trang')" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; background: #fff;" onmouseover="this.style.borderColor='var(--shop-primary)'; this.style.background='#f0fdf4';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#fff';">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <strong style="color: #0f172a; font-size: 0.95rem;">Đặng Văn Trang</strong>
+                                <span style="background: #e0f2fe; color: #0284c7; font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;">KHÁCH HÀNG 1</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #64748b; font-family: monospace;">kh1@gmail.com / 123456</div>
+                            <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;"><i class="fa-solid fa-phone"></i> 0900000000</div>
+                        </div>
+                        <button type="button" class="btn-auth" style="width: auto; padding: 6px 12px; font-size: 0.8rem; pointer-events: none;">Chọn</button>
+                    </div>
+
+                    <!-- Khách hàng 3: Phạm Ngọc Mai -->
+                    <div onclick="chonTaiKhoanKhach('kh2@gmail.com', '123456', 'Phạm Ngọc Mai')" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; background: #fff;" onmouseover="this.style.borderColor='var(--shop-primary)'; this.style.background='#f0fdf4';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#fff';">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <strong style="color: #0f172a; font-size: 0.95rem;">Phạm Ngọc Mai</strong>
+                                <span style="background: #e0f2fe; color: #0284c7; font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;">KHÁCH HÀNG 2</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #64748b; font-family: monospace;">kh2@gmail.com / 123456</div>
+                            <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;"><i class="fa-solid fa-phone"></i> 0900000001</div>
+                        </div>
+                        <button type="button" class="btn-auth" style="width: auto; padding: 6px 12px; font-size: 0.8rem; pointer-events: none;">Chọn</button>
+                    </div>
+
+                    <!-- Khách hàng 4: Tài khoản Test -->
+                    <div onclick="chonTaiKhoanKhach('test@example.com', '123456', 'Tài Khoản Test')" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; background: #fff;" onmouseover="this.style.borderColor='var(--shop-primary)'; this.style.background='#f0fdf4';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#fff';">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <strong style="color: #0f172a; font-size: 0.95rem;">Tài Khoản Test</strong>
+                                <span style="background: #fef3c7; color: #d97706; font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;">TEST ACC</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #64748b; font-family: monospace;">test@example.com / 123456</div>
+                            <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;"><i class="fa-solid fa-phone"></i> 0988888888</div>
+                        </div>
+                        <button type="button" class="btn-auth" style="width: auto; padding: 6px 12px; font-size: 0.8rem; pointer-events: none;">Chọn</button>
+                    </div>
+                </div>
+
+                <div style="padding: 12px 20px; background: #f8fafc; border-top: 1px solid var(--shop-border); text-align: right;">
+                    <button type="button" class="btn-auth" onclick="dongModalChonTaiKhoanKhach()" style="width: auto; padding: 6px 16px; background: #e2e8f0; color: #475569; font-size: 0.85rem;">Đóng</button>
+                </div>
+            </div>
+        </div>
+
         <div class="auth-container d-none" id="register-form">
             <h2 class="auth-title">Đăng ký tài khoản Khách hàng</h2>
             <form onsubmit="handleRegister(event)">
@@ -159,6 +228,7 @@
 
     
     <script src="../../js/storage.js"></script>
+    <script src="../../js/env.js"></script>
     <script src="../../js/api.js"></script>
     <script src="../../js/app.js"></script>
     <script src="../../js/auth.js"></script>
@@ -169,9 +239,21 @@
             document.getElementById(formId).classList.remove('d-none');
         }
 
-        function fillCustomerDemo(email, pass) {
+        function moModalChonTaiKhoanKhach() {
+            document.getElementById('modal-sample-customers').style.display = 'flex';
+        }
+
+        function dongModalChonTaiKhoanKhach() {
+            document.getElementById('modal-sample-customers').style.display = 'none';
+        }
+
+        function chonTaiKhoanKhach(email, pass, tenHienThi) {
             document.getElementById('login-email').value = email;
             document.getElementById('login-pw').value = pass;
+            dongModalChonTaiKhoanKhach();
+            if (typeof App !== 'undefined' && App.showToast) {
+                App.showToast('Đã chọn: ' + tenHienThi + '!', 'success');
+            }
         }
 
         async function handleLogin(e) {
@@ -182,7 +264,8 @@
             const ok = await Auth.loginCustomer(email, password);
             if (ok) {
                 setTimeout(() => {
-                    window.location.href = 'index.html';
+                    const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
+                    window.location.href = redirectUrl;
                 }, 800);
             }
         }
@@ -203,3 +286,4 @@
     </script>
 </body>
 </html>
+

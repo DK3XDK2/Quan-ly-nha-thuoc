@@ -30,9 +30,19 @@ const ProductManager = {
     },
 
     init: async function() {
+        this.checkPermissions();
         await this.loadCategories();
         await this.loadProducts();
         this.bindEvents();
+    },
+
+    checkPermissions: function() {
+        const currentUser = Auth.getCurrentUser();
+        const isManager = currentUser && (currentUser.role === 'QUAN_LY' || currentUser.role === 'ADMIN');
+        const btnAdd = document.getElementById('btn-add-product');
+        if (btnAdd) {
+            btnAdd.style.display = isManager ? 'inline-flex' : 'none';
+        }
     },
 
     loadCategories: async function() {
@@ -141,11 +151,29 @@ const ProductManager = {
         }
 
         let html = '';
+        const currentUser = Auth.getCurrentUser();
+        const isManager = currentUser && (currentUser.role === 'QUAN_LY' || currentUser.role === 'ADMIN');
+
         paginatedItems.forEach(p => {
             const isOutOfStock = p.stock <= 0;
             const stockClass = isOutOfStock ? 'badge-danger' : (p.stock <= p.minStock ? 'badge-warning' : 'badge-success');
             const statusClass = p.status === 'ACTIVE' ? 'badge-success' : 'badge-danger';
             const statusText = p.status === 'ACTIVE' ? 'Đang bán' : 'Ngừng bán';
+
+            const actionCell = isManager ? `
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;" onclick="ProductManager.editProduct(${p.dbId})" title="Sửa">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; color: var(--danger-color);" onclick="ProductManager.deleteProduct(${p.dbId})" title="Đổi trạng thái">
+                        <i class="fa-solid fa-ban"></i>
+                    </button>
+                </div>
+            ` : `
+                <div style="display: flex; justify-content: flex-end;">
+                    <span class="badge" style="background: var(--bg-hover); color: var(--text-muted); font-size: 0.75rem;"><i class="fa-solid fa-lock"></i> Chỉ xem</span>
+                </div>
+            `;
 
             html += `
                 <tr>
@@ -160,14 +188,7 @@ const ProductManager = {
                     <td><span class="badge ${stockClass}">${p.stock}</span></td>
                     <td><span class="badge ${statusClass}">${statusText}</span></td>
                     <td style="text-align: right;">
-                        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;" onclick="ProductManager.editProduct(${p.dbId})" title="Sửa">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; color: var(--danger-color);" onclick="ProductManager.deleteProduct(${p.dbId})" title="Đổi trạng thái">
-                                <i class="fa-solid fa-ban"></i>
-                            </button>
-                        </div>
+                        ${actionCell}
                     </td>
                 </tr>
             `;
@@ -176,6 +197,11 @@ const ProductManager = {
     },
 
     openModal: function() {
+        const currentUser = Auth.getCurrentUser();
+        if (!currentUser || (currentUser.role !== 'QUAN_LY' && currentUser.role !== 'ADMIN')) {
+            App.showToast('Chỉ Quản lý mới có quyền thêm sản phẩm mới!', 'error');
+            return;
+        }
         const form = document.getElementById('product-form');
         if (form) form.reset();
         document.getElementById('edit-id').value = '';
@@ -190,6 +216,11 @@ const ProductManager = {
     },
 
     editProduct: function(dbId) {
+        const currentUser = Auth.getCurrentUser();
+        if (!currentUser || (currentUser.role !== 'QUAN_LY' && currentUser.role !== 'ADMIN')) {
+            App.showToast('Chỉ Quản lý mới có quyền chỉnh sửa sản phẩm!', 'error');
+            return;
+        }
         const p = this.products.find(x => x.dbId === dbId);
         if (!p) return;
 
@@ -215,6 +246,11 @@ const ProductManager = {
     },
 
     saveProduct: async function() {
+        const currentUser = Auth.getCurrentUser();
+        if (!currentUser || (currentUser.role !== 'QUAN_LY' && currentUser.role !== 'ADMIN')) {
+            App.showToast('Chỉ Quản lý mới có quyền lưu hoặc sửa sản phẩm!', 'error');
+            return;
+        }
         const maThuoc = document.getElementById('p-id').value.trim();
         const tenThuoc = document.getElementById('p-name').value.trim();
         const hoatChat = document.getElementById('p-ingredient').value.trim();

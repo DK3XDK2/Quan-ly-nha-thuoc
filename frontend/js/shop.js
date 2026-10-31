@@ -163,7 +163,14 @@ const Shop = {
         document.body.appendChild(btn);
         
         window.addEventListener('scroll', () => {
+            if (btn.dataset.cartDrawerHidden === 'true') {
+                btn.style.opacity = '0';
+                btn.style.visibility = 'hidden';
+                btn.style.display = 'none';
+                return;
+            }
             if (window.scrollY > 300) {
+                btn.style.display = 'flex';
                 btn.style.opacity = '1';
                 btn.style.visibility = 'visible';
             } else {
@@ -440,6 +447,7 @@ const Shop = {
 
             const pId = p.id || p.dbId || p.maThuoc;
             const imgSrc = getValidMedicineImage(p);
+            const isWishlisted = (typeof Wishlist !== 'undefined' && typeof Wishlist.has === 'function') ? Wishlist.has(pId) : false;
             html += `
                 <div class="product-card">
                     <img src="${imgSrc}" alt="${p.name}" class="product-image" onclick="goToProductDetail('${pId}')" onerror="this.onerror=null;this.src='${DEFAULT_MEDICINE_ICON}'; onerror=null;" style="cursor:pointer; object-fit: cover;">
@@ -456,9 +464,16 @@ const Shop = {
                         <span class="product-price">${App.formatCurrency(p.price)}</span>
                     </div>
 
-                    <div class="product-actions">
-                        <button class="btn-add-cart" ${btnDisabled} onclick="Cart.add('${pId}', 1, event)">
-                            ${p.stock === 0 ? 'Hết hàng' : 'Thêm vào giỏ'}
+                    <div class="product-actions" style="display:flex; gap:8px; align-items:center;">
+                        <button class="btn-add-cart" style="flex:1;" ${btnDisabled} onclick="Cart.add('${pId}', 1, event)">
+                            ${p.stock === 0 ? 'Hết hàng' : '<i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ'}
+                        </button>
+                        <button class="btn-wishlist ${isWishlisted ? 'active' : ''}" 
+                                data-wishlist-id="${pId}"
+                                onclick="Wishlist.toggle('${pId}', this); event.stopPropagation();" 
+                                title="${isWishlisted ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}"
+                                style="width:38px; height:38px; display:flex; align-items:center; justify-content:center; border-radius:6px; flex:none; padding:0;">
+                            <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart" style="${isWishlisted ? 'color:#ef4444;' : ''}"></i>
                         </button>
                     </div>
                 </div>

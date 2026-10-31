@@ -134,7 +134,7 @@ duongDan.get("/thong-ke", xacThucTruyCap, async (req, res) => {
 duongDan.post(
   "/lo",
   xacThucTruyCap,
-  yeuCauVaiTro("QUAN_LY", "NHAN_VIEN"),
+  yeuCauVaiTro("QUAN_LY"),
   async (req, res) => {
     try {
       const { thuocId, soLo, hanSuDung, soLuongTon, giaNhap } = req.body;
@@ -145,11 +145,11 @@ duongDan.post(
 
       const loMoi = await coSoDuLieu.loTonKho.create({
         data: {
-          thuocId,
-          soLo,
+          thuocId: Number(thuocId),
+          soLo: String(soLo),
           hanSuDung: hanSuDung ? new Date(hanSuDung) : null,
-          soLuongTon,
-          giaNhap,
+          soLuongTon: Number(soLuongTon) || 0,
+          giaNhap: giaNhap !== undefined ? Number(giaNhap) : 0,
         },
       });
 
@@ -164,6 +164,7 @@ duongDan.post(
 
       return res.status(201).json(loMoi);
     } catch (loi) {
+      console.error("Lỗi tạo lô:", loi);
       return res.status(400).json({ thongBao: "Lỗi khi tạo lô tồn kho" });
     }
   },
@@ -172,7 +173,7 @@ duongDan.post(
 duongDan.patch(
   "/lo/:id",
   xacThucTruyCap,
-  yeuCauVaiTro("QUAN_LY", "NHAN_VIEN"),
+  yeuCauVaiTro("QUAN_LY"),
   async (req, res) => {
     try {
       const id = Number(req.params.id);
@@ -186,6 +187,15 @@ duongDan.patch(
         ...req.body,
       };
 
+      if (duLieuCapNhat.thuocId) {
+        duLieuCapNhat.thuocId = Number(duLieuCapNhat.thuocId);
+      }
+      if (duLieuCapNhat.soLuongTon !== undefined) {
+        duLieuCapNhat.soLuongTon = Number(duLieuCapNhat.soLuongTon);
+      }
+      if (duLieuCapNhat.giaNhap !== undefined) {
+        duLieuCapNhat.giaNhap = Number(duLieuCapNhat.giaNhap);
+      }
       if (duLieuCapNhat.hanSuDung !== undefined) {
         duLieuCapNhat.hanSuDung = duLieuCapNhat.hanSuDung ? new Date(duLieuCapNhat.hanSuDung) : null;
       }
@@ -210,9 +220,48 @@ duongDan.patch(
 
       return res.json(loMoi);
     } catch (loi) {
+      console.error("Lỗi cập nhật lô:", loi);
       return res.status(400).json({ thongBao: "Lỗi khi cập nhật lô tồn kho" });
     }
   },
+);
+
+duongDan.delete(
+  "/lo/:id",
+  xacThucTruyCap,
+  yeuCauVaiTro("QUAN_LY"),
+  async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const lo = await coSoDuLieu.loTonKho.findUnique({ where: { id } });
+      if (!lo) {
+        return res.status(404).json({ thongBao: "Không tìm thấy lô tồn kho" });
+      }
+
+      const daXuat = await coSoDuLieu.lichSuXuatKho.findFirst({ where: { loTonKhoId: id } });
+      if (daXuat) {
+        return res.status(400).json({ 
+          thongBao: "Không thể xóa lô hàng đã có lịch sử xuất bán! Bạn có thể chỉnh số lượng tồn về 0." 
+        });
+      }
+
+      await coSoDuLieu.loTonKho.delete({ where: { id } });
+
+      await ghiNhatKy(
+        req.nguoiDung.id,
+        "XOA",
+        "LO_TON_KHO",
+        id,
+        lo,
+        null
+      );
+
+      return res.json({ thongBao: "Đã xóa lô hàng thành công" });
+    } catch (loi) {
+      console.error("Lỗi xóa lô:", loi);
+      return res.status(500).json({ thongBao: "Lỗi khi xóa lô tồn kho" });
+    }
+  }
 );
 
 duongDan.get("/lich-su-xuat", xacThucTruyCap, async (req, res) => {

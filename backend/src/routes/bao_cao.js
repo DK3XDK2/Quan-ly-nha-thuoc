@@ -37,7 +37,7 @@ duongDan.get(
   },
 );
 
-duongDan.get("/export/excel", xacThucTruyCap, async (req, res) => {
+duongDan.get("/export/excel", xacThucTruyCap, yeuCauVaiTro("QUAN_LY"), async (req, res) => {
   try {
     const { start, end, scope } = req.query;
     let where = {};
@@ -94,7 +94,7 @@ duongDan.get("/export/excel", xacThucTruyCap, async (req, res) => {
   }
 });
 
-duongDan.get("/export/pdf", xacThucTruyCap, async (req, res) => {
+duongDan.get("/export/pdf", xacThucTruyCap, yeuCauVaiTro("QUAN_LY"), async (req, res) => {
   try {
     const { start, end } = req.query;
     let where = {};

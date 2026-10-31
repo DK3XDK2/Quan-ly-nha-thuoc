@@ -2,6 +2,7 @@ require("dotenv").config();
 BigInt.prototype.toJSON = function() { return this.toString() };
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const duongDanXacThuc = require("./routes/xac_thuc");
 const duongDanThuoc = require("./routes/thuoc");
@@ -25,6 +26,7 @@ const duongDanNhaCungCap = require("./routes/nha_cung_cap");
 const duongDanThanhToan = require("./routes/thanh_toan");
 const duongDanTuVan = require("./routes/tu_van");
 const duongDanNhatKy = require("./routes/nhat_ky");
+const { theoDoiApiMiddleware, duongDanGiamSat } = require("./middleware/giam_sat_api");
 const { khoiTaoCronDonDep } = require("./tasks/don_dep_du_lieu");
 
 khoiTaoCronDonDep();
@@ -37,10 +39,20 @@ const serverHttp = http.createServer(ungDung);
 
 const io = khoiTaoSocket(serverHttp);
 
+// Tự động quét dọn dẹp các phiên tư vấn chờ quá hạn (sau 5 phút) và im lặng (sau 10 phút) định kỳ mỗi 60s
+if (duongDanTuVan && typeof duongDanTuVan.donDepPhienHetHan === "function") {
+  setInterval(() => {
+    duongDanTuVan.donDepPhienHetHan(io);
+  }, 60 * 1000);
+  duongDanTuVan.donDepPhienHetHan(io);
+}
+
 ungDung.use((req, res, next) => {
   req.io = io;
   next();
 });
+
+ungDung.use(theoDoiApiMiddleware);
 
 ungDung.use(cors({
   origin: (origin, callback) => callback(null, true),
@@ -50,10 +62,13 @@ ungDung.use(cors({
 }));
 ungDung.use(express.json({ limit: '10mb' }));
 ungDung.use(express.urlencoded({ extended: true, limit: '10mb' }));
+ungDung.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 ungDung.get("/", (req, res) => {
   return res.json({ thongBao: "Hệ thống quản lý thuốc đang hoạt động bình thường" });
 });
+
+ungDung.use("/api/giam-sat", duongDanGiamSat);
 
 ungDung.use("/api/xac-thuc", duongDanXacThuc);
 ungDung.use("/api/thuoc", duongDanThuoc);

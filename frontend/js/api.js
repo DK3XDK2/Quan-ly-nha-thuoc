@@ -4,7 +4,58 @@
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1";
 
-  const API_BASE = isLocalhost ? "http://localhost:4000" : window.location.origin;
+  // CẤU HÌNH NHANH TRỰC TIẾP (Nếu không muốn dùng file env.js hay gõ console):
+  // Bạn có thể dán link Ngrok trực tiếp vào biến DIRECT_BACKEND_URL này:
+  const DIRECT_BACKEND_URL = ""; // Ví dụ: "https://your-domain.ngrok-free.app"
+
+  // 1. Kiểm tra tham số ?backend=... trên URL (rất tiện khi gửi link demo cho thầy cô/bạn bè)
+  try {
+    if (typeof window !== "undefined" && window.location && window.location.search) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlBackend = urlParams.get("backend");
+      if (urlBackend && urlBackend.trim()) {
+        const clean = urlBackend.trim().replace(/\/+$/, "");
+        localStorage.setItem("BACKEND_URL", clean);
+        console.log(`%c[API Config] Đã cấu hình Backend URL từ URL: ${clean}`, "color: #10b981; font-weight: bold;");
+      }
+    }
+  } catch (e) {}
+
+  // Tự động nạp cấu hình từ env.js nếu chưa có sẵn trong trang
+  if (typeof window !== "undefined" && !window.__ENV__) {
+    try {
+      const xhr = new XMLHttpRequest();
+      const envPath = window.location.pathname.includes("/pages/") ? "../../js/env.js" : "js/env.js";
+      xhr.open("GET", envPath, false);
+      xhr.send();
+      if (xhr.status === 200 && xhr.responseText) {
+        new Function(xhr.responseText)();
+      }
+    } catch (e) {}
+  }
+
+  // 2. Đọc cấu hình từ window.__ENV__ (từ file frontend/js/env.js)
+  const envBackend = (window.__ENV__ && window.__ENV__.BACKEND_URL) || (window.ENV && window.ENV.BACKEND_URL);
+
+  // 3. Đọc từ localStorage (đã lưu trước đó qua setBackendUrl hoặc query param)
+  const customBackend = typeof localStorage !== "undefined" ? (localStorage.getItem("BACKEND_URL") || localStorage.getItem("API_BASE")) : null;
+
+  // 4. Đường link mặc định dự phòng
+  const defaultNgrok = "https://slighted-jelly-basis.ngrok-free.dev";
+
+  // Thứ tự ưu tiên giải quyết URL Backend:
+  // (1) localStorage -> (2) env.js -> (3) DIRECT_BACKEND_URL -> (4) Localhost:4000 hoặc defaultNgrok
+  let API_BASE = "http://localhost:4000";
+
+  if (customBackend && customBackend.trim()) {
+    API_BASE = customBackend.trim().replace(/\/+$/, "");
+  } else if (envBackend && envBackend.trim()) {
+    API_BASE = envBackend.trim().replace(/\/+$/, "");
+  } else if (DIRECT_BACKEND_URL && DIRECT_BACKEND_URL.trim()) {
+    API_BASE = DIRECT_BACKEND_URL.trim().replace(/\/+$/, "");
+  } else if (!isLocalhost) {
+    API_BASE = defaultNgrok;
+  }
 
   function safeGetStorage(key) {
     try {
@@ -346,18 +397,31 @@
     },
 
     clearAuth: function () {
-      const ctx = this.getContext();
-      if (ctx === 'ADMIN') {
-        localStorage.removeItem("admin_token");
-        localStorage.removeItem("admin_user");
-      } else {
-        localStorage.removeItem("shop_token");
-        localStorage.removeItem("shop_user");
-      }
+      const keysToRemove = [
+        "admin_token", "admin_user",
+        "shop_token", "shop_user",
+        "token", "user_token", "currentUser",
+        "selectedProductId", "pos_cart", "cart",
+        "draft_orders", "activePrescription", "active_tab",
+        "aina_messenger_ai_history"
+      ];
+      keysToRemove.forEach(k => {
+        try { localStorage.removeItem(k); } catch (e) {}
+      });
 
-      localStorage.removeItem("token");
-      localStorage.removeItem("user_token");
-      localStorage.removeItem("currentUser");
+      try {
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.clear();
+        }
+      } catch (e) {}
+
+      try {
+        if (typeof document !== 'undefined' && document.cookie) {
+          document.cookie.split(";").forEach(c => {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+          });
+        }
+      } catch (e) {}
     },
 
     getCurrentUser: function () {
@@ -400,6 +464,7 @@
     request: async function (endpoint, options = {}) {
       const url = endpoint.startsWith("http") ? endpoint : `${this.baseUrl}${endpoint}`;
       options.headers = options.headers || {};
+      options.headers['ngrok-skip-browser-warning'] = 'true';
 
       const token = this.getToken();
       if (token) {
@@ -471,6 +536,25 @@
     "delete": function (endpoint) {
       return this.request(endpoint, { method: "DELETE" });
     }
+  };
+
+  // Hàm tiện ích để đổi nhanh Backend ngay trên Console F12:
+  window.setBackendUrl = function (url) {
+    if (!url) {
+      localStorage.removeItem("BACKEND_URL");
+      localStorage.removeItem("API_BASE");
+      console.log("%c[API] Đã xóa URL Backend tùy chỉnh. Đang dùng mặc định: " + API.baseUrl, "color: #10b981; font-weight: bold;");
+    } else {
+      const clean = url.trim().replace(/\/+$/, "");
+      localStorage.setItem("BACKEND_URL", clean);
+      console.log("%c[API] Đã chuyển Backend URL thành: " + clean + ". Trang sẽ tải lại sau 500ms...", "color: #3b82f6; font-weight: bold;");
+      setTimeout(() => window.location.reload(), 500);
+    }
+  };
+
+  window.getBackendUrl = function () {
+    console.log("%c[API Backend Đang Kết Nối]: " + API.baseUrl, "color: #8b5cf6; font-weight: bold; font-size: 13px;");
+    return API.baseUrl;
   };
 
   window.API = API;

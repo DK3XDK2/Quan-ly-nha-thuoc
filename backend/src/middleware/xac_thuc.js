@@ -2,13 +2,18 @@ const jwt = require("jsonwebtoken");
 const { coSoDuLieu } = require("../config/database");
 
 async function xacThucTruyCap(req, res, next) {
+  let token = null;
   const tieuDe = req.headers.authorization;
 
-  if (!tieuDe || !tieuDe.startsWith("Bearer ")) {
-    return res.status(401).json({ thongBao: "Vui lòng đăng nhập tài khoản để sử dụng tính năng này" });
+  if (tieuDe && tieuDe.startsWith("Bearer ")) {
+    token = tieuDe.split(" ")[1];
+  } else if (req.query && req.query.token) {
+    token = req.query.token;
   }
 
-  const token = tieuDe.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ thongBao: "Vui lòng đăng nhập tài khoản để sử dụng tính năng này" });
+  }
 
   try {
     const duLieu = jwt.verify(token, process.env.KHOA_BI_MAT_JWT);
@@ -63,7 +68,8 @@ function yeuCauKhachHang(req, res, next) {
     return res.status(401).json({ thongBao: "Chua xac thuc" });
   }
 
-  if (req.nguoiDung.loaiTaiKhoan !== "KHACH_HANG") {
+  const laKhach = req.nguoiDung.loaiTaiKhoan === "KHACH_HANG" || req.nguoiDung.vaiTro === "KHACH_HANG";
+  if (!laKhach) {
     return res.status(403).json({ thongBao: "Chi danh cho khach hang" });
   }
 

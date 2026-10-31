@@ -277,26 +277,69 @@ const App = {
             document.body.appendChild(container);
         }
 
+        const now = Date.now();
+        this._toastHistory = this._toastHistory || {};
+
+        // 1. Chống spam thông báo giống hệt nhau trong vòng 1.5 giây
+        const lastTime = this._toastHistory[message] || 0;
+        if (now - lastTime < 1500) {
+            const existingToast = container.querySelector('.toast:last-child');
+            if (existingToast) {
+                existingToast.style.transition = 'transform 0.15s ease';
+                existingToast.style.transform = 'scale(1.06)';
+                setTimeout(() => {
+                    if (existingToast) existingToast.style.transform = 'scale(1)';
+                }, 150);
+            }
+            return;
+        }
+        this._toastHistory[message] = now;
+
+        // 2. Giới hạn số lượng toast hiển thị tối đa cùng lúc (tối đa 2 cái)
+        const currentToasts = container.querySelectorAll('.toast');
+        if (currentToasts.length >= 2) {
+            currentToasts[0].classList.remove('show');
+            setTimeout(() => {
+                if (currentToasts[0] && currentToasts[0].parentNode) currentToasts[0].remove();
+            }, 200);
+        }
+
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
+        toast.style.cursor = 'pointer';
+        toast.title = 'Bấm để đóng nhanh';
         
         let iconClass = 'fa-check-circle';
         if (type === 'error') iconClass = 'fa-circle-xmark';
         if (type === 'warning') iconClass = 'fa-triangle-exclamation';
+        if (type === 'info') iconClass = 'fa-circle-info';
 
         toast.innerHTML = `
-            <i class="fa-solid ${iconClass} toast-icon" style="font-size: 1.5rem;"></i>
-            <div class="toast-message">${message}</div>
+            <i class="fa-solid ${iconClass} toast-icon" style="font-size: 1.35rem;"></i>
+            <div class="toast-message" style="flex:1;">${message}</div>
+            <i class="fa-solid fa-xmark" style="font-size: 0.85rem; opacity: 0.6; margin-left: 8px;"></i>
         `;
+
+        // Bấm vào toast để đóng tức thì
+        toast.onclick = () => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                if (toast && toast.parentNode) toast.remove();
+            }, 250);
+        };
 
         container.appendChild(toast);
 
         setTimeout(() => toast.classList.add('show'), 10);
 
         setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
+            if (toast && toast.parentNode) {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast && toast.parentNode) toast.remove();
+                }, 250);
+            }
+        }, 2200);
     },
 
     formatCurrency: function(amount) {
@@ -374,13 +417,21 @@ const App = {
         let confirmBox = document.getElementById('global-confirm');
         if (!confirmBox) {
             const html = `
-                <div id="global-confirm" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-                    <div style="background:var(--bg-surface, #fff); padding:2rem; border-radius:8px; width:400px; max-width:90%; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-                        <h3 style="margin-top:0; margin-bottom:1rem; color:var(--text-primary, #111); font-size:1.25rem;">Xác nhận thao tác</h3>
-                        <p id="global-confirm-msg" style="margin-bottom:2rem; color:var(--text-secondary, #444); line-height:1.5;"></p>
-                        <div style="display:flex; justify-content:flex-end; gap:1rem;">
-                            <button id="global-confirm-cancel" style="padding:8px 16px; background:var(--bg-hover, #eee); border:1px solid #ccc; border-radius:4px; cursor:pointer;">Hủy</button>
-                            <button id="global-confirm-ok" style="padding:8px 16px; background:var(--danger-color, #ef4444); color:white; border:none; border-radius:4px; cursor:pointer;">Xác nhận</button>
+                <div id="global-confirm" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); backdrop-filter:blur(4px); z-index:100000; justify-content:center; align-items:center; padding:15px; box-sizing:border-box;">
+                    <div style="background:var(--bg-surface, #fff); padding:24px 28px; border-radius:16px; width:430px; max-width:95%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.35); border:1px solid rgba(0,0,0,0.08); animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                            <div style="width:42px; height:42px; border-radius:50%; background:#fee2e2; color:#dc2626; display:flex; align-items:center; justify-content:center; font-size:1.25rem; flex-shrink:0;">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            </div>
+                            <div>
+                                <h3 style="margin:0; color:var(--text-primary, #1e293b); font-size:1.15rem; font-weight:700;">Xác nhận thao tác</h3>
+                                <div style="font-size:0.78rem; color:var(--text-muted, #94a3b8);">Vui lòng kiểm tra kỹ trước khi tiếp tục</div>
+                            </div>
+                        </div>
+                        <p id="global-confirm-msg" style="margin:0 0 22px 0; color:var(--text-secondary, #475569); line-height:1.55; font-size:0.92rem; white-space:pre-line;"></p>
+                        <div style="display:flex; justify-content:flex-end; gap:10px;">
+                            <button id="global-confirm-cancel" style="padding:9px 18px; background:var(--bg-hover, #f1f5f9); color:var(--text-secondary, #475569); border:1px solid #cbd5e1; border-radius:8px; font-weight:600; cursor:pointer; font-size:0.88rem; transition:all 0.15s ease;">Hủy bỏ</button>
+                            <button id="global-confirm-ok" style="padding:9px 20px; background:var(--danger-color, #dc2626); color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer; font-size:0.88rem; box-shadow:0 4px 12px rgba(220,38,38,0.25); transition:all 0.15s ease;">Xác nhận</button>
                         </div>
                     </div>
                 </div>
@@ -420,30 +471,337 @@ const App = {
         confirmBox.addEventListener('click', outsideHandler);
     },
 
-    showLoading: function() {
-        let loading = document.getElementById('global-loading');
-        if (!loading) {
-            const html = `
-                <div id="global-loading" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); z-index:10000; justify-content:center; align-items:center;">
-                    <div style="width:40px; height:40px; border:4px solid var(--primary-light, #bae6fd); border-top:4px solid var(--primary-color, #0ea5e9); border-radius:50%; animation:spin 1s linear infinite;"></div>
-                    <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-                </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', html);
-            loading = document.getElementById('global-loading');
+    _loadingStartTime: 0,
+    _hideLoadingTimer: null,
+
+    showLoading: function(text = 'Đang đồng bộ dữ liệu...') {
+        this._loadingStartTime = Date.now();
+        if (this._hideLoadingTimer) {
+            clearTimeout(this._hideLoadingTimer);
+            this._hideLoadingTimer = null;
         }
-        loading.style.display = 'flex';
+
+        // 1. Thanh progress bar mỏng chạy ở mép trên màn hình
+        let bar = document.getElementById('global-progress-bar');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'global-progress-bar';
+            bar.className = 'global-progress-bar';
+            document.body.appendChild(bar);
+        }
+        bar.classList.remove('done');
+        bar.classList.add('loading');
+
+        // 2. Loading Spinner rõ nét nằm ngay trong Body/Content (không đè Sidebar/Header)
+        const container = document.querySelector('.app-main') || document.querySelector('.page-content') || document.body;
+        let overlay = document.getElementById('content-loading-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'content-loading-overlay';
+            overlay.className = 'content-loading-overlay';
+            container.appendChild(overlay);
+        } else if (overlay.parentElement !== container) {
+            container.appendChild(overlay);
+        }
+
+        overlay.innerHTML = `
+            <div class="content-loading-spinner"></div>
+            <div class="content-loading-text">${text}</div>
+        `;
+        overlay.classList.add('active');
     },
 
     hideLoading: function() {
-        const loading = document.getElementById('global-loading');
-        if (loading) loading.style.display = 'none';
+        const elapsed = Date.now() - (this._loadingStartTime || 0);
+        // Giữ hiệu ứng loading tối thiểu 200ms để mắt người thấy spinner xoay êm ái
+        const minDuration = 200;
+        const delay = Math.max(0, minDuration - elapsed);
+
+        if (this._hideLoadingTimer) clearTimeout(this._hideLoadingTimer);
+
+        this._hideLoadingTimer = setTimeout(() => {
+            const bar = document.getElementById('global-progress-bar');
+            if (bar) {
+                bar.classList.remove('loading');
+                bar.classList.add('done');
+                setTimeout(() => {
+                    if (bar.classList.contains('done')) {
+                        bar.classList.remove('done');
+                    }
+                }, 350);
+            }
+
+            const overlay = document.getElementById('content-loading-overlay');
+            if (overlay) {
+                overlay.classList.remove('active');
+            }
+        }, delay);
+    },
+
+    isNavigating: false,
+
+    softNavigate: async function(url, push = true) {
+        if (this.isNavigating) return;
+
+        const targetUrl = new URL(url, window.location.href);
+        const currentUrl = new URL(window.location.href);
+
+        if (targetUrl.href === currentUrl.href) return;
+
+        if (!targetUrl.pathname.includes('/pages/admin/')) {
+            window.location.href = url;
+            return;
+        }
+
+        const pageName = targetUrl.pathname.split('/').pop().replace('.html', '');
+        const permissionMap = {
+            'suppliers': 'suppliers',
+            'reports': 'reports',
+            'employees': 'employees',
+            'pos': 'pos',
+            'products': 'products',
+            'inventory': 'inventory',
+            'orders': 'orders',
+            'customers': 'customers',
+            'ai-assistant': 'ai',
+            'consultations': 'consultations'
+        };
+        const reqModule = permissionMap[pageName];
+        if (reqModule && window.Auth && typeof Auth.hasPermission === 'function') {
+            if (!Auth.hasPermission(reqModule)) {
+                this.showToast('Bạn không có quyền truy cập vào trang này!', 'warning');
+                return;
+            }
+        }
+
+        const currentContent = document.querySelector('.page-content');
+        if (!currentContent) {
+            window.location.href = url;
+            return;
+        }
+
+        this.isNavigating = true;
+        this.showLoading();
+
+        try {
+            // 1. Dims nhẹ nội dung hiện tại (không làm biến mất gây khoảng trống trắng)
+            currentContent.classList.remove('is-ready', 'is-entering');
+            currentContent.classList.add('is-leaving');
+
+            // 2. Fetch HTML trang mới không dùng cache để luôn đảm bảo dữ liệu mới
+            const response = await fetch(targetUrl.href, { cache: 'no-store' });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const html = await response.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+
+            const newContent = doc.querySelector('.page-content');
+            if (!newContent) {
+                window.location.href = url;
+                return;
+            }
+
+            // 3. Cập nhật Title và URL thanh địa chỉ
+            document.title = doc.title || 'AINA Pharmacy';
+            if (push) {
+                history.pushState({ softNav: true, url: targetUrl.href }, '', targetUrl.href);
+            }
+
+            // Đóng các dropdown nếu đang mở
+            const uDrop = document.getElementById('user-dropdown');
+            if (uDrop) uDrop.style.display = 'none';
+            const nDrop = document.getElementById('notification-dropdown');
+            if (nDrop) nDrop.style.display = 'none';
+
+            // 4. Đồng bộ stylesheets (<link rel="stylesheet">) mới nếu chưa có
+            const headLinks = Array.from(doc.head.querySelectorAll('link[rel="stylesheet"]'));
+            for (const link of headLinks) {
+                const href = link.getAttribute('href');
+                const exists = Array.from(document.head.querySelectorAll('link[rel="stylesheet"]'))
+                    .some(ex => ex.getAttribute('href') === href || ex.href === link.href);
+                if (!exists) {
+                    const newLink = document.createElement('link');
+                    newLink.rel = 'stylesheet';
+                    newLink.href = link.href;
+                    document.head.appendChild(newLink);
+                }
+            }
+
+            // Đồng bộ style riêng của trang (<style>)
+            // Nạp style mới trước, sau đó mới xóa style cũ để tránh FOUC (chớp nháy giao diện)
+            const oldStyles = Array.from(document.head.querySelectorAll('style[data-page-style]'));
+            doc.querySelectorAll('style').forEach(st => {
+                const newStyle = document.createElement('style');
+                newStyle.setAttribute('data-page-style', 'true');
+                newStyle.textContent = st.textContent;
+                document.head.appendChild(newStyle);
+            });
+            oldStyles.forEach(el => el.remove());
+
+            // 5. Đồng bộ các Modal chuyên dụng của từng trang
+            document.querySelectorAll('.modal-overlay').forEach(el => {
+                if (el.id !== 'global-confirm' && el.id !== 'global-loading') {
+                    el.remove();
+                }
+            });
+            doc.querySelectorAll('.modal-overlay').forEach(el => {
+                if (el.id !== 'global-confirm' && el.id !== 'global-loading') {
+                    document.body.appendChild(el.cloneNode(true));
+                }
+            });
+
+            // 6. Thay thế vùng .page-content mới
+            newContent.classList.add('is-entering');
+            currentContent.replaceWith(newContent);
+
+            // Dọn sạch bất kỳ phần tử lạ nào ngoài app-header và .page-content trong app-main
+            const mainEl = document.querySelector('.app-main');
+            if (mainEl) {
+                Array.from(mainEl.children).forEach(child => {
+                    if (!child.classList.contains('app-header') && !child.classList.contains('page-content')) {
+                        child.remove();
+                    }
+                });
+            }
+
+            // Cuộn lên đầu trang
+            newContent.scrollTop = 0;
+            window.scrollTo(0, 0);
+
+            // 6. Nạp các thư viện ngoài ở <head> nếu trang mới cần (Chart.js, html2pdf...)
+            const headScripts = Array.from(doc.head.querySelectorAll('script[src]'));
+            for (const s of headScripts) {
+                const src = s.getAttribute('src');
+                const exists = Array.from(document.head.querySelectorAll('script[src]'))
+                    .some(ex => ex.src === s.src || ex.getAttribute('src') === src);
+                if (!exists) {
+                    await new Promise(res => {
+                        const el = document.createElement('script');
+                        el.src = src;
+                        el.onload = res;
+                        el.onerror = res;
+                        document.head.appendChild(el);
+                    });
+                }
+            }
+
+            // 7. Nạp script logic riêng của trang nếu chưa có (products.js, orders.js...)
+            const bodyScripts = Array.from(doc.body.querySelectorAll('script[src]'));
+            for (const s of bodyScripts) {
+                const src = s.getAttribute('src');
+                const fileName = src.split('/').pop().split('?')[0];
+                const exists = Array.from(document.body.querySelectorAll('script[src]'))
+                    .some(ex => ex.src.includes(fileName));
+                if (!exists) {
+                    await new Promise(res => {
+                        const el = document.createElement('script');
+                        el.src = src;
+                        el.onload = res;
+                        el.onerror = res;
+                        document.body.appendChild(el);
+                    });
+                }
+            }
+
+            // 8. Chạy inline scripts của trang mới và kích hoạt DOMContentLoaded
+            const inlineScripts = Array.from(doc.querySelectorAll('script:not([src])'));
+            const pendingCallbacks = [];
+            const originalAddEventListener = document.addEventListener;
+
+            document.addEventListener = function(event, handler, options) {
+                if (event === 'DOMContentLoaded') {
+                    pendingCallbacks.push(handler);
+                } else {
+                    originalAddEventListener.call(document, event, handler, options);
+                }
+            };
+
+            for (const s of inlineScripts) {
+                try {
+                    // Chạy qua indirect eval để các khai báo function/var được đưa lên global window
+                    (0, eval)(s.textContent);
+                } catch (err) {
+                    console.error('Lỗi thực thi inline script trang mới:', err);
+                }
+            }
+
+            document.addEventListener = originalAddEventListener;
+
+            // Kích hoạt các hàm khởi tạo trang (renderSidebar, renderHeader, Manager.init...)
+            for (const fn of pendingCallbacks) {
+                try {
+                    fn();
+                } catch (err) {
+                    console.error('Lỗi chạy callback khởi tạo trang:', err);
+                }
+            }
+
+            // 9. Fade-in mượt mà vùng nội dung mới
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    newContent.classList.remove('is-entering');
+                    newContent.classList.add('is-ready');
+                    this.hideLoading();
+                });
+            });
+
+        } catch (err) {
+            console.warn('Soft Navigation gặp sự cố, chuyển hướng thông thường:', err);
+            window.location.href = url;
+        } finally {
+            this.isNavigating = false;
+            this.hideLoading();
+        }
+    },
+
+    initSoftNavigation: function() {
+        if (this._softNavInitialized) return;
+        this._softNavInitialized = true;
+
+        if (!window.location.pathname.includes('/pages/admin/')) return;
+
+        // Đánh dấu style trang ban đầu để có thể dọn dẹp khi chuyển sang trang khác
+        document.querySelectorAll('style').forEach(st => {
+            st.setAttribute('data-page-style', 'true');
+        });
+
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a[href]');
+            if (!link) return;
+
+            if (link.target === '_blank' || link.hasAttribute('download')) return;
+            const rawHref = link.getAttribute('href');
+            if (!rawHref || rawHref.startsWith('#') || rawHref.startsWith('javascript:')) return;
+
+            const url = new URL(link.href, window.location.href);
+            if (url.origin !== window.location.origin) return;
+
+            if (!url.pathname.includes('/pages/admin/')) return;
+
+            if (url.pathname === window.location.pathname && url.search === window.location.search) {
+                e.preventDefault();
+                return;
+            }
+
+            e.preventDefault();
+            this.softNavigate(url.href, true);
+        });
+
+        window.addEventListener('popstate', () => {
+            if (window.location.pathname.includes('/pages/admin/')) {
+                this.softNavigate(window.location.href, false);
+            }
+        });
     }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
     App.initSidebar();
+    App.initSoftNavigation();
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giám Sát Lưu Lượng API - AINA Pharmacy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../../css/variables.css">
+    <link rel="stylesheet" href="../../css/reset.css">
+    <link rel="stylesheet" href="../../css/components.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <style>
+        .monitor-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+        .badge-method {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            font-family: monospace;
+            text-transform: uppercase;
+        }
+        .method-get { background: #e0f2fe; color: #0284c7; }
+        .method-post { background: #dcfce7; color: #16a34a; }
+        .method-put { background: #fef3c7; color: #d97706; }
+        .method-patch { background: #ede9fe; color: #7c3aed; }
+        .method-delete { background: #fee2e2; color: #dc2626; }
+        .method-options { background: #f1f5f9; color: #64748b; }
+
+        .badge-status {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: monospace;
+        }
+        .status-2xx { background: #dcfce7; color: #16a34a; }
+        .status-3xx { background: #e0e7ff; color: #4338ca; }
+        .status-4xx { background: #fef3c7; color: #b45309; }
+        .status-5xx { background: #fee2e2; color: #b91c1c; }
+
+        .badge-latency {
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-family: monospace;
+            font-weight: 500;
+        }
+        .lat-fast { color: #16a34a; }
+        .lat-med { color: #d97706; }
+        .lat-slow { color: #dc2626; font-weight: 700; }
+
+        .live-pulse {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #10b981;
+            margin-right: 6px;
+            box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="app-sidebar" id="app-sidebar"></aside>
+        <main class="app-main">
+            <header class="app-header" id="app-header"></header>
+            
+            <div class="page-content">
+                <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.4rem;"><i class="fa-solid fa-network-wired" style="color: var(--primary-color);"></i> Giám Sát Lưu Lượng API (Real-time Monitor)</h2>
+                        <p style="margin: 4px 0 0; color: var(--text-secondary); font-size: 0.85rem;">Theo dõi mọi lượt gọi API từ người dùng, Ngrok hoặc Local theo thời gian thực.</p>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button id="btn-toggle-auto" class="btn btn-outline" onclick="toggleAutoRefresh()" style="display: flex; align-items: center; font-size: 0.85rem;">
+                            <span class="live-pulse" id="pulse-indicator"></span>
+                            <span id="auto-refresh-text">Tự động làm mới: BẬT (2s)</span>
+                        </button>
+                        <button class="btn btn-outline" onclick="taiDuLieuTraffic()" title="Làm mới ngay"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button class="btn btn-outline" onclick="xoaNhatKyTraffic()" style="color: #ef4444;" title="Xóa toàn bộ lịch sử"><i class="fa-solid fa-trash-can"></i> Xóa log</button>
+                        <a href="http://localhost:4040" target="_blank" class="btn btn-primary" style="font-size: 0.85rem;" title="Mở trang Inspector chi tiết của Ngrok trên port 4040">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Ngrok Inspector (4040)
+                        </a>
+                    </div>
+                </div>
+
+                <!-- KPI Stats Cards -->
+                <div class="monitor-stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">
+                            <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Tổng Requests</div>
+                            <div id="stat-total" style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary);">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #dcfce7; color: #16a34a;">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Thành công (2xx)</div>
+                            <div id="stat-success" style="font-size: 1.4rem; font-weight: 700; color: #16a34a;">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #fee2e2; color: #dc2626;">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Lỗi Client / Server</div>
+                            <div id="stat-errors" style="font-size: 1.4rem; font-weight: 700; color: #dc2626;">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #ede9fe; color: #7c3aed;">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Độ trễ trung bình</div>
+                            <div id="stat-latency" style="font-size: 1.4rem; font-weight: 700; color: #7c3aed;">0 ms</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Traffic Table Card -->
+                <div class="card" style="padding: 1.25rem;">
+                    <div class="table-toolbar" style="margin-bottom: 1rem; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <div class="search-box" style="flex: 1; min-width: 250px;">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" id="search-url" class="search-input" placeholder="Tìm theo đường dẫn (VD: /api/thuoc, /api/ai...)" onkeyup="locDanhSachTraffic()">
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <select class="form-select" id="filter-method" onchange="locDanhSachTraffic()" style="padding: 6px 10px; font-size: 0.85rem;">
+                                <option value="ALL">Tất cả Method</option>
+                                <option value="GET">GET</option>
+                                <option value="POST">POST</option>
+                                <option value="PUT">PUT</option>
+                                <option value="PATCH">PATCH</option>
+                                <option value="DELETE">DELETE</option>
+                            </select>
+                            <select class="form-select" id="filter-status" onchange="locDanhSachTraffic()" style="padding: 6px 10px; font-size: 0.85rem;">
+                                <option value="ALL">Tất cả Status</option>
+                                <option value="2XX">2xx (Thành công)</option>
+                                <option value="4XX">4xx (Lỗi Client)</option>
+                                <option value="5XX">5xx (Lỗi Server)</option>
+                            </select>
+                            <select class="form-select" id="filter-channel" onchange="locDanhSachTraffic()" style="padding: 6px 10px; font-size: 0.85rem;">
+                                <option value="ALL">Tất cả Kênh</option>
+                                <option value="NGROK/PROXY">Ngrok / Public</option>
+                                <option value="LOCAL">Localhost</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                        <table class="table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f8fafc; border-bottom: 2px solid var(--border-color); text-align: left;">
+                                    <th style="padding: 10px; width: 60px;">ID</th>
+                                    <th style="padding: 10px; width: 90px;">Thời gian</th>
+                                    <th style="padding: 10px; width: 85px;">Method</th>
+                                    <th style="padding: 10px;">Endpoint (Đường dẫn API)</th>
+                                    <th style="padding: 10px; width: 80px;">Status</th>
+                                    <th style="padding: 10px; width: 80px;">Độ trễ</th>
+                                    <th style="padding: 10px; width: 140px;">IP / Nguồn</th>
+                                    <th style="padding: 10px; width: 90px;">Vai trò</th>
+                                </tr>
+                            </thead>
+                            <tbody id="traffic-tbody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                        Đang tải dữ liệu lưu lượng API...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../js/storage.js"></script>
+    <script src="../../js/mock-data.js"></script>
+    <script src="../../js/env.js"></script>
+    <script src="../../js/api.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script src="../../js/app.js"></script>
+    <script src="../../js/components.js"></script>
+
+    <script>
+        let danhSachTrafficGoc = [];
+        let autoRefreshInterval = null;
+        let isAutoRefresh = true;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = Auth.requireAuth();
+            if (!user) return;
+
+            // Kiểm tra phân quyền: Chỉ Quản lý mới được xem Monitor
+            if (user.role !== 'QUAN_LY' && user.role !== 'ADMIN') {
+                App.showToast('Bạn không có quyền truy cập trang Giám sát API!', 'error');
+                setTimeout(() => window.location.href = 'dashboard.html', 1000);
+                return;
+            }
+
+            Layout.renderHeader();
+            Layout.renderSidebar('api-monitor');
+
+            taiDuLieuTraffic();
+            batDauAutoRefresh();
+        });
+
+        async function taiDuLieuTraffic() {
+            try {
+                const res = await API.get('/api/giam-sat/traffic');
+                if (res && res.thongKe) {
+                    capNhatThongKe(res.thongKe);
+                    danhSachTrafficGoc = res.danhSach || [];
+                    locDanhSachTraffic();
+                }
+            } catch (loi) {
+                console.warn("Lỗi tải API Traffic:", loi.message);
+            }
+        }
+
+        function capNhatThongKe(stats) {
+            document.getElementById('stat-total').innerText = stats.tongSo || 0;
+            document.getElementById('stat-success').innerText = stats.thanhCong || 0;
+            document.getElementById('stat-errors').innerText = (stats.loiClient || 0) + (stats.loiServer || 0);
+            document.getElementById('stat-latency').innerText = (stats.doTreTrungBinh || 0) + ' ms';
+        }
+
+        function locDanhSachTraffic() {
+            const searchVal = document.getElementById('search-url').value.trim().toLowerCase();
+            const methodVal = document.getElementById('filter-method').value;
+            const statusVal = document.getElementById('filter-status').value;
+            const channelVal = document.getElementById('filter-channel').value;
+
+            const ketQua = danhSachTrafficGoc.filter(item => {
+                const matchUrl = !searchVal || item.duongDan.toLowerCase().includes(searchVal);
+                const matchMethod = methodVal === 'ALL' || item.phuongThuc === methodVal;
+                const matchChannel = channelVal === 'ALL' || item.kenh === channelVal;
+                
+                let matchStatus = true;
+                if (statusVal === '2XX') matchStatus = item.maTrangThai >= 200 && item.maTrangThai < 300;
+                else if (statusVal === '4XX') matchStatus = item.maTrangThai >= 400 && item.maTrangThai < 500;
+                else if (statusVal === '5XX') matchStatus = item.maTrangThai >= 500;
+
+                return matchUrl && matchMethod && matchChannel && matchStatus;
+            });
+
+            renderTable(ketQua);
+        }
+
+        function renderTable(list) {
+            const tbody = document.getElementById('traffic-tbody');
+            if (!tbody) return;
+
+            if (list.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                            Chưa có lượt gọi API nào phù hợp.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = list.map(item => {
+                const methodLower = (item.phuongThuc || 'get').toLowerCase();
+                const timeStr = item.thoiGian ? new Date(item.thoiGian).toLocaleTimeString('vi-VN') : '--:--:--';
+                
+                let statusClass = 'status-2xx';
+                if (item.maTrangThai >= 400 && item.maTrangThai < 500) statusClass = 'status-4xx';
+                else if (item.maTrangThai >= 500) statusClass = 'status-5xx';
+                else if (item.maTrangThai >= 300) statusClass = 'status-3xx';
+
+                let latClass = 'lat-fast';
+                if (item.thoiGianXuLyMs > 500) latClass = 'lat-slow';
+                else if (item.thoiGianXuLyMs > 150) latClass = 'lat-med';
+
+                const isNgrok = item.kenh === 'NGROK/PROXY';
+
+                return `
+                    <tr style="border-bottom: 1px solid var(--border-color); font-size: 0.85rem;">
+                        <td style="padding: 8px 10px; color: var(--text-muted); font-family: monospace;">#${item.id}</td>
+                        <td style="padding: 8px 10px; color: var(--text-secondary); font-family: monospace;">${timeStr}</td>
+                        <td style="padding: 8px 10px;">
+                            <span class="badge-method method-${methodLower}">${item.phuongThuc}</span>
+                        </td>
+                        <td style="padding: 8px 10px; font-family: monospace; font-weight: 500; color: #1e293b; max-width: 320px; word-break: break-all;">
+                            ${item.duongDan}
+                        </td>
+                        <td style="padding: 8px 10px;">
+                            <span class="badge-status ${statusClass}">${item.maTrangThai}</span>
+                        </td>
+                        <td style="padding: 8px 10px;">
+                            <span class="badge-latency ${latClass}">${item.thoiGianXuLyMs}ms</span>
+                        </td>
+                        <td style="padding: 8px 10px; font-size: 0.78rem;">
+                            <span style="font-family: monospace; color: #475569;">${item.ip}</span><br>
+                            <span style="color: ${isNgrok ? '#2563eb' : '#64748b'}; font-weight: ${isNgrok ? '600' : 'normal'};">
+                                ${isNgrok ? '<i class="fa-solid fa-globe"></i> NGROK' : '<i class="fa-solid fa-laptop"></i> LOCAL'}
+                            </span>
+                        </td>
+                        <td style="padding: 8px 10px;">
+                            <span style="padding: 2px 6px; background: #f1f5f9; border-radius: 4px; font-size: 0.72rem; color: #475569;">
+                                ${item.userRole}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function toggleAutoRefresh() {
+            isAutoRefresh = !isAutoRefresh;
+            const pulse = document.getElementById('pulse-indicator');
+            const text = document.getElementById('auto-refresh-text');
+
+            if (isAutoRefresh) {
+                pulse.style.display = 'inline-block';
+                text.innerText = 'Tự động làm mới: BẬT (2s)';
+                batDauAutoRefresh();
+            } else {
+                pulse.style.display = 'none';
+                text.innerText = 'Tự động làm mới: TẮT';
+                if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            }
+        }
+
+        function batDauAutoRefresh() {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            autoRefreshInterval = setInterval(() => {
+                taiDuLieuTraffic();
+            }, 2000);
+        }
+
+        async function xoaNhatKyTraffic() {
+            const confirmed = await App.showConfirm('Bạn có chắc muốn xóa sạch toàn bộ lịch sử theo dõi API không?');
+            if (!confirmed) return;
+
+            try {
+                await API.delete('/api/giam-sat/traffic');
+                App.showToast('Đã xóa sạch lịch sử theo dõi API!', 'success');
+                taiDuLieuTraffic();
+            } catch (e) {
+                App.showToast(e.message || 'Lỗi khi xóa nhật ký', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

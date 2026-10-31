@@ -16,10 +16,19 @@
     <style>
         .page-content {
             display: flex;
-            gap: var(--spacing-lg);
+            flex-direction: column;
             height: calc(100vh - var(--header-height));
-            padding-bottom: 0;
+            padding: 0;
             overflow: hidden;
+        }
+
+        .ai-view-container {
+            display: flex;
+            gap: var(--spacing-lg);
+            padding: var(--spacing-lg);
+            flex: 1;
+            overflow: hidden;
+            box-sizing: border-box;
         }
 
         
@@ -324,18 +333,26 @@
         <main class="app-main">
             <header class="app-header" id="app-header"></header>
 
-            <!-- Tab Switcher Bar -->
-            <div class="ai-tab-bar">
-                <button class="ai-tab-btn active" id="tab-btn-internal" onclick="AIChatMonitor.switchTab('internal')">
-                    <i class="fa-solid fa-robot"></i> Trợ lý Phân tích & Tồn kho
-                </button>
-                <button class="ai-tab-btn" id="tab-btn-monitor" onclick="AIChatMonitor.switchTab('monitor')">
-                    <i class="fa-solid fa-clipboard-list"></i> Giám sát Chat Khách hàng (Can thiệp kịp thời)
-                </button>
-            </div>
+            <div class="page-content">
+                <!-- Tab Switcher Bar -->
+                <div class="ai-tab-bar" style="display: flex; justify-content: space-between; align-items: center; padding-right: var(--spacing-lg);">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="ai-tab-btn active" id="tab-btn-internal" onclick="AIChatMonitor.switchTab('internal')">
+                            <i class="fa-solid fa-robot"></i> Trợ lý Phân tích & Tồn kho
+                        </button>
+                        <button class="ai-tab-btn" id="tab-btn-monitor" onclick="AIChatMonitor.switchTab('monitor')">
+                            <i class="fa-solid fa-clipboard-list"></i> Giám sát Khách Chat AI (AINA Bot)
+                        </button>
+                    </div>
+                    <div>
+                        <a href="consultations.html" class="btn btn-outline" style="border-radius: 20px; font-size: 0.85rem; padding: 6px 16px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; color: var(--primary-color); border-color: var(--primary-color); background: rgba(37,99,235,0.06);">
+                            <i class="fa-solid fa-headset"></i> Phòng Tư Vấn Dược Sĩ & Giám Sát <i class="fa-solid fa-arrow-right" style="font-size: 0.75rem;"></i>
+                        </a>
+                    </div>
+                </div>
 
-            <!-- Tab 1: Trợ lý Phân tích nội bộ -->
-            <div class="page-content" id="view-internal" style="padding: var(--spacing-lg);">
+                <!-- Tab 1: Trợ lý Phân tích nội bộ -->
+                <div class="ai-view-container" id="view-internal">
                 
                 <div class="ai-insights-panel" id="insights-panel">
                     <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 8px;">AI Insights Dashboard</h3>
@@ -455,10 +472,12 @@
                 <div id="monitor-pagination"></div>
 
             </div>
+
+            </div>
         </main>
     </div>
 
-    
+    <!-- Scripts -->
     <script src="../../js/storage.js"></script>
     <script src="../../js/api.js"></script>
     <script src="../../js/auth.js"></script>

@@ -1,6 +1,6 @@
 const { Server } = require("socket.io");
 const { coSoDuLieu } = require("../config/database");
-const { cloudinary } = require("../config/cloudinary");
+const { luuAnhTuVan } = require("../utils/chat_upload");
 
 function khoiTaoSocket(serverHttp) {
   const io = new Server(serverHttp, {
@@ -21,60 +21,33 @@ function khoiTaoSocket(serverHttp) {
       console.log(`🏠 Socket ${socket.id} đã tham gia phòng: room_${phienId}`);
     });
 
+    // Lưu ý: Việc gửi tin nhắn hiện được thực hiện chuẩn qua REST API /api/tu-van/gui-tin
+    // để đảm bảo xác thực JWT, phân quyền dược sĩ và chống trùng lặp tin nhắn.
     socket.on("send_message", async (data) => {
-      let { phienId, nguoiGuiId, vaiTroGui, noiDung, laHinhAnh } = data;
-      
-      try {
-        if (laHinhAnh && noiDung.startsWith('data:image')) {
-            const uploadRes = await cloudinary.uploader.upload(noiDung, {
-                folder: 'chat_images',
-                resource_type: 'auto'
-            });
-            noiDung = uploadRes.secure_url;
-        }
-
-        const tinNhan = await coSoDuLieu.tinNhanTuVan.create({
-          data: {
-            phienId: Number(phienId),
-            nguoiGuiId: Number(nguoiGuiId),
-            vaiTroGui,
-            noiDung,
-            laHinhAnh: !!laHinhAnh
-          }
-        });
-
-        await coSoDuLieu.phienTuVan.update({
-          where: { id: Number(phienId) },
-          data: { capNhatLuc: new Date() }
-        });
-
-        io.to(`room_${phienId}`).emit("receive_message", tinNhan);
-        
-        if (vaiTroGui === 'KHACH_HANG') {
-            io.emit("new_notification", { phienId, message: "Khách hàng đã gửi tin mới" });
-        }
-
-      } catch (error) {
-        console.error("Lỗi xử lý tin nhắn socket:", error);
-      }
+      // No-op: API /api/tu-van/gui-tin đã lưu DB và broadcast receive_message
+      console.log(`[SOCKET_SEND_DEPRECATED] Bỏ qua socket send_message phòng room_${data?.phienId} để chống duplicate.`);
     });
 
     socket.on("mark_seen", async (data) => {
-        const { phienId, vaiTro } = data; 
-        try {
-            await coSoDuLieu.tinNhanTuVan.updateMany({
-                where: {
-                    phienId: Number(phienId),
-                    vaiTroGui: vaiTro === 'KHACH_HANG' ? { not: 'KHACH_HANG' } : 'KHACH_HANG',
-                    daXem: false
-                },
-                data: { daXem: true }
-            });
+      const { phienId, vaiTro } = data; 
+      try {
+        await coSoDuLieu.tinNhanTuVan.updateMany({
+          where: {
+            phienId: Number(phienId),
+            vaiTroGui: vaiTro === 'KHACH_HANG' ? { not: 'KHACH_HANG' } : 'KHACH_HANG',
+            daXem: false
+          },
+          data: { daXem: true }
+        });
 
-            io.to(`room_${phienId}`).emit("messages_seen", { phienId, vaiTro });
-        } catch (error) {
-            console.error(" Lỗi đánh dấu đã xem:", error);
-        }
+        io.to(`room_${phienId}`).emit("messages_seen", { 
+          phienId: Number(phienId), 
+          vaiTro, 
+          daXemLuc: new Date() 
+        });
+      } catch (error) {
+        console.error("Lỗi đánh dấu đã xem:", error);
+      }
     });
 
     socket.on("disconnect", () => {

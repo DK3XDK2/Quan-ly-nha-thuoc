@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tư Vấn Khách Hàng & Giám Sát Dược Sĩ | AINA Pharmacy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../../css/variables.css">
+    <link rel="stylesheet" href="../../css/reset.css">
+    <link rel="stylesheet" href="../../css/components.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/responsive.css">
+    <style>
+        .consult-tab-bar {
+            display: flex;
+            gap: 12px;
+            padding: 10px var(--spacing-lg);
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .consult-tab-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border-radius: var(--radius-md);
+            font-size: 0.92rem;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            background: white;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .consult-tab-btn:hover {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            background: #eff6ff;
+        }
+
+        .consult-tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        .consult-view {
+            padding: var(--spacing-lg);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            flex: 1;
+            box-sizing: border-box;
+            overflow: hidden;
+            height: calc(100vh - var(--header-height) - 55px);
+        }
+
+        #view-history {
+            overflow-y: auto;
+        }
+
+        /* Stats Grid */
+        .consult-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .consult-stat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .consult-stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        /* Filter Bar */
+        .consult-filter-bar {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
+        }
+
+        /* Live Chat Layout */
+        .livechat-layout {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 16px;
+            flex: 1;
+            height: 100%;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .livechat-session-panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            height: 100%;
+        }
+
+        .livechat-chatbox-panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            height: 100%;
+        }
+
+        .livechat-filter-btn {
+            border: 1px solid var(--border-color);
+            background: white;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .livechat-filter-btn.active {
+            background: #eff6ff;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        @media (max-width: 900px) {
+            .livechat-layout {
+                grid-template-columns: 1fr;
+                overflow-y: auto;
+            }
+            .livechat-session-panel {
+                height: 380px;
+                flex-shrink: 0;
+            }
+            .livechat-chatbox-panel {
+                height: 550px;
+                flex-shrink: 0;
+            }
+        }
+
+        #modal-transcript.active {
+            display: flex !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            z-index: 9999 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar" id="app-sidebar"></aside>
+
+        <!-- Main Workspace -->
+        <main class="app-main">
+            <header class="app-header" id="app-header"></header>
+
+            <div class="page-content" style="padding: 0; display: flex; flex-direction: column; height: calc(100vh - var(--header-height)); overflow: hidden;">
+                <!-- Tab Switcher Bar -->
+                <div class="consult-tab-bar">
+                    <button class="consult-tab-btn active" id="tab-btn-livechat" onclick="ConsultationApp.switchTab('livechat')">
+                        <i class="fa-solid fa-headset"></i> Tư Vấn Trực Tuyến (Live Chat)
+                        <span id="badge-pending-sessions" class="badge" style="display:none; background:#ef4444; color:white; border-radius:10px; padding:2px 8px; font-size:0.75rem; margin-left:4px; font-weight:700;">0</span>
+                    </button>
+                    <button class="consult-tab-btn" id="tab-btn-history" onclick="ConsultationApp.switchTab('history')">
+                        <i class="fa-solid fa-clipboard-check"></i> Lịch Sử Tư Vấn & Giám Sát Dược Sĩ
+                    </button>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- TAB 1: TƯ VẤN TRỰC TIẾP (LIVE CHAT) -->
+                <!-- ========================================== -->
+                <div class="consult-view" id="view-livechat">
+                <div class="livechat-layout">
+                    
+                    <!-- Left Column: Session List -->
+                    <div class="livechat-session-panel">
+                        <div style="padding: 14px 16px; border-bottom: 1px solid var(--border-color); background: var(--bg-surface-secondary); display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-comments text-primary"></i> Phiên Tư Vấn
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="LiveChatAdmin.loadSessions()" title="Làm mới danh sách">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </div>
+
+                        <!-- Filter Chips -->
+                        <div style="padding: 10px 14px; border-bottom: 1px solid var(--border-color); display: flex; gap: 6px; background: white;">
+                            <button class="livechat-filter-btn active" id="lc-filter-all" onclick="LiveChatAdmin.setFilter('all')">Tất cả</button>
+                            <button class="livechat-filter-btn" id="lc-filter-waiting" onclick="LiveChatAdmin.setFilter('CHO_TU_VAN')">
+                                Chờ duyệt (<span id="lc-count-waiting">0</span>)
+                            </button>
+                            <button class="livechat-filter-btn" id="lc-filter-active" onclick="LiveChatAdmin.setFilter('DANG_TU_VAN')">Đang chat</button>
+                        </div>
+
+                        <!-- Session Items Container -->
+                        <div id="livechat-session-list" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; background: #f8fafc;">
+                            <div style="text-align: center; padding: 40px 10px; color: var(--text-muted); font-size: 0.88rem;">
+                                <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px; display: block;"></i>
+                                Đang tải danh sách phiên tư vấn...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Active Chat Box -->
+                    <div class="livechat-chatbox-panel">
+                        
+                        <!-- Empty State (No Session Selected) -->
+                        <div id="livechat-empty-state" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); padding: 40px; text-align: center;">
+                            <div style="width: 80px; height: 80px; border-radius: 50%; background: #eff6ff; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: var(--primary-color); margin-bottom: 16px;">
+                                <i class="fa-solid fa-comments"></i>
+                            </div>
+                            <h3 style="margin: 0 0 8px 0; color: var(--text-primary); font-size: 1.2rem;">Chưa Chọn Phiên Tư Vấn</h3>
+                            <p style="margin: 0; max-width: 380px; font-size: 0.88rem; line-height: 1.5;">
+                                Vui lòng chọn một khách hàng từ danh sách bên trái hoặc bấm <strong>"Tiếp nhận tư vấn"</strong> khi có yêu cầu mới.
+                            </p>
+                        </div>
+
+                        <!-- Active Chat Box Content -->
+                        <div id="livechat-chat-box" style="display: none; flex-direction: column; height: 100%;">
+                            
+                            <!-- Header -->
+                            <div style="padding: 12px 18px; border-bottom: 1px solid var(--border-color); background: white; display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div id="lc-client-avatar" style="width: 44px; height: 44px; border-radius: 50%; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem;">
+                                        KH
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 700; font-size: 1rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                                            <span id="lc-client-name">Khách hàng</span>
+                                            <span id="lc-client-badge" class="badge badge-success">Đang tư vấn</span>
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                                            <i class="fa-solid fa-phone" style="font-size: 0.75rem;"></i> <span id="lc-client-phone">0901234567</span> &bull; 
+                                            <i class="fa-solid fa-user-doctor" style="font-size: 0.75rem;"></i> Phụ trách: <span id="lc-staff-name" style="font-weight: 600;">Tôi</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button id="lc-btn-accept" class="btn btn-primary" style="display: none; font-size: 0.82rem; padding: 6px 14px; border-radius: 18px;" onclick="LiveChatAdmin.acceptSession(LiveChatAdmin.currentSession?.id)">
+                                        <i class="fa-solid fa-headset"></i> Tiếp nhận tư vấn
+                                    </button>
+                                    <button id="lc-btn-end" class="btn btn-outline text-danger" style="font-size: 0.82rem; padding: 6px 14px; border-radius: 18px;" onclick="LiveChatAdmin.endCurrentSession()">
+                                        <i class="fa-solid fa-phone-slash"></i> Kết thúc phiên
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Supervisor Banner (Chỉ Quản lý thấy khi đang xem phiên của Dược sĩ khác) -->
+                            <div id="lc-supervisor-banner" style="display: none; padding: 10px 18px; background: #fffbeb; border-bottom: 1px solid #fde68a; color: #92400e; font-size: 0.85rem; font-weight: 600; align-items: center; justify-content: center; gap: 8px;">
+                                <i class="fa-solid fa-eye text-amber-600"></i>
+                                <span>Chế độ Giám Sát Quản Lý: Bạn đang xem phiên tư vấn của <strong id="lc-supervisor-staff-name">Dược sĩ</strong></span>
+                            </div>
+
+                            <!-- VIEW 1: TRẠNG THÁI KHÓA BẢO VỆ (Người khác không được xem hội thoại) -->
+                            <div id="livechat-locked-state" style="flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; background: #f8fafc;">
+                                <div style="width: 80px; height: 80px; border-radius: 50%; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin-bottom: 20px; box-shadow: 0 4px 14px rgba(239,68,68,0.15);">
+                                    <i class="fa-solid fa-lock"></i>
+                                </div>
+                                <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0 0 10px 0;">Quyền Truy Cập Bị Hạn Chế</h3>
+                                <p style="font-size: 0.9rem; color: #64748b; max-width: 440px; line-height: 1.6; margin: 0 0 20px 0;">
+                                    Phiên tư vấn này đã được tiếp nhận bởi <strong id="lc-lock-staff-name" style="color: #0f172a;">Dược sĩ khác</strong>.<br>
+                                    Để đảm bảo quyền riêng tư và bảo mật thông tin y tế của khách hàng, nội dung trò chuyện sẽ không được hiển thị cho người khác.
+                                </p>
+                                <div style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; border-radius: 20px; background: #eff6ff; color: #2563eb; font-size: 0.82rem; font-weight: 700; border: 1px solid #bfdbfe;">
+                                    <i class="fa-solid fa-shield-halved"></i> Đang bảo mật nội dung phiên tư vấn
+                                </div>
+                            </div>
+
+                            <!-- VIEW 2: TRẠNG THÁI CHỜ TIẾP NHẬN (CHO_TU_VAN) -->
+                            <div id="livechat-waiting-state" style="flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; background: #f8fafc;">
+                                <div style="width: 80px; height: 80px; border-radius: 50%; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin-bottom: 20px; box-shadow: 0 4px 14px rgba(217,119,6,0.15);">
+                                    <i class="fa-solid fa-headset"></i>
+                                </div>
+                                <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0 0 10px 0;">Yêu Cầu Tư Vấn Mới</h3>
+                                <p style="font-size: 0.9rem; color: #64748b; max-width: 420px; line-height: 1.6; margin: 0 0 24px 0;">
+                                    Khách hàng đang đợi phản hồi từ Dược sĩ trực quầy.<br>
+                                    Vui lòng bấm nút bên dưới để chính thức tiếp nhận và bắt đầu tư vấn.
+                                </p>
+                                <button class="btn btn-primary btn-lg" style="padding: 12px 32px; font-weight: 700; font-size: 0.95rem; border-radius: 24px; box-shadow: 0 6px 18px rgba(37,99,235,0.3);" onclick="LiveChatAdmin.acceptSession(LiveChatAdmin.currentSession?.id)">
+                                    <i class="fa-solid fa-comments" style="margin-right: 8px;"></i> TIẾP NHẬN TƯ VẤN NGAY
+                                </button>
+                            </div>
+
+                            <!-- VIEW 3: TRẠNG THÁI CHAT THỰC TẾ (isMine HOẶC Quản lý) -->
+                            <div id="livechat-active-chat-area" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                                <!-- Chat Messages Container -->
+                                <div id="livechat-messages" style="flex: 1; padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #f8fafc;">
+                                    <!-- Dynamic messages -->
+                                </div>
+
+                                <!-- Image Preview Strip -->
+                                <div id="livechat-image-preview" style="display: none; padding: 8px 18px; background: #f1f5f9; border-top: 1px solid var(--border-color); align-items: center; gap: 12px;">
+                                    <div style="position: relative; width: 44px; height: 44px; border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1; flex-shrink: 0;">
+                                        <img id="livechat-preview-img" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                                        <button type="button" onclick="LiveChatAdmin.cancelImage()" style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.65); color: white; border: none; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;">&times;</button>
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #475569; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        <span id="livechat-preview-name" style="font-weight: 600;">Ảnh đính kèm</span>
+                                        <div style="font-size: 0.72rem; color: #94a3b8;">Nhấn gửi hoặc Enter để gửi ảnh kèm tin nhắn</div>
+                                    </div>
+                                </div>
+
+                                <!-- Chat Input Area -->
+                                <div id="livechat-input-area" style="padding: 12px 18px; border-top: 1px solid var(--border-color); background: var(--bg-surface); display: flex; align-items: center; gap: 10px;">
+                                    <button type="button" class="btn btn-outline" onclick="document.getElementById('livechat-file-input').click()" title="Đính kèm ảnh tư vấn" style="width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0;">
+                                        <i class="fa-solid fa-image" style="font-size: 1.1rem; color: var(--primary-color);"></i>
+                                    </button>
+                                    <input type="file" id="livechat-file-input" accept="image/*" style="display: none;" onchange="LiveChatAdmin.handleImageSelected(event)">
+
+                                    <textarea id="livechat-input" class="form-control" rows="1" placeholder="Nhập tin nhắn tư vấn gửi khách hàng... (Nhấn Enter để gửi)" style="resize: none; border-radius: 20px; padding: 10px 16px; font-size: 0.92rem;" onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); LiveChatAdmin.sendMessage(); }"></textarea>
+                                    <button class="btn btn-primary send-btn" onclick="LiveChatAdmin.sendMessage()" style="flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fa-solid fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- TAB 2: LỊCH SỬ TƯ VẤN & GIÁM SÁT DƯỢC SĨ -->
+            <!-- ========================================== -->
+            <div class="consult-view" id="view-history" style="display: none;">
+                
+                <!-- KPI Cards -->
+                <div class="consult-stats-grid">
+                    <div class="consult-stat-card">
+                        <div class="consult-stat-icon" style="background:#eff6ff; color:#2563eb;">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:0.8rem; color:var(--text-secondary); font-weight:500;">Tổng Phiên Đã Hoàn Tất</div>
+                            <div id="stat-history-tong" style="font-size:1.5rem; font-weight:700; color:var(--text-primary); line-height:1.2; margin-top:2px;">0</div>
+                        </div>
+                    </div>
+
+                    <div class="consult-stat-card">
+                        <div class="consult-stat-icon" style="background:#f0fdf4; color:#16a34a;">
+                            <i class="fa-solid fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:0.8rem; color:var(--text-secondary); font-weight:500;">Phiên Tư Vấn Hôm Nay</div>
+                            <div id="stat-history-hom-nay" style="font-size:1.5rem; font-weight:700; color:var(--text-primary); line-height:1.2; margin-top:2px;">0</div>
+                        </div>
+                    </div>
+
+                    <div class="consult-stat-card" style="border-left: 4px solid #8b5cf6;">
+                        <div class="consult-stat-icon" style="background:#f5f3ff; color:#7c3aed;">
+                            <i class="fa-solid fa-images"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:0.8rem; color:var(--text-secondary); font-weight:500;">Phiên Có Ảnh / Đơn Thuốc</div>
+                            <div id="stat-history-co-anh" style="font-size:1.5rem; font-weight:700; color:#7c3aed; line-height:1.2; margin-top:2px;">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="consult-filter-bar">
+                    <div style="flex: 1; min-width: 240px; position: relative;">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                        <input type="text" id="history-search-input" class="chat-input" placeholder="Tìm theo tên khách, SĐT, hoặc tên Dược sĩ..." style="padding-left: 36px; width: 100%; box-sizing: border-box; font-size: 0.88rem; padding-top: 8px; padding-bottom: 8px;">
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);"><i class="fa-solid fa-calendar-day"></i> Ngày:</label>
+                        <input type="date" id="history-date-filter" class="chat-input" style="font-size: 0.85rem; padding: 7px 10px;">
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);"><i class="fa-solid fa-filter"></i> Lọc ảnh:</label>
+                        <select id="history-photo-filter" class="chat-input" style="font-size: 0.85rem; padding: 8px 12px; cursor: pointer;">
+                            <option value="">Tất cả các phiên</option>
+                            <option value="true">Chỉ phiên có đính kèm ảnh</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-outline" onclick="ConsultationHistory.resetFilters()" title="Đặt lại bộ lọc" style="padding: 8px 14px;">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+
+                <!-- Table Card -->
+                <div class="card" style="padding: 0; display: flex; flex-direction: column; flex: 1; min-height: 380px; overflow: hidden; margin-bottom: 0;">
+                    <div style="flex: 1; overflow-y: auto; overflow-x: auto; min-height: 0;">
+                        <table class="table" style="margin-bottom: 0; width: 100%;">
+                            <thead style="position: sticky; top: 0; background: var(--bg-surface-secondary); z-index: 5; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                <tr>
+                                    <th style="width: 80px;">Mã</th>
+                                    <th>Khách Hàng</th>
+                                    <th>Dược Sĩ Phụ Trách</th>
+                                    <th>Thời Gian Bắt Đầu</th>
+                                    <th>Số Tin Nhắn</th>
+                                    <th>Lý Do Kết Thúc</th>
+                                    <th style="text-align: right; width: 140px;">Hành Động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                                        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i> Đang tải lịch sử tư vấn...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div id="history-pagination" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--border-color); background: white; z-index: 5; flex-shrink: 0;">
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <span id="history-pagination-info" style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Hiển thị 0 / 0 phiên</span>
+                            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-muted);">
+                                <span>Hiển thị:</span>
+                                <select id="history-page-size" class="chat-input" style="width: auto; padding: 4px 8px; font-size: 0.82rem; border-radius: 6px; cursor: pointer;" onchange="ConsultationHistory.changePageSize(this.value)">
+                                    <option value="10" selected>10 dòng</option>
+                                    <option value="15">15 dòng</option>
+                                    <option value="25">25 dòng</option>
+                                    <option value="50">50 dòng</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <button id="history-btn-prev" class="btn btn-sm btn-outline" disabled onclick="ConsultationHistory.prevPage()" style="padding: 5px 12px; font-size: 0.82rem; border-radius: 6px;">
+                                <i class="fa-solid fa-chevron-left"></i> Trước
+                            </button>
+                            <div id="history-page-numbers" style="display: flex; gap: 4px; align-items: center;">
+                                <!-- Page numbers rendered dynamically -->
+                            </div>
+                            <button id="history-btn-next" class="btn btn-sm btn-outline" disabled onclick="ConsultationHistory.nextPage()" style="padding: 5px 12px; font-size: 0.82rem; border-radius: 6px;">
+                                Sau <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal Xem Chi Tiết Toàn Bộ Tin Nhắn Của Phiên (Transcript) -->
+    <div class="modal-overlay" id="modal-transcript" style="display: none;" onclick="if(event.target === this) ConsultationHistory.closeTranscript()">
+        <div class="modal-card" style="max-width: 650px; width: 95%; max-height: 85vh; display: flex; flex-direction: column; padding: 0; border-radius: var(--radius-lg); overflow: hidden; background: white; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35); z-index: 10001; position: relative;">
+            <div style="padding: 14px 20px; background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 id="transcript-modal-title" style="margin: 0; font-size: 1.05rem;">Lịch Sử Đoạn Chat Chi Tiết</h4>
+                    <div id="transcript-modal-sub" style="font-size: 0.78rem; opacity: 0.85; margin-top: 2px;">Khách hàng & Dược sĩ</div>
+                </div>
+                <button type="button" class="btn-close" style="background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer;" onclick="ConsultationHistory.closeTranscript()">&times;</button>
+            </div>
+
+            <!-- Messages Transcript Body -->
+            <div id="transcript-modal-body" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #f8fafc; min-height: 350px; max-height: 55vh;">
+                <!-- Rendered dynamically -->
+            </div>
+
+            <div style="padding: 12px 20px; border-top: 1px solid var(--border-color); background: white; display: flex; justify-content: space-between; align-items: center;">
+                <div id="transcript-modal-note" style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">
+                    Ghi chú kết thúc: ...
+                </div>
+                <button type="button" class="btn btn-outline" onclick="ConsultationHistory.closeTranscript()">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Chat Image Lightbox Viewer -->
+    <div id="consult-chat-lightbox" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:99999; justify-content:center; align-items:center; cursor:zoom-out; opacity:1 !important; pointer-events:auto !important;" onclick="this.style.display='none'">
+        <img id="consult-lightbox-img" src="" style="max-width:90vw; max-height:90vh; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5); object-fit:contain;">
+        <button type="button" style="position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.25); border:none; color:white; font-size:1.8rem; border-radius:50%; width:44px; height:44px; cursor:pointer; display:flex; align-items:center; justify-content:center;" onclick="document.getElementById('consult-chat-lightbox').style.display='none'">&times;</button>
+    </div>
+
+    <!-- Modal Kết Thúc Phiên Tư Vấn (Chọn / Nhập lý do kết thúc) -->
+    <div class="modal-overlay" id="modal-end-session" style="display: none;" onclick="if(event.target === this) LiveChatAdmin.closeEndModal()">
+        <div class="modal-card" style="max-width: 520px; width: 95%; display: flex; flex-direction: column; padding: 0; border-radius: var(--radius-lg); overflow: hidden; background: white; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35); z-index: 10002; position: relative;">
+            <div style="padding: 16px 20px; background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.15rem;">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; font-size: 1.05rem; font-weight: 700;">Kết Thúc Phiên Tư Vấn</h4>
+                        <div style="font-size: 0.78rem; opacity: 0.9; margin-top: 2px;">Cập nhật lý do đóng & hoàn tất phiên làm việc</div>
+                    </div>
+                </div>
+                <button type="button" style="background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer; line-height: 1;" onclick="LiveChatAdmin.closeEndModal()">&times;</button>
+            </div>
+
+            <div style="padding: 20px; display: flex; flex-direction: column; gap: 14px; background: #fff;">
+                <!-- Session brief card -->
+                <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">Khách hàng:</span>
+                        <div id="modal-end-customer-name" style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">Khách hàng</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">Mã phiên:</span>
+                        <div id="modal-end-session-id" style="font-weight: 700; color: #dc2626;">#0</div>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">
+                        Lý do kết thúc phiên <span style="color: #dc2626;">*</span>
+                    </label>
+                    <select id="modal-end-reason-select" class="form-control" style="width: 100%; padding: 10px 12px; font-size: 0.9rem; border-radius: 8px; border: 1px solid var(--border-color); background: white; cursor: pointer;" onchange="LiveChatAdmin.onEndReasonChange(this.value)">
+                        <option value="Đã hoàn thành phiên tư vấn">✅ Đã hoàn thành phiên tư vấn</option>
+                        <option value="Khách đã chốt đơn hàng">💊 Khách đã chốt đơn hàng</option>
+                        <option value="Khách không phản hồi">⏱️ Khách không phản hồi</option>
+                        <option value="Đã hướng dẫn khách đến trực tiếp nhà thuốc hoặc cơ sở y tế">🏥 Đã hướng dẫn khách đến nhà thuốc / cơ sở y tế</option>
+                        <option value="Hết hàng / Không có thuốc">📦 Hết hàng / Không có thuốc</option>
+                        <option value="Khách có thái độ không tốt">⚠️ Khách có thái độ không tốt</option>
+                        <option value="Spam / Quấy rối">🚫 Spam / Quấy rối</option>
+                        <option value="Khách hàng yêu cầu dừng tư vấn">🛑 Khách hàng yêu cầu dừng tư vấn</option>
+                        <option value="KHAC">✍️ Lý do khác (Tự nhập chi tiết)...</option>
+                    </select>
+                </div>
+
+                <div id="modal-end-custom-wrap" style="display: none;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">
+                        Nhập lý do kết thúc chi tiết <span style="color: #dc2626;">*</span>
+                    </label>
+                    <textarea id="modal-end-custom-input" class="form-control" rows="3" placeholder="Nhập lý do hoặc tóm tắt nội dung kết thúc phiên..." style="width: 100%; padding: 10px 12px; font-size: 0.88rem; border-radius: 8px; border: 1px solid var(--border-color); box-sizing: border-box; resize: vertical;"></textarea>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">
+                        Ghi chú thêm của Dược sĩ <span style="font-weight: 400; color: var(--text-muted); font-size: 0.8rem;">(Tùy chọn)</span>
+                    </label>
+                    <input type="text" id="modal-end-extra-notes" class="form-control" placeholder="Ghi chú thêm về triệu chứng, đơn thuốc đề xuất nếu có..." style="width: 100%; padding: 9px 12px; font-size: 0.85rem; border-radius: 8px; border: 1px solid var(--border-color); box-sizing: border-box;">
+                </div>
+            </div>
+
+            <div style="padding: 14px 20px; background: #f8fafc; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-outline" onclick="LiveChatAdmin.closeEndModal()" style="padding: 8px 16px; font-size: 0.88rem; border-radius: 6px;">Hủy bỏ</button>
+                <button type="button" class="btn btn-danger" id="btn-submit-end-session" onclick="LiveChatAdmin.submitEndSession()" style="padding: 8px 18px; font-size: 0.88rem; border-radius: 6px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-flag-checkered"></i> Xác nhận kết thúc
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../../js/storage.js"></script>
+    <script src="../../js/api.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script src="../../js/notifications.js"></script>
+    <script src="../../js/app.js"></script>
+    <script src="../../js/components.js"></script>
+    <script src="../../js/consultations.js"></script>
+    <script>
+        Auth.requireAuth();
+        document.addEventListener('DOMContentLoaded', () => {
+            Layout.renderSidebar('consultations');
+            Layout.renderHeader('Tư Vấn Khách Hàng');
+            if (window.ConsultationApp && typeof ConsultationApp.init === 'function') {
+                ConsultationApp.init();
+            }
+        });
+    </script>
+</body>
+</html>

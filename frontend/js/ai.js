@@ -2,7 +2,12 @@
 const aiService = {
     ask: async function(query) {
         try {
-            const res = await API.post('/api/goi-y-ai/hoi', { cauHoi: query });
+            let res;
+            try {
+                res = await API.post('/api/goi-y-ai/hoi-noi-bo', { cauHoi: query });
+            } catch(err) {
+                res = await API.post('/api/goi-y-ai/hoi', { cauHoi: query });
+            }
             if (res && res.traLoi) {
                 return res.traLoi;
             }
@@ -222,29 +227,69 @@ const AIChatMonitor = {
     },
 
     init: function() {
-        this.bindEvents();
-        this.loadHistory();
+        const user = Auth.getCurrentUser();
+        const isQuanLy = user && (user.role === 'QUAN_LY' || user.role === 'ADMIN');
+        const tabBtnMonitor = document.getElementById('tab-btn-monitor');
+
+        if (!isQuanLy) {
+            if (tabBtnMonitor) {
+                tabBtnMonitor.style.display = 'none';
+            }
+        } else {
+            this.bindEvents();
+            this.loadHistory();
+        }
+
+        // Chuyển hướng sang trang Tư vấn riêng nếu có hash hoặc param ?tab=livechat
+        if (window.location.hash === '#livechat' || new URLSearchParams(window.location.search).get('tab') === 'livechat') {
+            window.location.href = 'consultations.html';
+            return;
+        }
+
+        window.addEventListener('hashchange', () => {
+            if (window.location.hash === '#livechat') {
+                window.location.href = 'consultations.html';
+            } else if (!window.location.hash || window.location.hash === '#internal') {
+                this.switchTab('internal');
+            }
+        });
     },
 
     switchTab: function(tabName) {
+        const user = Auth.getCurrentUser();
+        const isQuanLy = user && (user.role === 'QUAN_LY' || user.role === 'ADMIN');
+
+        if (tabName === 'livechat') {
+            window.location.href = 'consultations.html';
+            return;
+        }
+
+        if (tabName === 'monitor' && !isQuanLy) {
+            if (window.App && typeof App.showToast === 'function') {
+                App.showToast('Chỉ Quản lý mới có quyền xem lịch sử chat AI!', 'warning');
+            } else {
+                alert('Chỉ Quản lý mới có quyền xem lịch sử chat AI!');
+            }
+            return;
+        }
+
         const tabInternal = document.getElementById('tab-btn-internal');
         const tabMonitor = document.getElementById('tab-btn-monitor');
         const viewInternal = document.getElementById('view-internal');
         const viewMonitor = document.getElementById('view-monitor');
 
-        if (!viewInternal || !viewMonitor) return;
+        if (tabInternal) tabInternal.classList.remove('active');
+        if (tabMonitor) tabMonitor.classList.remove('active');
+        if (viewInternal) viewInternal.style.display = 'none';
+        if (viewMonitor) viewMonitor.style.display = 'none';
 
         if (tabName === 'monitor') {
-            tabInternal.classList.remove('active');
-            tabMonitor.classList.add('active');
-            viewInternal.style.display = 'none';
-            viewMonitor.style.display = 'flex';
+            if (tabMonitor) tabMonitor.classList.add('active');
+            if (viewMonitor) viewMonitor.style.display = 'flex';
             this.loadHistory();
         } else {
-            tabMonitor.classList.remove('active');
-            tabInternal.classList.add('active');
-            viewMonitor.style.display = 'none';
-            viewInternal.style.display = 'flex';
+            if (tabInternal) tabInternal.classList.add('active');
+            if (viewInternal) viewInternal.style.display = 'flex';
         }
     },
 
@@ -560,15 +605,25 @@ const AIChatMonitor = {
     },
 
     deleteItem: async function(id) {
-        if (!confirm('Bạn có chắc chắn muốn xóa bản ghi tư vấn AI này khỏi nhật ký?')) return;
-        try {
-            await API.delete(`/api/goi-y-ai/lich-su-chat/${id}`);
-            if (window.App && typeof App.showToast === 'function') {
-                App.showToast('Đã xóa bản ghi chat thành công', 'success');
+        const doDelete = async () => {
+            try {
+                await API.delete(`/api/goi-y-ai/lich-su-chat/${id}`);
+                if (window.App && typeof App.showToast === 'function') {
+                    App.showToast('Đã xóa bản ghi chat thành công.', 'success');
+                }
+                this.loadHistory();
+            } catch (e) {
+                if (window.App && typeof App.showToast === 'function') {
+                    App.showToast('Không thể xóa bản ghi: ' + e.message, 'error');
+                }
             }
-            this.loadHistory();
-        } catch (e) {
-            alert('Không thể xóa bản ghi: ' + e.message);
+        };
+
+        const msg = 'Bạn có chắc chắn muốn xóa bản ghi tư vấn AI này khỏi nhật ký?';
+        if (window.App && typeof App.showConfirm === 'function') {
+            App.showConfirm(msg, doDelete);
+        } else {
+            doDelete();
         }
     }
 };

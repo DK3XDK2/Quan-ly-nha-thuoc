@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -329,6 +329,7 @@
     
     <script src="../../js/storage.js"></script>
     <script src="../../js/mock-data.js"></script>
+    <script src="../../js/env.js"></script>
     <script src="../../js/api.js"></script>
     <script src="../../js/app.js"></script>
     <script src="../../js/cart.js"></script>
@@ -443,6 +444,8 @@
                 ? `<span style="display:inline-block; background:#fee2e2; color:#dc2626; padding:3px 10px; border-radius:12px; font-size:0.8rem; font-weight:700; margin-left:8px;"><i class="fa-solid fa-prescription"></i> Thuốc kê đơn (Rx)</span>` 
                 : `<span style="display:inline-block; background:#dcfce7; color:#16a34a; padding:3px 10px; border-radius:12px; font-size:0.8rem; font-weight:700; margin-left:8px;"><i class="fa-solid fa-capsules"></i> Không kê đơn (OTC)</span>`;
 
+            const isWishlisted = (typeof Wishlist !== 'undefined' && typeof Wishlist.has === 'function') ? Wishlist.has(p.dbId || p.id) : false;
+
             const html = `
                 <div class="product-detail-grid">
                     <div class="product-gallery">
@@ -466,7 +469,7 @@
                         <div class="p-actions">
                             <div class="qty-selector">
                                 <button class="qty-btn" onclick="const i=document.getElementById('qty'); i.value=Math.max(1, i.value-1)">-</button>
-                                <input type="number" id="qty" class="qty-input" value="1" min="1" max="${p.stock || 999}">
+                                <input type="number" id="qty" class="qty-input" value="1" min="1" max="${p.stock || 999}" oninput="const s=${p.stock || 999}; if(parseInt(this.value)>s){ this.value=s; if(typeof App!=='undefined'&&App.showToast) App.showToast('Kho chỉ còn '+s+' sản phẩm!', 'warning'); } if(parseInt(this.value)<1){ this.value=1; }">
                                 <button class="qty-btn" onclick="const i=document.getElementById('qty'); i.value=Math.min(${p.stock || 999}, parseInt(i.value)+1)">+</button>
                             </div>
                             <div style="display:flex; gap:10px; flex:1;">
@@ -475,6 +478,13 @@
                                 </button>
                                 <button class="p-btn-buy" ${p.stock === 0 ? 'disabled' : ''} style="flex:1; background:#ea580c; color:white; border:1px solid #ea580c;" onclick="Cart.buyNow('${p.dbId}', parseInt(document.getElementById('qty').value))">
                                     MUA NGAY
+                                </button>
+                                <button class="p-btn-buy btn-wishlist ${isWishlisted ? 'active' : ''}" 
+                                        data-wishlist-id="${p.dbId || p.id}"
+                                        style="width:50px; flex:none; display:flex; align-items:center; justify-content:center; font-size:1.3rem; border-radius:8px; border:1px solid var(--shop-border); background:white; cursor:pointer;" 
+                                        onclick="Wishlist.toggle('${p.dbId || p.id}', this)" 
+                                        title="${isWishlisted ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}">
+                                    <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart" style="${isWishlisted ? 'color:#ef4444;' : ''}"></i>
                                 </button>
                             </div>
                         </div>
@@ -539,3 +549,4 @@
 <script src="../../js/shop-ai.js"></script>
 </body>
 </html>
+

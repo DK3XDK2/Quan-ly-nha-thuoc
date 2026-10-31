@@ -5,20 +5,48 @@ const Layout = {
         { id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-pie', link: 'dashboard.html' },
         { id: 'pos', label: 'Bán hàng (POS)', icon: 'fa-cash-register', link: 'pos.html' },
         { id: 'products', label: 'Sản phẩm', icon: 'fa-pills', link: 'products.html' },
-        { id: 'inventory', label: 'Tồn kho & Lô', icon: 'fa-boxes-stacked', link: 'inventory.html' },
+        { id: 'inventory', label: 'Tồn kho', icon: 'fa-boxes-stacked', link: 'inventory.html' },
+        { id: 'batches', label: 'Lô hàng', icon: 'fa-layer-group', link: 'batches.html' },
         { id: 'orders', label: 'Đơn hàng', icon: 'fa-file-invoice-dollar', link: 'orders.html' },
         { id: 'customers', label: 'Khách hàng', icon: 'fa-users', link: 'customers.html' },
         { id: 'suppliers', label: 'Nhà cung cấp', icon: 'fa-truck-field', link: 'suppliers.html' },
         { id: 'reports', label: 'Báo cáo', icon: 'fa-chart-line', link: 'reports.html' },
         { id: 'employees', label: 'Nhân viên', icon: 'fa-user-nurse', link: 'employees.html' },
         { id: 'ai', label: 'AINA Assistant', icon: 'fa-robot', link: 'ai-assistant.html', extraClass: 'color-primary' },
+        { id: 'consultations', label: 'Tư vấn Khách hàng', icon: 'fa-headset', link: 'consultations.html' },
+        { id: 'api-monitor', label: 'Giám sát API', icon: 'fa-network-wired', link: 'api-monitor.html' },
         { id: 'settings', label: 'Cài đặt', icon: 'fa-gear', link: 'settings.html' },
         { id: 'shop', label: 'Xem Shop Khách', icon: 'fa-store', link: '../public/index.html' }
     ],
 
     renderSidebar: function(activeId) {
+        const sidebarContainer = document.getElementById('app-sidebar');
+        if (!sidebarContainer) return;
 
         const availableMenus = this.sidebarMenu.filter(menu => Auth.hasPermission(menu.id));
+
+        const existingNav = sidebarContainer.querySelector('.sidebar-nav');
+        if (existingNav) {
+            const currentItemIds = Array.from(existingNav.querySelectorAll('.nav-item')).map(item => item.getAttribute('data-id'));
+            const expectedItemIds = availableMenus.map(m => m.id);
+            const isMenuSame = currentItemIds.length === expectedItemIds.length && currentItemIds.every((id, idx) => id === expectedItemIds[idx]);
+
+            if (isMenuSame) {
+                // Sidebar đã tồn tại trong DOM và đúng quyền: chỉ cập nhật class .active mà không hủy/vẽ lại DOM!
+                const navItems = existingNav.querySelectorAll('.nav-item');
+                navItems.forEach(item => {
+                    const href = item.getAttribute('href') || '';
+                    const itemId = item.getAttribute('data-id') || '';
+                    const isMatch = activeId && (itemId === activeId || href.includes(activeId));
+                    if (isMatch) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+                return;
+            }
+        }
         
         let menuHtml = '';
         availableMenus.forEach(menu => {
@@ -26,7 +54,7 @@ const Layout = {
             const extraClass = menu.extraClass ? menu.extraClass : '';
             
             menuHtml += `
-                <a href="${menu.link}" class="nav-item ${isActive}">
+                <a href="${menu.link}" data-id="${menu.id}" class="nav-item ${isActive}">
                     <div class="nav-icon ${extraClass}"><i class="fa-solid ${menu.icon}"></i></div>
                     <div class="nav-text" style="${menu.extraClass ? 'font-weight: 600;' : ''}">${menu.label}</div>
                 </a>
@@ -49,13 +77,20 @@ const Layout = {
             </div>
         `;
 
-        const sidebarContainer = document.getElementById('app-sidebar');
-        if (sidebarContainer) {
-            sidebarContainer.innerHTML = sidebarHtml;
-        }
+        sidebarContainer.innerHTML = sidebarHtml;
     },
 
     renderHeader: function(pageTitle) {
+        const headerContainer = document.getElementById('app-header');
+        if (!headerContainer) return;
+
+        const existingTitle = headerContainer.querySelector('.header-page-title');
+        if (existingTitle) {
+            // Header đã tồn tại trong DOM: chỉ cập nhật text tiêu đề, không phá hủy chuông/avatar!
+            existingTitle.textContent = pageTitle;
+            return;
+        }
+
         const user = Auth.getCurrentUser();
         const userName = user ? user.name : 'User';
         const userRole = user ? user.role : '';
@@ -65,7 +100,7 @@ const Layout = {
                 <button class="toggle-sidebar-btn" id="toggle-sidebar">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                <div style="font-weight: 500; font-size: 1.125rem; color: var(--text-secondary)">
+                <div class="header-page-title" style="font-weight: 500; font-size: 1.125rem; color: var(--text-secondary)">
                     ${pageTitle}
                 </div>
             </div>
@@ -108,10 +143,7 @@ const Layout = {
             </div>
         `;
 
-        const headerContainer = document.getElementById('app-header');
-        if (headerContainer) {
-            headerContainer.innerHTML = headerHtml;
-        }
+        headerContainer.innerHTML = headerHtml;
 
         App.initSidebar();
 

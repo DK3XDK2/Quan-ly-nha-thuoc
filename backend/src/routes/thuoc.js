@@ -20,7 +20,7 @@ duongDan.get("/danh-muc", async (req, res) => {
 duongDan.post(
   "/danh-muc",
   xacThucTruyCap,
-  yeuCauVaiTro("QUAN_LY", "NHAN_VIEN"),
+  yeuCauVaiTro("QUAN_LY"),
   async (req, res) => {
     try {
       const tenDanhMuc = String(req.body?.tenDanhMuc || "").trim();
@@ -63,7 +63,7 @@ duongDan.get("/", async (req, res) => {
 duongDan.post(
   "/",
   xacThucTruyCap,
-  yeuCauVaiTro("QUAN_LY", "NHAN_VIEN"),
+  yeuCauVaiTro("QUAN_LY"),
   async (req, res) => {
     try {
       const {
@@ -128,7 +128,7 @@ duongDan.post(
 duongDan.patch(
   "/:id",
   xacThucTruyCap,
-  yeuCauVaiTro("QUAN_LY", "NHAN_VIEN"),
+  yeuCauVaiTro("QUAN_LY"),
   async (req, res) => {
     try {
       const id = Number(req.params.id);

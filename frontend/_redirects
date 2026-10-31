@@ -1,0 +1,12 @@
+# Netlify redirects and proxy rules
+/api/*                  https://slighted-jelly-basis.ngrok-free.dev/api/:splat  200!
+
+/admin/login            /pages/admin/login.html         200
+/admin                  /pages/admin/dashboard.html     200
+/login                  /pages/public/shop-login.html   200
+/shop                   /pages/public/index.html        200
+/public/:slug           /pages/public/:slug.html        200
+/customer/:slug         /pages/customer/:slug.html      200
+/admin/:slug            /pages/admin/:slug.html         200
+/pages/public/pages/*   /pages/:splat                   200
+/                       /pages/public/index.html        200
