@@ -257,6 +257,7 @@ const ProductManager = {
         const categoryId = parseInt(document.getElementById('p-category').value);
         const donViTinh = document.getElementById('p-unit').value.trim();
         const giaBan = parseFloat(document.getElementById('p-price').value);
+        const tonKhoBanDau = parseInt(document.getElementById('p-stock')?.value) || 0;
         const dbId = document.getElementById('edit-id').value;
 
         if (!maThuoc || !tenThuoc) {
@@ -289,7 +290,8 @@ const ProductManager = {
                     hoatChat,
                     danhMucThuocId: categoryId || 1,
                     donViTinh,
-                    giaBan
+                    giaBan,
+                    tonKhoBanDau
                 });
                 App.showToast('Thêm sản phẩm thành công!', 'success');
             }

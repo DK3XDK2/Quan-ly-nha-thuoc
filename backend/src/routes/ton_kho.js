@@ -139,8 +139,8 @@ duongDan.post(
     try {
       const { thuocId, soLo, hanSuDung, soLuongTon, giaNhap } = req.body;
 
-      if (soLo && !/^[a-zA-Z0-9]+$/.test(soLo)) {
-        return res.status(400).json({ thongBao: "Số lô chỉ được chứa chữ cái và số" });
+      if (soLo && !/^[a-zA-Z0-9-_/.\s]+$/.test(soLo)) {
+        return res.status(400).json({ thongBao: "Số lô chỉ được chứa chữ cái, số và ký tự -_/" });
       }
 
       const loMoi = await coSoDuLieu.loTonKho.create({
@@ -200,8 +200,8 @@ duongDan.patch(
         duLieuCapNhat.hanSuDung = duLieuCapNhat.hanSuDung ? new Date(duLieuCapNhat.hanSuDung) : null;
       }
 
-      if (duLieuCapNhat.soLo && !/^[a-zA-Z0-9]+$/.test(duLieuCapNhat.soLo)) {
-        return res.status(400).json({ thongBao: "Số lô chỉ được chứa chữ cái và số" });
+      if (duLieuCapNhat.soLo && !/^[a-zA-Z0-9-_/.\s]+$/.test(duLieuCapNhat.soLo)) {
+        return res.status(400).json({ thongBao: "Số lô chỉ được chứa chữ cái, số và ký tự -_/" });
       }
 
       const loMoi = await coSoDuLieu.loTonKho.update({

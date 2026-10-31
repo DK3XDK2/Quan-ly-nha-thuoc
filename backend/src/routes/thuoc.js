@@ -75,8 +75,8 @@ duongDan.post(
         danhMucThuocId,
       } = req.body;
 
-      if (maThuoc && !/^[a-zA-Z0-9]+$/.test(maThuoc)) {
-        return res.status(400).json({ thongBao: "Mã thuốc chỉ được chứa chữ cái và số" });
+      if (maThuoc && !/^[a-zA-Z0-9-_]+$/.test(maThuoc)) {
+        return res.status(400).json({ thongBao: "Mã thuốc chỉ được chứa chữ cái, số, gạch nối" });
       }
 
       const tenRegex = /^[a-zA-Z0-9ÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂÂÊÔƠƯưăâêôơ\s.,/-]+$/;
@@ -103,6 +103,25 @@ duongDan.post(
           danhMucThuocId,
         },
       });
+
+      // Tự động tạo lô tồn kho ban đầu để thuốc có sẵn trong kho, bán hàng và AI nhận diện được ngay
+      const tonKhoKhoiTao = req.body.tonKhoBanDau !== undefined 
+        ? Number(req.body.tonKhoBanDau) 
+        : (req.body.soLuongTon !== undefined ? Number(req.body.soLuongTon) : 100);
+
+      if (tonKhoKhoiTao > 0) {
+        const hanSuDung = new Date();
+        hanSuDung.setFullYear(hanSuDung.getFullYear() + 2); // Mặc định hạn sử dụng 2 năm
+        await coSoDuLieu.loTonKho.create({
+          data: {
+            thuocId: duLieuMoi.id,
+            soLo: `L26-${duLieuMoi.maThuoc}`,
+            soLuongTon: tonKhoKhoiTao,
+            giaNhap: Math.round(Number(giaBan || 10000) * 0.7),
+            hanSuDung: hanSuDung,
+          },
+        });
+      }
 
       await ghiNhatKy(
         req.nguoiDung.id,

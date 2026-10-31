@@ -393,6 +393,9 @@ const App = {
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.style.display = 'flex';
+            modal.classList.add('active');
+            modal.style.opacity = '1';
+            modal.style.pointerEvents = 'auto';
 
             if (!modal.dataset.eventsBound) {
                 const closeBtns = modal.querySelectorAll('.btn-close, .modal-close');
@@ -410,6 +413,9 @@ const App = {
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.style.display = 'none';
+            modal.classList.remove('active');
+            modal.style.opacity = '';
+            modal.style.pointerEvents = '';
         }
     },
 
